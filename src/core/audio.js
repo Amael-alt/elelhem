@@ -1,13 +1,18 @@
-// Musique de fond : une boucle douce, lancée au premier geste du joueur (les
-// navigateurs interdisent le son avant), montée en fondu, baissée pendant les
-// dialogues, coupée quand l'onglet est caché. Le joueur peut la couper (bouton
-// en haut à droite, ou touche M) ; ce choix est retenu dans le navigateur.
+// Le son du jeu : la musique de fond et le bus des sons d'ambiance
+// (core/ambience.js), réunis sous un même volume général.
 //
-// Le volume passe par Web Audio (un nœud de gain) : sur iPhone, le volume
-// d'un élément audio est ignoré, seul un gain le règle vraiment.
+// - Tout démarre au premier geste du joueur (les navigateurs interdisent le
+//   son avant) : le contexte audio naît là, la musique monte en fondu.
+// - La musique se fait plus discrète pendant les dialogues.
+// - Onglet caché : tout le son se met en pause, il reprend au retour.
+// - Le joueur peut couper le son (bouton en haut à droite, ou touche M) ; ce
+//   choix est retenu dans le navigateur.
+//
+// Les volumes passent par Web Audio (des nœuds de gain) : sur iPhone, le
+// volume d'un élément audio est ignoré, seul un gain le règle vraiment.
 
-const VOLUME = 0.26; // assez bas pour rester une ambiance
-const DUCK = 0.55; // part du volume pendant un dialogue
+const MUSIC_VOLUME = 0.26; // assez bas pour rester une ambiance
+const DUCK = 0.55; // part du volume de la musique pendant un dialogue
 const FADE_IN = 3; // secondes
 const FADE_SHORT = 0.5;
 const PREFERENCE_KEY = 'village-lia-son';
@@ -30,35 +35,39 @@ function writeMuted(muted) {
 
 // src : le fichier de musique ; button : le bouton #son ; labels : { couper,
 // remettre }, les textes du bouton pour un lecteur d'écran.
-export function createMusic(src, button, labels) {
+export function createAudio(src, button, labels) {
   const audio = new Audio();
   audio.src = src;
   audio.loop = true;
   audio.preload = 'none'; // rien n'est téléchargé avant le lancement du jeu
   let context = null;
-  let gain = null;
+  let master = null; // volume général : coupé, il fait taire tout le jeu
+  let musicGain = null;
+  let ambienceBus = null;
   let started = false;
   let muted = readMuted();
   let ducked = false;
-  let pauseTimer = 0;
+  let suspendTimer = 0;
+  const startListeners = [];
 
-  const level = () => (muted ? 0 : VOLUME * (ducked ? DUCK : 1));
+  const musicLevel = () => MUSIC_VOLUME * (ducked ? DUCK : 1);
 
-  function fadeTo(seconds) {
-    if (gain) {
-      const now = context.currentTime;
-      gain.gain.cancelScheduledValues(now);
-      gain.gain.setValueAtTime(gain.gain.value, now);
-      gain.gain.linearRampToValueAtTime(level(), now + seconds);
-    } else {
-      audio.volume = level();
-    }
+  function ramp(param, value, seconds) {
+    const now = context.currentTime;
+    param.cancelScheduledValues(now);
+    param.setValueAtTime(param.value, now);
+    param.linearRampToValueAtTime(value, now + seconds);
   }
 
-  function play() {
-    clearTimeout(pauseTimer);
+  function resume() {
+    clearTimeout(suspendTimer);
     context?.resume();
     audio.play().catch(() => {});
+  }
+
+  function pause() {
+    audio.pause();
+    context?.suspend();
   }
 
   function refreshButton() {
@@ -67,26 +76,30 @@ export function createMusic(src, button, labels) {
     button.dataset.coupe = muted ? 'oui' : 'non';
   }
 
-  // À appeler pendant un geste du joueur (clic, touche) : crée le contexte
-  // audio, branche la musique sur le gain et lance le fondu.
+  // À appeler pendant un geste du joueur (clic, touche).
   function start() {
     if (started) return;
-    started = true;
     const AudioContextClass = window.AudioContext ?? window.webkitAudioContext;
-    if (AudioContextClass) {
-      try {
-        context = new AudioContextClass();
-        gain = context.createGain();
-        gain.gain.value = 0;
-        context.createMediaElementSource(audio).connect(gain).connect(context.destination);
-      } catch {
-        context = null;
-        gain = null;
-      }
+    if (!AudioContextClass) return; // navigateur sans Web Audio : le jeu reste muet
+    started = true;
+    context = new AudioContextClass();
+    master = context.createGain();
+    master.gain.value = muted ? 0 : 1;
+    master.connect(context.destination);
+    musicGain = context.createGain();
+    musicGain.gain.value = 0;
+    musicGain.connect(master);
+    ambienceBus = context.createGain();
+    ambienceBus.connect(master);
+    try {
+      context.createMediaElementSource(audio).connect(musicGain);
+    } catch {
+      // musique indisponible : l'ambiance marche quand même
     }
-    if (!gain) audio.volume = 0;
-    if (!muted) play();
-    fadeTo(FADE_IN);
+    if (muted) context.suspend();
+    else resume();
+    ramp(musicGain.gain, musicLevel(), FADE_IN);
+    for (const listener of startListeners) listener({ context, destination: ambienceBus });
   }
 
   function toggle() {
@@ -97,9 +110,13 @@ export function createMusic(src, button, labels) {
       start();
       return;
     }
-    fadeTo(FADE_SHORT);
-    if (muted) pauseTimer = setTimeout(() => audio.pause(), FADE_SHORT * 1000 + 50);
-    else play();
+    if (muted) {
+      ramp(master.gain, 0, FADE_SHORT);
+      suspendTimer = setTimeout(pause, FADE_SHORT * 1000 + 50);
+    } else {
+      resume();
+      ramp(master.gain, 1, FADE_SHORT);
+    }
   }
 
   button.addEventListener('click', () => {
@@ -110,17 +127,23 @@ export function createMusic(src, button, labels) {
     if (event.code !== 'KeyM' || event.repeat || event.target instanceof HTMLInputElement) return;
     toggle();
   });
-  // Onglet caché : la musique s'arrête, elle reprend au retour.
+  // Onglet caché : tout s'arrête, tout reprend au retour.
   document.addEventListener('visibilitychange', () => {
     if (!started || muted) return;
-    if (document.hidden) audio.pause();
-    else play();
+    if (document.hidden) pause();
+    else resume();
   });
   refreshButton();
 
   return {
     start,
     toggle,
+    // listener({ context, destination }) : appelé quand le son démarre (tout
+    // de suite s'il a déjà démarré). C'est là que l'ambiance se branche.
+    onStart(listener) {
+      if (started) listener({ context, destination: ambienceBus });
+      else startListeners.push(listener);
+    },
     showButton() {
       button.hidden = false;
     },
@@ -128,10 +151,18 @@ export function createMusic(src, button, labels) {
     setDucked(on) {
       if (on === ducked) return;
       ducked = on;
-      if (started) fadeTo(FADE_SHORT * 2);
+      if (started) ramp(musicGain.gain, musicLevel(), FADE_SHORT * 2);
     },
     get state() {
-      return { started, muted, ducked, paused: audio.paused, time: Number(audio.currentTime.toFixed(1)), gain: gain ? Number(gain.gain.value.toFixed(3)) : audio.volume };
+      return {
+        started,
+        muted,
+        ducked,
+        paused: audio.paused,
+        time: Number(audio.currentTime.toFixed(1)),
+        gain: musicGain ? Number(musicGain.gain.value.toFixed(3)) : 0,
+        context: context?.state ?? 'absent',
+      };
     },
   };
 }

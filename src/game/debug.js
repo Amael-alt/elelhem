@@ -114,7 +114,7 @@ function checkDialogues(texts, characters) {
 // game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
 // dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience } = game;
   let viewer = null;
 
   const info = () => ({
@@ -220,6 +220,37 @@ export function installDebugApi(game) {
       }
       return Boolean(viewer);
     },
+    // Galerie de QA : les personnages en grand, au repos, dans leurs quatre
+    // directions (bas, gauche, droite, haut), sur un fond neutre. ids : liste
+    // d'identifiants (tous par défaut) ; scale : agrandissement.
+    portraits(on = true, ids = Object.keys(sheets), scale = 5) {
+      document.getElementById('lia-portraits')?.remove();
+      if (!on) return false;
+      const frame = 32;
+      const canvas = document.createElement('canvas');
+      canvas.id = 'lia-portraits';
+      const perRow = 4;
+      const cell = frame * 4 * scale + 16;
+      canvas.width = Math.min(ids.length, perRow) * cell;
+      canvas.height = Math.ceil(ids.length / perRow) * (frame * scale + 16);
+      canvas.style.cssText = 'position:fixed;inset:0;z-index:40;background:#7d7a8c;image-rendering:pixelated;max-width:100%;max-height:100%;pointer-events:none';
+      const context = canvas.getContext('2d');
+      context.imageSmoothingEnabled = false;
+      ids.forEach((id, n) => {
+        const { buffer } = sheets[id];
+        const source = document.createElement('canvas');
+        source.width = buffer.width;
+        source.height = buffer.height;
+        source.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buffer.data), buffer.width, buffer.height), 0, 0);
+        const ox = (n % perRow) * cell + 8;
+        const oy = Math.floor(n / perRow) * (frame * scale + 16) + 8;
+        for (let row = 0; row < 4; row += 1) {
+          context.drawImage(source, 0, row * frame, frame, frame, ox + row * frame * scale, oy, frame * scale, frame * scale);
+        }
+      });
+      document.body.append(canvas);
+      return true;
+    },
     // Conversations. talk ouvre celle d'un habitant sans condition de distance ;
     // advance fait l'action (termine la page, passe à la suivante, ferme).
     talk(id = 'lia') {
@@ -232,6 +263,7 @@ export function installDebugApi(game) {
     },
     dialogue: () => dialogue.snapshot(),
     music: () => music.state,
+    ambience: () => ambience.state,
     // Habitant à portée du héros (ou null) et distance à chacun.
     nearby: () => ({
       cible: interaction.target?.id ?? null,

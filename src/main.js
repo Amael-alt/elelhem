@@ -8,7 +8,8 @@ import { createFloatingStick, createKeyboard, createLoadGate } from './core/inpu
 import { createRenderer, MAX_PIXEL_RATIO } from './core/renderer.js';
 import { createQualityGovernor } from './core/quality.js';
 import { trackViewportHeight } from './core/viewport.js';
-import { createMusic } from './core/audio.js';
+import { createAudio } from './core/audio.js';
+import { createAmbience } from './core/ambience.js';
 import { createPipeline, SPRITE_LAYER } from './gfx/post/pipeline.js';
 import { createFollowCamera } from './core/camera.js';
 import { createVillage } from './world/village.js';
@@ -22,7 +23,7 @@ import { createInteraction } from './game/interaction.js';
 import { createGameState, resetGameState, saveGameState } from './game/state.js';
 import { createTitleScreen } from './game/title.js';
 import { createAreaBanner } from './game/banner.js';
-import { REGIONS } from './world/layout.js';
+import { ANVIL, CAMPFIRE, HEARTH, REGIONS, TOWERS, WATERFALL } from './world/layout.js';
 import { createDebugPanel, installDebugApi, isDebugEnabled } from './game/debug.js';
 import { backgroundColor } from './data/palette.js';
 import { figurants, hero, villagers } from './data/characters.js';
@@ -143,8 +144,17 @@ function start() {
     camera: follow.camera, canvas,
   });
 
-  // Musique de fond : lancée par le geste qui ferme l'écran titre.
-  const music = createMusic('assets/audio/village-bell.mp3', document.getElementById('son'), textesInterface.musique);
+  // Musique de fond et sons d'ambiance : lancés par le geste qui ferme l'écran titre.
+  const music = createAudio('assets/audio/village-bell.mp3', document.getElementById('son'), textesInterface.musique);
+  const dovecote = TOWERS.colombier;
+  const ambience = createAmbience(music, {
+    // La rivière : du plateau au nord jusqu'à la plaine au sud.
+    river: [[31.5, -30], [31.5, 16.5], [32.5, 17.5], [32.5, 60]],
+    waterfall: [(WATERFALL.x0 + WATERFALL.x1) / 2, WATERFALL.z + 0.3],
+    fires: [[HEARTH.x, HEARTH.z], [CAMPFIRE.x, CAMPFIRE.z]],
+    anvil: [ANVIL.x, ANVIL.z],
+    dovecote: [dovecote.x + dovecote.size / 2, dovecote.z + dovecote.size / 2],
+  }, (x, z) => village.map.cellAt(Math.floor(x), Math.floor(z))?.matter ?? 'grass');
 
   // Écran titre (sauf ?autostart, pour les tests) et bandeau de lieu.
   const banner = createAreaBanner(document.getElementById('lieu'), REGIONS, textesInterface.lieux);
@@ -186,6 +196,7 @@ function start() {
       interaction.update(dt, keyboard.takeAction());
       banner.update(player.position);
       music.setDucked(interaction.isTalking);
+      ambience.update(player.position, dt);
     } else {
       keyboard.takeAction();
       keyboard.takeCancel();
@@ -198,7 +209,7 @@ function start() {
   }
 
   installDebugApi({
-    renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music,
+    renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
   });
 
   let last = performance.now();

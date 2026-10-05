@@ -1,0 +1,45 @@
+#!/bin/sh
+# Crochet pre-commit du Village de LIA, dépôt public.
+# Bloque un commit qui signerait avec une autre identité que l'adresse anonyme,
+# ou qui ferait entrer un tiret long, un chemin de disque ou un motif interdit.
+# Activation, une fois par clonage :  git config core.hooksPath .githooks
+
+ANONYME="310769219+Amael-alt@users.noreply.github.com"
+MOTIFS=".motifs-interdits"
+CADRATIN=$(printf '\342\200\224')
+DEMI_CADRATIN=$(printf '\342\200\223')
+
+if [ "$(git config user.email)" != "$ANONYME" ]; then
+  echo "Refusé : ce dépôt ne se signe qu'avec l'adresse anonyme." >&2
+  echo "  git config user.email $ANONYME" >&2
+  exit 1
+fi
+
+liste=$(mktemp)
+if [ -f "$MOTIFS" ]; then
+  tr -d '\r' < "$MOTIFS" | grep -v -e '^#' -e '^[[:space:]]*$' > "$liste"
+else
+  echo "Attention : $MOTIFS absent, les noms et chemins personnels ne sont pas vérifiés." >&2
+fi
+
+# Contenu indexé de chaque fichier ajouté ou modifié, hors three.js vendu.
+rapport=$(
+  git diff --cached --name-only --diff-filter=ACMR -- . ':(exclude)vendor/' |
+  while IFS= read -r fichier; do
+    contenu=$(git show ":$fichier")
+    {
+      printf '%s\n' "$contenu" | LC_ALL=C grep -I -n -e "$CADRATIN" -e "$DEMI_CADRATIN" | sed 's/^/tiret long, ligne /'
+      printf '%s\n' "$contenu" | grep -I -n -E '(^|[^A-Za-z])[A-Za-z]:[\\/][A-Za-z]' | sed 's/^/chemin de disque, ligne /'
+      if [ -s "$liste" ]; then
+        printf '%s\n' "$contenu" | grep -I -n -i -w -F -f "$liste" | sed 's/^/motif interdit, ligne /'
+      fi
+    } | sed "s|^|  $fichier : |"
+  done
+)
+rm -f "$liste"
+
+if [ -n "$rapport" ]; then
+  echo "Refusé : ce commit ferait entrer dans le dépôt public :" >&2
+  printf '%s\n' "$rapport" >&2
+  exit 1
+fi

@@ -1,0 +1,23 @@
+#!/bin/sh
+# Crochet commit-msg du Village de LIA : pas de tiret long dans un message de
+# commit, ni de motif interdit (voir pre-commit).
+
+MOTIFS=".motifs-interdits"
+CADRATIN=$(printf '\342\200\224')
+DEMI_CADRATIN=$(printf '\342\200\223')
+
+if LC_ALL=C grep -q -e "$CADRATIN" -e "$DEMI_CADRATIN" "$1"; then
+  echo "Refusé : le message de commit contient un tiret long. Virgules ou points." >&2
+  exit 1
+fi
+
+if [ -f "$MOTIFS" ]; then
+  liste=$(mktemp)
+  tr -d '\r' < "$MOTIFS" | grep -v -e '^#' -e '^[[:space:]]*$' > "$liste"
+  if [ -s "$liste" ] && grep -v '^#' "$1" | grep -q -i -w -F -f "$liste"; then
+    rm -f "$liste"
+    echo "Refusé : le message de commit contient un motif interdit." >&2
+    exit 1
+  fi
+  rm -f "$liste"
+fi

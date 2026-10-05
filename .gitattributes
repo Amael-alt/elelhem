@@ -1,0 +1,7 @@
+# Fins de ligne LF partout, quel que soit le poste qui committe.
+* text=auto eol=lf
+
+# Fichiers vendus et binaires : jamais retouchés par git.
+vendor/** -text
+*.png binary
+*.woff2 binary

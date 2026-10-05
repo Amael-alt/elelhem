@@ -1,0 +1,21 @@
+# Outils de poste, jamais publiés
+node_modules/
+.env
+.env.*
+
+# Captures et exports de vérification : régénérables, on ne les versionne pas
+qa/
+captures/
+*.local.*
+
+# Liste locale des motifs interdits (chemins, noms) lue par le crochet pre-commit.
+# Elle reste hors du dépôt : la publier publierait ce qu'elle protège.
+.motifs-interdits
+
+# Réglages personnels de Claude Code
+.claude/settings.local.json
+
+# Systèmes
+Thumbs.db
+desktop.ini
+.DS_Store

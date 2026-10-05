@@ -8,6 +8,7 @@ import { createFloatingStick, createKeyboard, createLoadGate } from './core/inpu
 import { createRenderer, MAX_PIXEL_RATIO } from './core/renderer.js';
 import { createQualityGovernor } from './core/quality.js';
 import { trackViewportHeight } from './core/viewport.js';
+import { createMusic } from './core/audio.js';
 import { createPipeline, SPRITE_LAYER } from './gfx/post/pipeline.js';
 import { createFollowCamera } from './core/camera.js';
 import { createVillage } from './world/village.js';
@@ -142,9 +143,13 @@ function start() {
     camera: follow.camera, canvas,
   });
 
+  // Musique de fond : lancée par le geste qui ferme l'écran titre.
+  const music = createMusic('assets/audio/village-bell.mp3', document.getElementById('son'), textesInterface.musique);
+
   // Écran titre (sauf ?autostart, pour les tests) et bandeau de lieu.
   const banner = createAreaBanner(document.getElementById('lieu'), REGIONS, textesInterface.lieux);
   let playing = params.has('autostart');
+  if (playing) music.showButton();
   if (!playing) {
     createTitleScreen(document.getElementById('titre'), {
       texts: textesInterface,
@@ -156,6 +161,8 @@ function start() {
         // La touche qui a lancé le jeu ne doit pas aussi ouvrir un dialogue.
         keyboard.takeAction();
         playing = true;
+        music.start();
+        music.showButton();
       },
     });
   }
@@ -178,6 +185,7 @@ function start() {
       if (keyboard.takeCancel()) dialogue.close();
       interaction.update(dt, keyboard.takeAction());
       banner.update(player.position);
+      music.setDucked(interaction.isTalking);
     } else {
       keyboard.takeAction();
       keyboard.takeCancel();
@@ -190,7 +198,7 @@ function start() {
   }
 
   installDebugApi({
-    renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues,
+    renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music,
   });
 
   let last = performance.now();

@@ -4,7 +4,7 @@ Un petit RPG en HD-2D, jouable dans le navigateur, dans la contrée d'Ellelhem. 
 
 **Aucune image n'est chargée par le jeu.** Textures, personnages, ciel et effets de lumière sont générés par le code au chargement de la page.
 
-> **En construction, en public.** Le village se bâtit étape par étape. Pour l'instant, on le parcourt (au clavier ou au pouce) à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. Neuf habitants s'y tiennent, dont Lia, la guide, qui parle déjà ; les huit artisans portent leur nom mais ne répondent pas encore. Commandes : ZQSD, WASD ou flèches, molette pour le zoom, E, Entrée ou Espace pour parler. Le récit de la construction est dans [`docs/construction.md`](docs/construction.md).
+> **En construction, en public.** Le village se bâtit étape par étape. Pour l'instant, on le parcourt (au clavier ou au pouce) à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. Neuf habitants s'y tiennent, dont Lia, la guide, qui parle déjà ; les huit artisans portent leur nom mais ne répondent pas encore. Commandes : ZQSD, WASD ou flèches, molette pour le zoom, E, Entrée ou Espace pour parler, M pour couper la musique. Le récit de la construction est dans [`docs/construction.md`](docs/construction.md).
 
 - **Jouer** : https://amael-alt.github.io/village-de-lia/
 - **Mesurer** : ajouter `?debug` à l'adresse pour afficher les images par seconde et le coût du rendu.
@@ -65,6 +65,8 @@ Conçu et construit par Jordan Goussery, formateur et consultant IA à Bayonne, 
 https://maintenant-vous-savez.com
 
 three.js : © three.js authors, licence MIT.
+
+Musique : « The Village Bell », composée par Jordan Goussery avec Suno. Exclue de la licence MIT.
 
 Police Newsreader : © The Newsreader Project Authors, licence SIL Open Font 1.1, voir [`assets/fonts/OFL.txt`](assets/fonts/OFL.txt).
 

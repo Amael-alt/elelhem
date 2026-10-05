@@ -114,7 +114,7 @@ function checkDialogues(texts, characters) {
 // game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
 // dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music } = game;
   let viewer = null;
 
   const info = () => ({
@@ -231,6 +231,7 @@ export function installDebugApi(game) {
       return dialogue.snapshot();
     },
     dialogue: () => dialogue.snapshot(),
+    music: () => music.state,
     // Habitant à portée du héros (ou null) et distance à chacun.
     nearby: () => ({
       cible: interaction.target?.id ?? null,

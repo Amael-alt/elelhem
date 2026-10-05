@@ -635,3 +635,36 @@ body {
     animation: none !important;
   }
 }
+
+/* Bouton de la musique : rond, filet d'or, en haut à droite. */
+#son {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--or-fonce);
+  border-radius: 50%;
+  background: var(--nuit);
+  color: var(--or-vif);
+  box-shadow: inset 0 0 0 2px rgb(14 13 28 / 0.9), inset 0 0 0 3px rgb(243 208 140 / 0.4), 0 4px 14px rgb(0 0 0 / 0.45);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#son[hidden] {
+  display: none;
+}
+
+#son .son-croix,
+#son[data-coupe="oui"] .son-ondes {
+  display: none;
+}
+
+#son[data-coupe="oui"] .son-croix {
+  display: inline;
+}

@@ -5,3 +5,4 @@
 vendor/** -text
 *.png binary
 *.woff2 binary
+*.mp3 binary

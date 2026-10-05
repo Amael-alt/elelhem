@@ -22,7 +22,8 @@ Règles de ce dépôt pour Claude Code, valables dans chaque session ouverte ici
 
 - **Aucune image chargée par le jeu.** Textures, personnages, ciel, effets et diplôme sont générés par le code. Deux exceptions, pas une de plus : la flamme du logo Maintenant Vous Savez sur l'écran titre (`assets/mvs-flame.png`), et la vignette de partage `assets/social-preview.png`, lue par les réseaux sociaux via `og:image` mais jamais par la page.
 - Une seule police OFL en `woff2` dans `assets/fonts/`, avec sa licence. Le favicon est un SVG en data URI, pas un fichier.
-- À chaque vérification, la liste des requêtes réseau ne doit montrer que du HTML, du CSS, du JavaScript, la police et la flamme.
+- **Une musique de fond**, `assets/audio/village-bell.mp3` (composée par Jordan avec Suno, réencodée à 96 kb/s, sans métadonnées ni pochette, silences de bout retirés pour une boucle sans trou). Elle n'est demandée qu'au lancement du jeu, par le geste qui ferme l'écran titre (`preload="none"`), jamais au chargement de la page. Exclue de la licence MIT, comme la flamme.
+- À chaque vérification, la liste des requêtes réseau ne doit montrer que du HTML, du CSS, du JavaScript, la police et la flamme ; la musique s'y ajoute seulement après le lancement.
 
 ## Dépendance unique : three.js
 

@@ -26,6 +26,12 @@ fi
 rapport=$(
   git diff --cached --name-only --diff-filter=ACMR -- . ':(exclude)vendor/' |
   while IFS= read -r fichier; do
+    # Fichiers binaires (image, police, musique) : lus comme du texte, leurs
+    # octets donnent de faux tirets longs. On les saute ; leurs métadonnées
+    # doivent être nettoyées avant de les ajouter (voir CLAUDE.md).
+    if git diff --cached --numstat -- "$fichier" | grep -q '^-	-	'; then
+      continue
+    fi
     contenu=$(git show ":$fichier")
     {
       printf '%s\n' "$contenu" | LC_ALL=C grep -I -n -e "$CADRATIN" -e "$DEMI_CADRATIN" | sed 's/^/tiret long, ligne /'

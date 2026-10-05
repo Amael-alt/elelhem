@@ -37,6 +37,7 @@ export const textesInterface = {
   reprendre: 'Appuyer pour reprendre la partie',
   nouvellePartie: 'Nouvelle partie',
   parlerA: (nom) => `Parler à ${nom}`,
+  musique: { couper: 'Couper la musique', remettre: 'Remettre la musique' },
   lieux: {
     place: 'La place du puits',
     forge: 'La forge',

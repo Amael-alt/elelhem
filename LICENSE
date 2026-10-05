@@ -31,10 +31,15 @@ affichée sur l'écran titre (fichier assets/mvs-flame.png) et toute
 reproduction de ce logo : tous droits réservés. Il ne peut être ni réutilisé
 ni modifié sans autorisation écrite.
 
+Elle ne couvre pas non plus la musique de fond (assets/audio/village-bell.mp3,
+« The Village Bell », composée par l'auteur avec Suno) : elle n'est fournie
+que pour ce jeu et n'est pas placée sous licence MIT.
+
 Le dossier vendor/three/ contient three.js, sous sa propre licence MIT
 (vendor/three/LICENSE).
 
 Scope of this license (English summary): the MIT license above covers the
 code and the game texts. It does not cover the Maintenant Vous Savez logo
 (the flame shown on the title screen, assets/mvs-flame.png), which remains
-all rights reserved. three.js in vendor/three/ keeps its own MIT license.
+all rights reserved, nor the background music (assets/audio/village-bell.mp3,
+made by the author with Suno), which is provided for this game only. three.js in vendor/three/ keeps its own MIT license.

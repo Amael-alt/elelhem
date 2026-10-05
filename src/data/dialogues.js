@@ -17,19 +17,24 @@
 //     diplome,     facultatif (ajouté à l'étape 3) : vrai pour l'habitant qui
 //                  remet le diplôme au lieu d'un parchemin, et seulement quand
 //                  tous les parchemins sont réunis
+//     maxime,      facultatif (ajouté à l'étape 3b) : la phrase écrite sur le
+//                  parchemin, reprise telle quelle dans recompense et affichée
+//                  par le grimoire
 //   }
 //
-// `etat` : { prenom, parchemins: Set, visites: Map, choix: Map }, voir
-// game/state.js. Un parchemin porte la clé de l'habitant qui le remet ;
-// `choix` garde, pour chaque question réussie, l'indice de la bonne réponse.
+// `etat` : { prenom, parchemins: Set, visites: Map, choix: Map, erreurs: Map },
+// voir game/state.js. Un parchemin porte la clé de l'habitant qui le remet ;
+// `choix` garde, pour chaque question réussie, l'indice de la bonne réponse ;
+// `erreurs`, le nombre de mauvaises réponses données avant.
 // Une page tient en 170 caractères au plus (lisible sur téléphone sans
 // défilement), elle est neutre en genre et tutoie le joueur. Aucun tiret
 // long : virgules, deux-points ou points.
 //
 // Ce que joue le moteur (game/quest.js) :
-//   - première visite : intro, lecon, question, puis recompense ;
+//   - première visite : intro, puis l'offre (la leçon, ou directement la
+//     question ; textesInterface.offreLecon), question, puis recompense ;
 //   - une mauvaise réponse : son retour, puis la question de nouveau ;
-//   - visite suivante, parchemin pas encore gagné : retour, lecon, question ;
+//   - visite suivante, parchemin pas encore gagné : retour, l'offre, question ;
 //   - parchemin gagné : retour seul.
 
 // Les parchemins, dans l'ordre de leurs emplacements à l'écran : la clé de
@@ -59,6 +64,7 @@ const ADRESSE_DU_JEU = 'https://amael-alt.github.io/village-de-lia/';
 export const textesInterface = {
   titre: 'Le Village de LIA',
   contree: "Contrée d'Ellelhem",
+  accroche: "Huit notions d'IA, un village, dix minutes",
   signature: 'Jordan Goussery, formateur et consultant IA à Bayonne',
   site: 'https://maintenant-vous-savez.com',
   prenom: 'Ton prénom (facultatif)',
@@ -84,9 +90,26 @@ export const textesInterface = {
     notions: NOTIONS,
     compte: (n, total) => `${n} parchemin${n > 1 ? 's' : ''} sur ${total}`,
     obtenu: 'Parchemin obtenu',
+    relire: 'À relire dans le grimoire : touche le compteur.',
     manquant: 'pas encore trouvé',
+    ouvrir: (n, total) => `Ouvrir le grimoire, ${n} parchemin${n > 1 ? 's' : ''} sur ${total}`,
   },
   question: 'Choisis ta réponse',
+  // Après sa présentation, chaque habitant propose sa leçon ou sa question.
+  offreLecon: {
+    texte: "Je t'explique d'abord, ou tu tentes directement ma question ?",
+    choix: ["Explique-moi d'abord.", 'Directement la question !'],
+  },
+  // Le livre des parchemins gagnés : la notion, l'habitant, la maxime et la leçon.
+  grimoire: {
+    titre: "Le grimoire d'Ellelhem",
+    numero: (n, total) => `Parchemin ${n} sur ${total}`,
+    vierge: (nom) => `Page encore vierge. ${nom} garde ce parchemin quelque part dans le village.`,
+    precedente: 'Précédente',
+    suivante: 'Suivante',
+    fermer: 'Fermer',
+    page: (n, notion) => `Page ${n} : ${notion}`,
+  },
   diplome: {
     titre: "Diplôme d'Ellelhem",
     village: 'Le Village de LIA',
@@ -102,6 +125,18 @@ export const textesInterface = {
     site: 'maintenant-vous-savez.com',
     jeu: ADRESSE_DU_JEU,
     champ: 'Ton prénom sur le diplôme',
+    // La mention, d'après le nombre total de mauvaises réponses ; rien au-delà.
+    mention: (erreurs) => {
+      if (erreurs === 0) return 'avec les félicitations du village';
+      if (erreurs <= 2) return 'mention très bien';
+      if (erreurs <= 5) return 'mention bien';
+      return '';
+    },
+    partager: 'Partager',
+    partage: {
+      titre: "Mon diplôme d'Ellelhem",
+      texte: "J'ai obtenu mon diplôme d'Ellelhem : huit notions d'IA apprises dans un petit village. À toi de jouer : " + ADRESSE_DU_JEU,
+    },
     telecharger: 'Télécharger',
     copier: 'Copier le lien du jeu',
     copie: 'Lien copié',
@@ -140,6 +175,7 @@ const retourArtisan = (cle, gagne, reprise) => (etat) => [etat.parchemins.has(cl
 export const dialogues = {
   lia: {
     nom: 'Lia',
+    maxime: "Un LLM devine la suite la plus probable d'un texte.",
 
     intro: (etat) => [
       `Bienvenue à Ellelhem${apres(etat)}. Moi, c'est Lia, et ça se prononce comme « l'IA ». Ce n'est pas un hasard.`,
@@ -183,7 +219,7 @@ export const dialogues = {
 
     retour: (etat) => {
       if (!etat.parchemins.has('lia')) {
-        return [`Te revoilà${apres(etat)}. Reprenons ma leçon depuis le début, elle est courte.`];
+        return [`Te revoilà${apres(etat)}. On reprend où on en était ?`];
       }
       if (diplomeRemis(etat)) {
         return [`Ton diplôme est entre tes mains${apres(etat)}. Merci d'avoir traversé Ellelhem. Reviens quand tu veux, le village t'attendra.`];
@@ -202,6 +238,7 @@ export const dialogues = {
 
   ferrand: {
     nom: 'Maître Ferrand',
+    maxime: 'Un bon prompt se forge en plusieurs chauffes.',
 
     intro: () => [
       "Approche, mais pas trop de l'enclume. Maître Ferrand, forgeron d'Ellelhem. Ici, on forge des lames, des fers à cheval, et des prompts.",
@@ -243,12 +280,13 @@ export const dialogues = {
     retour: retourArtisan(
       'ferrand',
       (etat) => `Alors${apres(etat)}, ces prompts ? Pas de lame parfaite du premier coup : on remet au feu, et on dit ce qu'on veut changer.`,
-      (etat) => `Te revoilà${apres(etat)}. On reprend à froid : la leçon d'abord, la question ensuite.`,
+      (etat) => `Te revoilà${apres(etat)}. La forge est encore chaude : on reprend ?`,
     ),
   },
 
   marjolaine: {
     nom: 'Dame Marjolaine',
+    maxime: "Pose le bon livre, pas toute l'étagère.",
 
     intro: () => [
       "Chut, on lit, ici. Bonjour, je suis Dame Marjolaine, gardienne de la bibliothèque. Tu viens apprendre ce que l'IA lit vraiment ?",
@@ -291,12 +329,13 @@ export const dialogues = {
     retour: retourArtisan(
       'marjolaine',
       (etat) => `Chut${apres(etat)}, on lit toujours, ici. Et souviens-toi : le bon livre, pas toute l'étagère.`,
-      (etat) => `Te revoilà${apres(etat)}. Reprenons la leçon depuis la première page.`,
+      (etat) => `Te revoilà${apres(etat)}. J'ai gardé ton livre ouvert à la bonne page.`,
     ),
   },
 
   basile: {
     nom: 'Basile',
+    maxime: 'Belle étiquette ne fait pas bon remède.',
 
     intro: () => [
       'Ne touche à rien ! Ah, pardon. Basile, apothicaire. Regarde ces fioles : belles couleurs, étiquettes soignées. Laquelle boirais-tu ?',
@@ -339,12 +378,13 @@ export const dialogues = {
     retour: retourArtisan(
       'basile',
       (etat) => `Te revoilà${apres(etat)} ! Tu ouvres toujours les flacons avant de servir ? Belle étiquette ne fait pas bon remède.`,
-      (etat) => `Te revoilà${apres(etat)}. Reprenons la leçon, et cette fois encore, ne touche à rien.`,
+      (etat) => `Te revoilà${apres(etat)}. On reprend, et cette fois encore, ne touche à rien.`,
     ),
   },
 
   berthe: {
     nom: 'Berthe',
+    maxime: "Si tu veux que je m'en souvienne demain, écris-le dans le registre.",
 
     intro: () => [
       "Entre, entre, la soupe est chaude ! Berthe, aubergiste. Ici, je connais chaque client par son prénom, jusqu'à ce qu'il passe la porte.",
@@ -386,7 +426,7 @@ export const dialogues = {
 
     retour: (etat) => {
       if (!etat.parchemins.has('berthe')) {
-        return [`Te revoilà${apres(etat)}. Je reprends depuis le début : j'ai déjà tout oublié, évidemment.`];
+        return [`Te revoilà${apres(etat)}. Rappelle-moi où on en était : j'ai déjà tout oublié, évidemment.`];
       }
       if (etat.prenom) {
         return [`Te revoilà, ${etat.prenom} ! Tu vois, ton prénom, je l'ai noté dans mon registre. C'est comme ça qu'on se souvient.`];
@@ -397,6 +437,7 @@ export const dialogues = {
 
   pepin: {
     nom: 'Pépin',
+    maxime: 'Un pigeon par château, un protocole pour tous.',
 
     intro: () => [
       "Attention, ça roucoule ! Pépin, messager d'Ellelhem. Mes pigeons portent les messages entre l'IA et le reste du monde.",
@@ -439,12 +480,13 @@ export const dialogues = {
     retour: retourArtisan(
       'pepin',
       (etat) => `Te revoilà${apres(etat)} ! Mes pigeons te saluent. Un pigeon par château, un protocole pour tous.`,
-      (etat) => `Te revoilà${apres(etat)}. Mes pigeons t'ont gardé une place : on reprend la leçon.`,
+      (etat) => `Te revoilà${apres(etat)}. Mes pigeons t'ont gardé une place : on reprend ?`,
     ),
   },
 
   gaspard: {
     nom: 'Maître Gaspard',
+    maxime: 'Je ne porte pas les pierres, je tiens le plan.',
 
     intro: () => [
       'Attention, ça tombe ! Pas toi, les pierres. Maître Gaspard, chef de chantier. Ce bâtiment, je ne le monte pas : je le fais monter.',
@@ -487,12 +529,13 @@ export const dialogues = {
     retour: retourArtisan(
       'gaspard',
       (etat) => `Te revoilà${apres(etat)} ! Le chantier avance, parce que le plan tient. Je ne porte pas les pierres, je tiens le plan.`,
-      (etat) => `Te revoilà${apres(etat)}. On reprend le plan depuis la première pierre.`,
+      (etat) => `Te revoilà${apres(etat)}. Le chantier t'attendait : on reprend ?`,
     ),
   },
 
   rocard: {
     nom: 'Capitaine Rocard',
+    maxime: 'Ce qui franchit la porte ne revient pas.',
 
     intro: () => [
       "Halte ! Qui va là ? Ah, c'est toi. Capitaine Rocard, garde de la porte. Rien ne sort d'Ellelhem sans passer devant moi.",
@@ -535,7 +578,7 @@ export const dialogues = {
     retour: retourArtisan(
       'rocard',
       (etat) => `Halte${apres(etat)} ! Ah, c'est toi. Rien de secret dans tes poches ? Ce qui franchit la porte ne revient pas.`,
-      (etat) => `Halte${apres(etat)} ! On reprend la consigne depuis le début.`,
+      (etat) => `Halte${apres(etat)} ! Ah, c'est toi. On reprend la consigne ?`,
     ),
   },
 
@@ -599,4 +642,29 @@ export const dialogues = {
       return [`Il te manque encore ${reste} parchemin${pluriel(reste)}${apres(etat)}. Lia saura te dire où aller.`];
     },
   },
+};
+
+// Les répliques des figurants : une bulle au-dessus de leur tête quand on
+// passe près d'eux, sans question ni parchemin, une à chaque passage, à tour
+// de rôle. La clé est l'identifiant du figurant (data/characters.js) ; les
+// pigeons parlent depuis le haut du colombier.
+export const repliques = {
+  // L'apprenti de la forge, sur la route de la place.
+  'apprenti-3': [
+    "Maître Ferrand m'a fait remettre ma lame au feu six fois. Six ! Bon, elle est belle, maintenant.",
+    "Je lui ai dit « fais-moi une épée ». Il m'a demandé pour qui, pour quoi, de quelle longueur. On y est encore.",
+  ],
+  // Les apprentis du chantier, les sous-agents de Maître Gaspard.
+  'apprenti-1': [
+    "Le maître m'a dit d'attendre le plan. Ça fait trois jours que j'attends le plan.",
+    'Je porte les pierres, il tient le plan. Moi, je tiens surtout les pierres.',
+  ],
+  'apprenti-2': [
+    "On m'a confié une seule tâche, bien bornée : ce mur. Je ne sais même pas à quoi ressemble la maison.",
+    'Je rends mon mur, le maître le relit, il me le rend. Trois fois. Le métier de sous-agent.',
+  ],
+  pigeons: [
+    'Rou-rou ! Un mot de passe ? Non merci, je ne porte pas ça.',
+    "Rou ! Je ne vais que là où on m'envoie. Et toi, tu m'envoies où ?",
+  ],
 };

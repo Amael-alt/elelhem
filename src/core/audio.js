@@ -11,7 +11,7 @@
 // Les volumes passent par Web Audio (des nœuds de gain) : sur iPhone, le
 // volume d'un élément audio est ignoré, seul un gain le règle vraiment.
 
-const MUSIC_VOLUME = 0.26; // assez bas pour rester une ambiance
+const MUSIC_VOLUME = 0.21; // assez bas pour rester une ambiance (0,26 avant, baissé de 20 % à la demande de Jordan)
 const DUCK = 0.55; // part du volume de la musique pendant un dialogue
 const FADE_IN = 3; // secondes
 const FADE_SHORT = 0.5;

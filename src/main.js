@@ -1,10 +1,11 @@
 // Démarrage du Village de LIA : vérifie WebGL2, assemble le monde et le
-// héros, puis lance la boucle. Étape 1b : lumière dorée, maisons, lanternes.
-// Aucun post-traitement.
+// héros, puis lance la boucle. Étape 1c : post-traitement (flou de
+// profondeur, bloom, étalonnage) ; ?nofx pour le rendu direct.
 
 import * as THREE from 'three';
 import { createKeyboard, createLoadGate } from './core/input.js';
 import { createRenderer } from './core/renderer.js';
+import { createPipeline, SPRITE_LAYER } from './gfx/post/pipeline.js';
 import { createFollowCamera } from './core/camera.js';
 import { createVillage } from './world/village.js';
 import { createCharacterSheet } from './gfx/sprites.js';
@@ -49,31 +50,42 @@ function showFatal(text) {
 }
 
 function start() {
-  const renderer = createRenderer(canvas);
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(backgroundColor);
-
+  const params = new URLSearchParams(window.location.search);
+  const postProcessing = !params.has('nofx');
   const narrowScreen = Math.min(window.innerWidth, window.innerHeight) < NARROW_SCREEN;
+
+  const renderer = createRenderer(canvas, { postProcessing });
+  renderer.setClearColor(backgroundColor);
+  const pipeline = createPipeline(renderer, { enabled: postProcessing, view: params.get('view') ?? 'final', narrowScreen });
+  const scene = new THREE.Scene();
+
   const village = createVillage(scene, { narrowScreen });
   const follow = createFollowCamera();
   const keyboard = createKeyboard();
 
   const sheet = createCharacterSheet(hero);
-  const sprite = createSprite(sheet, village.sunDirection);
+  const sprite = createSprite(sheet, village.sunDirection, pipeline.spriteHooks);
+  sprite.object.layers.set(SPRITE_LAYER);
   const shadow = createBlobShadow();
   scene.add(sprite.object, shadow);
   const player = createPlayer({ sprite, shadow, village });
 
   const focusTarget = new THREE.Vector3();
+  const sharpPoint = new THREE.Vector3();
+  const drawingBuffer = new THREE.Vector2();
   follow.snap(player.worldPosition(focusTarget));
 
   function resize() {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
+    if (width === 0 || height === 0) return; // page pas encore affichée
     renderer.setSize(width, height, false);
+    renderer.getDrawingBufferSize(drawingBuffer);
+    pipeline.setSize(drawingBuffer.x, drawingBuffer.y);
     follow.setAspect(width / height);
   }
-  window.addEventListener('resize', resize);
+  // Suit la taille réelle du canvas (fenêtre redimensionnée, page affichée).
+  new ResizeObserver(resize).observe(canvas);
   resize();
 
   const state = { frozen: false, time: 0 };
@@ -88,7 +100,9 @@ function start() {
     player.update(step, keyboard.direction());
     follow.follow(player.worldPosition(focusTarget), step);
     village.update(state.time, follow.focus, follow.distance);
-    renderer.render(scene, follow.camera);
+    // Le point net du flou : le buste du héros.
+    sharpPoint.copy(player.worldPosition(focusTarget)).y += 0.9;
+    pipeline.render(scene, follow.camera, sharpPoint, state.time);
     gate.frameRendered();
   }
 

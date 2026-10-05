@@ -65,6 +65,15 @@ export function saveGameState(state) {
   write(state);
 }
 
+// Nouvelle partie : tout est vidé, la sauvegarde aussi.
+export function resetGameState(state) {
+  state.prenom = '';
+  state.parchemins.clear();
+  state.visites.clear();
+  state.choix.clear();
+  write(state);
+}
+
 // Note une conversation avec un habitant et sauvegarde aussitôt.
 export function recordVisit(state, id) {
   state.visites.set(id, (state.visites.get(id) ?? 0) + 1);

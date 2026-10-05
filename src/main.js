@@ -18,11 +18,14 @@ import { createNpc } from './game/npc.js';
 import { createDialogueBox } from './game/dialogue.js';
 import { createInteractionHint, createNameLabel } from './game/ui.js';
 import { createInteraction } from './game/interaction.js';
-import { createGameState } from './game/state.js';
+import { createGameState, resetGameState, saveGameState } from './game/state.js';
+import { createTitleScreen } from './game/title.js';
+import { createAreaBanner } from './game/banner.js';
+import { REGIONS } from './world/layout.js';
 import { createDebugPanel, installDebugApi, isDebugEnabled } from './game/debug.js';
 import { backgroundColor } from './data/palette.js';
 import { figurants, hero, villagers } from './data/characters.js';
-import { dialogues } from './data/dialogues.js';
+import { dialogues, textesInterface } from './data/dialogues.js';
 
 // Installée avant tout le reste, pour que rien ne passe avant elle.
 const gate = createLoadGate(6);
@@ -135,8 +138,27 @@ function start() {
   const hint = createInteractionHint(document.getElementById('indice'), () => interaction.request());
   const label = createNameLabel(document.getElementById('nom'));
   interaction = createInteraction({
-    player, npcs, hint, label, dialogue, state: gameState, texts: dialogues, camera: follow.camera, canvas,
+    player, npcs, hint, label, dialogue, state: gameState, texts: dialogues, talkLabel: textesInterface.parlerA,
+    camera: follow.camera, canvas,
   });
+
+  // Écran titre (sauf ?autostart, pour les tests) et bandeau de lieu.
+  const banner = createAreaBanner(document.getElementById('lieu'), REGIONS, textesInterface.lieux);
+  let playing = params.has('autostart');
+  if (!playing) {
+    createTitleScreen(document.getElementById('titre'), {
+      texts: textesInterface,
+      state: gameState,
+      onStart({ fresh, prenom }) {
+        if (fresh) resetGameState(gameState);
+        gameState.prenom = prenom;
+        saveGameState(gameState);
+        // La touche qui a lancé le jeu ne doit pas aussi ouvrir un dialogue.
+        keyboard.takeAction();
+        playing = true;
+      },
+    });
+  }
 
   // Une image du jeu. force : avance même figé (tests image par image).
   function tick(dt, force = false) {
@@ -147,13 +169,19 @@ function start() {
     const pushed = stick.direction();
     // autoDirection : direction imposée par les tests scriptés (__lia.walk).
     const wanted = state.autoDirection ?? (pushed.x !== 0 || pushed.z !== 0 ? pushed : keyboard.direction());
-    player.update(step, interaction.isTalking ? STANDING : wanted);
+    player.update(step, interaction.isTalking || !playing ? STANDING : wanted);
     for (const npc of npcs) npc.update(step, state.time, player.position);
     follow.follow(player.worldPosition(focusTarget), step);
     // Après la caméra : la bulle se pose sur l'image qui va être dessinée.
     // Le temps de la conversation est réel : le gel du temps ne fige pas le texte.
-    if (keyboard.takeCancel()) dialogue.close();
-    interaction.update(dt, keyboard.takeAction());
+    if (playing) {
+      if (keyboard.takeCancel()) dialogue.close();
+      interaction.update(dt, keyboard.takeAction());
+      banner.update(player.position);
+    } else {
+      keyboard.takeAction();
+      keyboard.takeCancel();
+    }
     village.update(state.time, follow.focus, follow.distance);
     // Le point net du flou : le buste du héros.
     sharpPoint.copy(player.worldPosition(focusTarget)).y += 0.9;

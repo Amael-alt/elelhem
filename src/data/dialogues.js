@@ -25,6 +25,33 @@
 // l'architecte, remet le diplôme.
 export const PARCHEMINS_TOTAL = 8;
 
+// Les textes de l'interface : écran titre, bulle de parole, noms des quartiers
+// affichés dans le bandeau de lieu (les rectangles sont dans world/layout.js).
+export const textesInterface = {
+  titre: 'Le Village de LIA',
+  contree: "Contrée d'Ellelhem",
+  signature: 'Jordan Goussery, formateur et consultant IA à Bayonne',
+  site: 'https://maintenant-vous-savez.com',
+  prenom: 'Ton prénom (facultatif)',
+  commencer: 'Appuyer pour commencer',
+  reprendre: 'Appuyer pour reprendre la partie',
+  nouvellePartie: 'Nouvelle partie',
+  parlerA: (nom) => `Parler à ${nom}`,
+  lieux: {
+    place: 'La place du puits',
+    forge: 'La forge',
+    bibliotheque: 'La bibliothèque',
+    apothicairerie: "L'apothicairerie et son jardin",
+    tour: "La tour de l'architecte",
+    porte: 'La porte de la muraille',
+    auberge: "L'auberge",
+    colombier: 'Le colombier',
+    chantier: 'Le chantier',
+    pont: 'Le pont',
+    prairie: "La prairie de l'est",
+  },
+};
+
 // « , Prénom » quand le joueur a donné le sien, rien sinon.
 const apres = (etat) => (etat.prenom ? `, ${etat.prenom}` : '');
 

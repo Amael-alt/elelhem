@@ -63,6 +63,8 @@ export function createKeyboard() {
 
   window.addEventListener('keydown', (event) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
+    // Dans un champ de saisie (le prénom), les touches écrivent : on n'y touche pas.
+    if (event.target instanceof HTMLInputElement) return;
     if (ACTION_KEYS.has(event.code) || CANCEL_KEYS.has(event.code)) {
       // Une touche maintenue répète keydown : une seule action par appui.
       if (!event.repeat) {

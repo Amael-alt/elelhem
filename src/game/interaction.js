@@ -14,7 +14,8 @@ const LABEL_LIFT = 52; // pixels : l'étiquette passe au-dessus de la bulle
 // ui.js et dialogue.js ; state : voir state.js ; texts : data/dialogues.js ;
 // camera et canvas servent à ancrer l'indicateur à l'écran ; label : l'étiquette
 // de nom (ui.js).
-export function createInteraction({ player, npcs, hint, label, dialogue, state, texts, camera, canvas }) {
+// talkLabel(nom) : le texte de la bulle pour un lecteur d'écran.
+export function createInteraction({ player, npcs, hint, label, dialogue, state, texts, talkLabel, camera, canvas }) {
   const head = new THREE.Vector3();
   const screen = { x: 0, y: 0 };
   let requested = false;
@@ -84,7 +85,7 @@ export function createInteraction({ player, npcs, hint, label, dialogue, state, 
         label.hide();
         return;
       }
-      if (target) hint.show(anchor, `Parler à ${target.character.nom}`);
+      if (target) hint.show(anchor, talkLabel(target.character.nom));
       else hint.hide();
       label.show(anchor, named.character.nom, target ? LABEL_LIFT : 0);
     },

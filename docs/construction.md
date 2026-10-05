@@ -250,3 +250,27 @@ Grille de contrôle (navigateur intégré) :
 Pas mesurés : les images par seconde (même raison qu'en 1e, la boucle ne tourne pas dans le panneau du navigateur intégré). Les ombres longues mettent la moitié sud de la place dans le noir : c'est la lumière dorée voulue, à juger par Jordan sur captures.
 
 Reste pour la suite : les textes et la quête (étape 3) ; les deux maisons du premier plan (auberge, bibliothèque) cachent le héros quand il passe derrière, comme annoncé en 1b ; le ciel visible au nord est un peu vide.
+
+## Étapes 2b à 2e : la direction artistique, d'après Emberfall (5 octobre 2026)
+
+**But** : Jordan trouvait le village juste, mais moins travaillé que la démo « Emberfall » du moteur Lumina (dépôt `stubborn-hug/lumina` sur GitLab), retrouvée entre-temps. Ce dépôt n'a pas de licence et se dit « for reference only » : comme pour les deux autres démos, on a comparé ses **captures publiées** (écran titre, heure dorée, dialogue, galerie d'objets), sans lire ni reprendre son code. Quatre sous-étapes, chacune vérifiée et commitée à part. Les personnages restent ceux de l'étape 2, à refaire plus tard.
+
+Ce que les captures montraient, et ce qu'on en a fait :
+
+- **2b, lumière et arbres.** Leurs ombres sont bleutées, les nôtres bouchaient la place. Ciel plus présent (hémisphère 1,7 vers 2,6), soleil à 28° au lieu de 23°, ombres remontées vers le bleu-vert dans l'étalonnage, flou de profondeur un peu plus fort (1,9 % vers 2,4 % de la hauteur, bande nette plus étroite), bloom plus présent. Les arbres cubiques deviennent des **couronnes de grappes de feuilles** (`gfx/foliage.js`) : quads tournés vers la caméra, découpés dans une image pixel art générée, teintés vert ou roux d'automne, qui ondulent au vent et projettent des ombres tachetées. Un seul appel de dessin pour tout le feuillage.
+- **2c, végétation et sol.** Le plus gros écart : leur sol déborde d'herbe et de fleurs. Environ 3 000 **touffes d'herbe et de fleurs** (`gfx/grass.js`), images de 12 × 12 à la densité du décor, plus serrées en lisière et fleuries dans les prés, dessinées en un appel ; des **buissons** en grappes ; une **lèvre d'herbe** qui déborde sur le haut des falaises et du socle.
+- **2d, maisons et objets.** Toits d'**ardoise** et de **chaume**, murs de **pierre de taille**, **jardinières fleuries** sous les fenêtres, un **étal à auvent rayé** sur la place, des **barrières**, des **meules de foin**, des **rochers** et un **feu de camp** avec sa fumée. Quatre textures nouvelles générées (ardoise, chaume, pierre, toile).
+- **2e, écran titre et interface.** L'**écran titre** par-dessus le village vivant : la flamme Maintenant Vous Savez en grand, « Le Village de LIA » en or, un ornement, la contrée, un prénom facultatif, « Appuyer pour commencer » (ou reprendre, avec un lien vers une nouvelle partie), la signature et le site. La **boîte de dialogue** passe au bleu nuit à filets d'or, losanges aux angles et cartouche de nom. Un **bandeau de lieu** annonce le quartier où l'on entre (onze quartiers). Tous ces textes vivent dans `data/dialogues.js` (`textesInterface`). La flamme est la seule image chargée par le jeu (81 Ko, réduite à 600 pixels de haut).
+
+Mesures (navigateur intégré, poste de développement, panneau `?debug` qui tourne enfin) :
+
+| Critère | Avant (étape 2) | Après (2e) |
+|---|---|---|
+| Images/s, bureau 1100 × 640 | non mesurables | 178 à 180 |
+| Appels de dessin | 70 à 73 | 78 à 85 |
+| Triangles | 16 300 | 24 500 |
+| Pixels saturés | 0 % | 0 % |
+| Parcours scripté | 33 sur 33 | 33 sur 33 |
+| Console | aucune erreur | aucune erreur |
+
+Pas encore fait : les personnages plus détaillés (décidé avec Jordan : plus tard) ; la mesure sur téléphone, plus nécessaire que jamais avec l'herbe dense : si le téléphone peine, la densité des touffes est le premier réglage à baisser.

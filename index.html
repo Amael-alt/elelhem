@@ -47,6 +47,24 @@
     <span class="touche" aria-hidden="true">E</span>
   </button>
 
+  <!-- Bandeau de lieu : le nom du quartier où l'on entre. -->
+  <div id="lieu" hidden aria-live="polite"><span class="lieu-filet" aria-hidden="true"></span><p class="lieu-nom"></p><span class="lieu-filet" aria-hidden="true"></span></div>
+
+  <!-- Écran titre, par-dessus le village vivant. La flamme est la seule image
+       chargée par le jeu. -->
+  <div id="titre" hidden>
+    <div class="titre-cadre">
+      <img class="titre-flamme" src="assets/mvs-flame.png" alt="" width="431" height="600">
+      <h1 class="titre-nom"></h1>
+      <div class="titre-orne" aria-hidden="true"><span></span><i></i><span></span></div>
+      <p class="titre-contree"></p>
+      <label class="titre-prenom"><span></span><input type="text" autocomplete="given-name" spellcheck="false"></label>
+      <p class="titre-commencer"></p>
+      <button class="titre-nouvelle" type="button"></button>
+      <p class="titre-credits"><span class="titre-signature"></span><a class="titre-site" target="_blank" rel="noopener"></a></p>
+    </div>
+  </div>
+
   <!-- Nom de l'habitant qui approche, au-dessus de sa tête. -->
   <div id="nom" hidden></div>
 

@@ -34,7 +34,7 @@ Règles de ce dépôt pour Claude Code, valables dans chaque session ouverte ici
 
 ## Inspirations : on regarde, on ne copie pas
 
-Deux démos publiques servent de référence : `Legerdo/hd2d-diorama` pour le rendu, `unclebill-spec/hd2d-suite` pour les contrôles tactiles. **Elles n'ont pas de licence**, leur code n'est donc pas réutilisable. On s'en inspire pour les techniques et les ordres de grandeur, déjà relevés dans le plan. Pendant la construction, on compare des captures, pas du code : ne pas ouvrir leurs sources, et ne reprendre aucune ligne, aucune structure de shader, aucun nom de fonction. Tout le code de ce dépôt est écrit ici.
+Trois démos publiques servent de référence : `Legerdo/hd2d-diorama` pour le rendu, `unclebill-spec/hd2d-suite` pour les contrôles tactiles, et `stubborn-hug/lumina` (la démo « Emberfall », sur GitLab) pour la direction artistique et l'interface, depuis l'étape 2b. **Elles n'ont pas de licence** (Lumina se dit « for reference only »), leur code n'est donc pas réutilisable. On s'en inspire pour les techniques et les ordres de grandeur, déjà relevés dans le plan. Pendant la construction, on compare des captures, pas du code : ne pas ouvrir leurs sources, et ne reprendre aucune ligne, aucune structure de shader, aucun nom de fonction. Tout le code de ce dépôt est écrit ici.
 
 ## Vie privée : le dépôt est public
 

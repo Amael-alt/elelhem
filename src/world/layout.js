@@ -143,5 +143,21 @@ export const SUN_RAYS = [
 // Pigeons du colombier : centre du vol (x, y, z), rayon, nombre.
 export const PIGEONS = { center: [27, 4.6, 19], radius: 2.6, count: 6 };
 
+// Quartiers, pour le bandeau de lieu : rectangles [x0, z0, x1, z1] en unités,
+// le premier qui contient le héros l'emporte. Noms dans data/dialogues.js.
+export const REGIONS = [
+  { id: 'tour', rect: [17, 2, 21.5, 7.5] },
+  { id: 'bibliotheque', rect: [10, 4, 16.5, 10.5] },
+  { id: 'apothicairerie', rect: [22, 5, 29.5, 10.5] },
+  { id: 'forge', rect: [3, 6, 10, 13] },
+  { id: 'porte', rect: [0, 9, 5, 17] },
+  { id: 'place', rect: [13.5, 10.5, 26, 18.6] },
+  { id: 'pont', rect: [28, 12, 33.5, 17] },
+  { id: 'colombier', rect: [24.5, 16.5, 29.5, 21] },
+  { id: 'chantier', rect: [21, 21, 31, 28.5] },
+  { id: 'auberge', rect: [6, 19, 18, 26.5] },
+  { id: 'prairie', rect: [33.5, 3, 38, 28.5] },
+];
+
 // Départ du héros.
 export const SPAWN = { x: 18.0, z: 17.0 };

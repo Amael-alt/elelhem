@@ -8,7 +8,7 @@ Un petit RPG en HD-2D, jouable dans le navigateur, dans la contrée d'Ellelhem. 
 
 - **Jouer** : https://amael-alt.github.io/village-de-lia/
 - **Mesurer** : ajouter `?debug` à l'adresse pour afficher les images par seconde et le coût du rendu.
-- **Revoir l'accueil** : la partie est sauvegardée dans le navigateur ; `?reset` repart de zéro.
+- **Revoir l'accueil** : la partie est sauvegardée dans le navigateur ; `?reset` repart de zéro, `?autostart` saute l'écran titre.
 - **Voir les coulisses** : `?nofx` montre le village sans post-traitement, `?view=coc` la carte du flou (net en noir, lointain en bleu, premier plan en orange), `?view=bloom` le halo seul, `?view=raw` la scène nette avant flou et halo.
 
 ## Lancer en local

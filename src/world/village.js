@@ -1,4 +1,5 @@
-// Composition du village : carte, sol, maisons, lanternes, lumières.
+// Composition du village : carte, sol, maisons, arbres, lanternes, lumières,
+// ciel et effets de vie (lucioles, poussière, fumée, rayons de soleil).
 //
 // Lumière dorée de fin de journée : un soleil bas et chaud venu de
 // l'ouest-sud-ouest, des ombres longues, un ciel froid en lumière d'ambiance
@@ -9,15 +10,22 @@ import * as THREE from 'three';
 import { createMap } from './map.js';
 import { createTerrain } from './terrain.js';
 import { createCollider } from './collision.js';
-import { buildHouse, buildLantern, LANTERN_FLAME, LANTERN_POST_RADIUS } from './props.js';
+import { buildHouse, buildLantern, buildTree, LANTERN_FLAME, LANTERN_POST_RADIUS, TREE_TRUNK_RADIUS } from './props.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
+import { createFxUniforms } from '../gfx/fx/points.js';
+import { createSky } from '../gfx/fx/sky.js';
+import { createFireflies } from '../gfx/fx/fireflies.js';
+import { createDust } from '../gfx/fx/dust.js';
+import { createSmoke } from '../gfx/fx/smoke.js';
+import { createSunRays } from '../gfx/fx/sunrays.js';
 import {
   createBrickTextures, createCobbleTextures, createDirtTextures, createDoorTexture, createGrassTextures,
-  createPlasterTextures, createRoofTextures, createWaterTextures, createWindowTextures, createWoodTextures,
+  createLeafTextures, createPlasterTextures, createRockTextures, createRoofTextures, createWaterTextures,
+  createWindowTextures, createWoodTextures,
 } from '../gfx/textures.js';
-import { hazeColor, ironColor, lanternColor } from '../data/palette.js';
+import { hazeColor, ironColor, lanternColor, natureRamps } from '../data/palette.js';
 
 const SUN_COLOR = 0xffc07a;
 const SUN_INTENSITY = 6.5;
@@ -70,6 +78,26 @@ const HOUSES = [
 // sud-ouest, et le gué.
 const LANTERNS = [[10.5, 9.5], [19.5, 9.5], [10.5, 15.5], [22.5, 11.4]];
 
+// Arbres : position du tronc, taille (1 : moyen).
+const TREES = [
+  [1.5, 1.5, 1.1], [12.8, 2.0, 0.9], [6.5, 5.0, 0.85], [21.0, 1.5, 1.0], [29.5, 6.5, 1.15],
+  [28.8, 15.5, 1.0], [1.8, 20.5, 1.2], [11.5, 21.0, 0.95], [23.0, 22.0, 1.05],
+];
+
+// Lucioles : [x, z, rayon] des coins où elles se rassemblent.
+const FIREFLY_ANCHORS = [
+  [7, 5, 2.5], [24, 6, 2.5], [29.5, 6.5, 2], [11.5, 21, 2.2], [2, 20, 2.5], [15, 12.5, 4], [27, 16, 2],
+];
+
+// Rayons de soleil : centre, longueur, largeur, opacité (0,06 à 0,12).
+const SUN_RAYS = [
+  { center: [9, 4.5, 11], length: 12, width: 1.6, opacity: 0.1 },
+  { center: [14, 4.5, 7.5], length: 11, width: 0.9, opacity: 0.08 },
+  { center: [17.5, 4.5, 13], length: 13, width: 2.0, opacity: 0.12 },
+  { center: [21, 4.5, 9], length: 10, width: 1.2, opacity: 0.07 },
+  { center: [12, 4.5, 16.5], length: 12, width: 1.4, opacity: 0.06 },
+];
+
 function sunDirectionFrom(elevationDeg, azimuthDeg) {
   const elevation = THREE.MathUtils.degToRad(elevationDeg);
   const azimuth = THREE.MathUtils.degToRad(azimuthDeg);
@@ -96,14 +124,21 @@ function createMaterials() {
     door: createPixelMaterial({ map: door, texSize: [16, 32], roughness: 0.8 }),
     window: createPixelMaterial({ ...windows, emissiveIntensity: WINDOW_GLOW, texSize: [16, 16], roughness: 0.4 }),
     iron: new THREE.MeshStandardMaterial({ color: ironColor, roughness: 0.55, metalness: 0.4 }),
+    bark: tile(createWoodTextures(83, natureRamps.ecorce), { normalStrength: 0.7, roughness: 0.95 }),
+    leaves: tile(createLeafTextures(89), { normalStrength: 1, roughness: 0.9 }),
+    rock: tile(createRockTextures(97), { normalStrength: 0.9, roughness: 0.95 }),
   };
 }
 
-// Une géométrie fusionnée par matière pour tout ce qui est bâti.
+// Une géométrie fusionnée par matière pour tout ce qui est bâti ou planté.
 function createBuildings(materials, posts) {
-  const keys = ['plaster', 'wood', 'roof', 'stone', 'brick', 'door', 'window', 'post', 'iron'];
+  const keys = ['plaster', 'wood', 'roof', 'stone', 'brick', 'door', 'window', 'post', 'iron', 'bark', 'leaves'];
   const builders = Object.fromEntries(keys.map((key) => [key, createMeshBuilder()]));
-  for (const house of HOUSES) buildHouse(house, builders);
+  const chimneys = HOUSES.map((house) => buildHouse(house, builders)).filter(Boolean);
+  TREES.forEach(([x, z, size], i) => {
+    posts.push({ x, z, radius: TREE_TRUNK_RADIUS * size });
+    buildTree(x, z, { size, seed: i }, builders);
+  });
   const flames = LANTERNS.map(([x, z]) => {
     posts.push({ x, z, radius: LANTERN_POST_RADIUS });
     return buildLantern(x, z, builders);
@@ -125,7 +160,7 @@ function createBuildings(materials, posts) {
     mesh.matrixAutoUpdate = false;
     group.add(mesh);
   }
-  return { group, flames };
+  return { group, flames, chimneys };
 }
 
 export function createVillage(scene, { narrowScreen = false } = {}) {
@@ -144,6 +179,16 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
   // Soleil. Son cadrage d'ombre suit la caméra (voir update) : 44 unités de
   // côté, assez serré pour des ombres nettes.
   const sunDirection = sunDirectionFrom(SUN_ELEVATION_DEG, SUN_AZIMUTH_DEG);
+
+  // Ciel et effets de vie, un appel de dessin chacun.
+  const fx = createFxUniforms();
+  scene.add(
+    createSky(sunDirection),
+    createFireflies(FIREFLY_ANCHORS, fx),
+    createDust(fx),
+    createSmoke(buildings.chimneys, fx),
+    createSunRays(SUN_RAYS, sunDirection, fx),
+  );
   const sun = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
   const shadowSize = narrowScreen ? 1024 : 2048;
   sun.castShadow = true;
@@ -196,8 +241,14 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
     groundHeight(x, z) {
       return map.cellAt(Math.floor(x), Math.floor(z))?.height ?? 0;
     },
+    // Pixels par unité à distance 1 : taille des particules à l'écran.
+    setPointScale(scale) {
+      fx.uPointScale.value = scale;
+    },
     // focus : point visé par la caméra ; cameraDistance : son recul.
     update(time, focus, cameraDistance) {
+      fx.uTime.value = time;
+      fx.uFocus.value.copy(focus);
       const along = Math.round(focus.dot(lightRight) / texel) * texel;
       const across = Math.round(focus.dot(lightUp) / texel) * texel;
       snapped.copy(lightRight).multiplyScalar(along)

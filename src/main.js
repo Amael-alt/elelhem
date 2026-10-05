@@ -1,6 +1,6 @@
 // Démarrage du Village de LIA : vérifie WebGL2, assemble le monde et le
-// héros, puis lance la boucle. Étape 1c : post-traitement (flou de
-// profondeur, bloom, étalonnage) ; ?nofx pour le rendu direct.
+// héros, puis lance la boucle. Post-traitement (flou de profondeur, bloom,
+// étalonnage) ; ?nofx pour le rendu direct.
 
 import * as THREE from 'three';
 import { createKeyboard, createLoadGate } from './core/input.js';
@@ -82,6 +82,7 @@ function start() {
     renderer.setSize(width, height, false);
     renderer.getDrawingBufferSize(drawingBuffer);
     pipeline.setSize(drawingBuffer.x, drawingBuffer.y);
+    village.setPointScale(drawingBuffer.y / (2 * Math.tan(THREE.MathUtils.degToRad(follow.camera.fov / 2))));
     follow.setAspect(width / height);
   }
   // Suit la taille réelle du canvas (fenêtre redimensionnée, page affichée).

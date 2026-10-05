@@ -204,7 +204,7 @@ export const ferrand = {
   direction: 'up',
   coiffure: 'court',
   tenue: 'tunique',
-  dialogue: null, // à brancher à l'étape 3
+  dialogue: 'ferrand',
   accessoire: {
     nom: 'marteau et tablier',
     ancre: [7, 12],
@@ -270,7 +270,7 @@ export const marjolaine = {
   direction: 'down',
   coiffure: 'chignon',
   tenue: 'robe',
-  dialogue: null, // à brancher à l'étape 3
+  dialogue: 'marjolaine',
   accessoire: {
     nom: 'lunettes et livre',
     ancre: [9, 9],
@@ -336,7 +336,7 @@ export const basile = {
   direction: 'down',
   coiffure: 'chauve',
   tenue: 'robe',
-  dialogue: null, // à brancher à l'étape 3
+  dialogue: 'basile',
   accessoire: {
     nom: 'fiole',
     ancre: [8, 14],
@@ -390,7 +390,7 @@ export const pepin = {
   direction: 'up',
   coiffure: 'herisse',
   tenue: 'tunique',
-  dialogue: null, // à brancher à l'étape 3
+  dialogue: 'pepin',
   accessoire: {
     nom: "pigeon sur l'épaule",
     ancre: [12, 11],
@@ -450,7 +450,7 @@ export const rocard = {
   direction: 'down',
   coiffure: 'court',
   tenue: 'tunique',
-  dialogue: null, // à brancher à l'étape 3
+  dialogue: 'rocard',
   accessoire: {
     nom: 'hallebarde et casque',
     ancre: [6, 1],
@@ -564,7 +564,7 @@ export const berthe = {
   direction: 'left',
   coiffure: 'court',
   tenue: 'robe',
-  dialogue: null, // à brancher à l'étape 3
+  dialogue: 'berthe',
   accessoire: {
     nom: 'cruche',
     ancre: [7, 3],
@@ -657,7 +657,7 @@ export const gaspard = {
   direction: 'right',
   coiffure: 'court',
   tenue: 'tunique',
-  dialogue: null, // à brancher à l'étape 3
+  dialogue: 'gaspard',
   accessoire: {
     nom: 'règle et rouleau',
     ancre: [8, 11],
@@ -726,7 +726,7 @@ export const clodomir = {
   direction: 'down',
   coiffure: 'court',
   tenue: 'robe',
-  dialogue: null, // à brancher à l'étape 3
+  dialogue: 'clodomir',
   accessoire: {
     nom: 'compas',
     ancre: [6, 11],

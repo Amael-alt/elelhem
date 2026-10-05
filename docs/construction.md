@@ -298,3 +298,31 @@ Le parcours scripté a trouvé une régression : une table de la terrasse barrai
 **Mode allégé sur téléphone** (écran étroit) : forêt de lisière moins profonde, un tiers de touffes d'herbe en moins.
 
 Mesures (navigateur intégré) : 99 à 104 appels de dessin en bureau, 89 en mobile ; 49 500 triangles en bureau, 36 900 en mobile ; 0 % de pixels saturés ; aucune erreur. Le coût d'une image, GPU compris (`__lia.bench`), passe de 0,42 à 0,71 ms sur le poste de développement. Les images/s ne sont pas mesurables cette fois (panneau du navigateur intégré masqué) ; sur téléphone, c'est la mesure de Jordan qui tranchera.
+
+## Personnages redessinés et sons d'ambiance (5 octobre 2026)
+
+**Personnages.** Après la refonte du décor, les sprites étaient un cran en dessous. Le générateur (`gfx/sprites.js`) a été réécrit, toujours sur des cadres de 32 × 32 et sans une image chargée :
+
+- **Coiffures en volume** : un volume plus large que le crâne, une frange dentelée, de fines mèches plus sombres et un reflet clair. Six styles : court, long (les cheveux tombent sur les épaules, dans le dos), chignon, queue de cheval, hérissé, chauve (une couronne à hauteur des oreilles).
+- **Visages** : yeux de deux pixels avec un reflet blanc, bouche, joues roses, nez qui dépasse du profil, ombre de la frange sur le front.
+- **Tenues** : tunique (col en V bordé, ceinture et boucle, plis, poignets) ou robe longue évasée (ourlet, ceinture de robe, plis). Reflet sur la tige des bottes.
+- Coiffure et tenue entrent dans le format des personnages comme **champs facultatifs** (`coiffure`, `tenue`) : les fiches existantes restent valables.
+- Les accessoires ont été recalés sur la nouvelle tête (casque et foulard plus larges, lunettes autour des yeux, barbes plus longues), la capuche du héros s'ouvre sur le visage, et Berthe, qui était toute orange, passe en bordeaux avec un foulard crème et une cruche brune.
+- Outil de QA : `__lia.portraits(on, ids, échelle)` affiche les personnages en grand dans leurs quatre directions.
+
+**Sons d'ambiance** (`core/ambience.js`), tous fabriqués par Web Audio, sans aucun fichier :
+
+| Son | Fabrication | Comportement |
+|---|---|---|
+| Rivière | bruit filtré en bande | volume selon la distance au tracé de la rivière, panoramique gauche-droite |
+| Cascade | bruit grave et plein | plus fort au pied de la chute, audible de loin |
+| Feux | souffle grave et craquements brefs, en boucle | près du foyer de la forge et du feu de camp |
+| Vent | bruit très grave | partout, il respire lentement |
+| Oiseaux | deux à cinq notes qui glissent vers l'aigu | au hasard toutes les deux à sept secondes, à gauche ou à droite |
+| Pigeons | « rou-rou » grave et chevrotant | près du colombier |
+| Forge | trois partiels métalliques et un choc | près de l'enclume, deux coups rapprochés puis une pause |
+| Pas | bref souffle filtré selon le sol | pavés secs, terre sourde, herbe qui froisse, à chaque foulée |
+
+La caméra ne tourne jamais : la droite de l'écran est toujours l'est, le panoramique vient directement de l'écart en x. Musique et ambiance passent sous un même volume général : le bouton (rebaptisé « Couper le son ») et la touche M coupent tout, et le contexte audio se met en pause quand l'onglet est caché ou le son coupé.
+
+Mesures : parcours scripté 33 sur 33, 97 appels de dessin, 0 % de pixels saturés, aucune erreur. Les volumes des sources ont été vérifiés par position (près de la cascade : rivière 0,16 et cascade 0,16 ; à la forge : feu 0,10 ; sur la place : tout à 0). Le rendu sonore, lui, reste à écouter : je ne peux pas entendre.

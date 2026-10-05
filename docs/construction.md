@@ -380,3 +380,33 @@ Navigateur intégré, bureau, préréglage mobile 375×812 et paysage 812×375, 
 | Réseau | HTML, CSS, JavaScript, les deux polices et la flamme : aucune autre image |
 
 Reste pour l'étape 4 : en paysage sur téléphone (812×375), la question et ses trois choix couvrent les trois quarts de l'écran, à compacter avec le reste de l'interface des écrans courts.
+
+## Étape 3b : partage, grimoire, leçon facultative (6 octobre 2026)
+
+**But** : soigner le joueur visé, quelqu'un qui arrive seul depuis un post LinkedIn, sur son téléphone, et qui doit avoir envie d'aller au bout puis de partager. Six améliorations choisies avec Jordan après l'étape 3 ; mesure d'audience, version anglaise et nouvel habitant écartés.
+
+- **Leçon facultative.** Après sa présentation, chaque habitant demande « Je t'explique d'abord, ou tu tentes directement ma question ? ». Le joueur pressé fait une conversation en quatre pages au lieu d'une dizaine ; la leçon reste dans le grimoire. Les huit phrases de reprise (on revient sans avoir gagné le parchemin) disaient « on reprend la leçon depuis le début » : elles proposent maintenant de reprendre, et l'offre suit. La boîte de dialogue sait poser une question à deux choix, et dit aux tests s'il s'agit de l'offre ou de la vraie question.
+- **Grimoire** (`game/grimoire.js`). Le compteur de parchemins devient un bouton : il ouvre un livre, une page par notion, avec l'habitant, sa maxime et sa leçon complète, une page vierge pour les parchemins à trouver (« Berthe garde ce parchemin quelque part dans le village »). Onglets en petits parchemins, boutons Précédente et Suivante, flèches ou A et D au clavier, G pour l'ouvrir et le fermer, Échap. La page défile seule si la leçon est longue, jamais l'écran. L'annonce d'un parchemin gagné dit où le relire. Chaque entrée de `dialogues.js` porte sa `maxime` (champ facultatif), et `checkDialogues()` vérifie qu'elle est bien celle que l'habitant prononce.
+- **Mention sur le diplôme**, selon les mauvaises réponses de toute la partie : « avec les félicitations du village » sans aucune, « mention très bien » à une ou deux, « mention bien » jusqu'à cinq, rien au-delà. L'état de partie gagne un champ `erreurs` ; une sauvegarde plus ancienne, qui ne l'a pas, se relit sans erreur (il vaut alors zéro).
+- **Partager en un geste.** Sur un appareil qui sait partager une image (Web Share, surtout les téléphones), le bouton « Partager » devient le bouton principal du diplôme : la feuille de partage s'ouvre avec le JPEG et un texte sobre qui finit par l'adresse du jeu. L'image est préparée après chaque dessin, parce que Safari n'ouvre la feuille que dans le geste lui-même, sans attente. Ailleurs, le bouton n'apparaît pas et Télécharger reste le principal.
+- **Accroche** sous le titre : « Huit notions d'IA, un village, dix minutes ».
+- **Répliques des figurants** (`game/chatter.js`). Les trois apprentis et les pigeons du colombier parlent quand on passe près d'eux : une bulle de parchemin au-dessus de la tête, le temps de la lire, une réplique par passage, à tour de rôle. Rien pendant une conversation ou quand un écran est ouvert.
+
+Ce qui a résisté :
+
+- **Le partage n'est pas testable ici** : le navigateur intégré n'a pas Web Share. Le chemin du bouton a été vérifié avec une fonction de partage simulée (fichier JPEG de 275 Ko, titre et texte transmis) ; le vrai test se fait sur téléphone.
+- **Le focus du compteur** : devenu bouton, il doit rendre le focus au jeu après un toucher, sinon Espace et Entrée resteraient pris par lui au lieu de faire parler les habitants.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Offre de leçon | « directement la question » : conversation de Maître Ferrand en 4 pages ; avec la leçon : 11 pages chez Basile |
+| Erreurs et mention | une erreur chez Lia, deux chez Basile : enregistrées et sauvegardées ; trois erreurs en tout donnent « mention bien » sur le diplôme |
+| Grimoire | ouvert au toucher du compteur sur la dernière notion gagnée ; flèche droite vers une page vierge ; G ferme et rouvre ; Échap ferme ; G ne fait rien pendant une conversation |
+| Figurants | l'apprenti de la forge, les pigeons et un apprenti du chantier parlent quand on approche ; la réplique suivante vient au passage suivant ; rien quand on est loin |
+| Sauvegarde ancienne | sauvegarde de l'étape 3 sans `erreurs` : relue, partie continuée, erreurs comptées ensuite |
+| Mobile 375×812 | grimoire plein écran, texte lisible sans zoom, la page défile seule, aucun défilement de la page |
+| Textes | `checkDialogues()` vide, répliques comprises |
+| Appels de dessin | 95, inchangés |
+| Console | aucune erreur |

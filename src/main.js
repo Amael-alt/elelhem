@@ -1,6 +1,6 @@
 // Démarrage du Village de LIA : vérifie WebGL2, assemble le monde et le
-// héros, puis lance la boucle. Étape 1a : sol texturé, caméra qui suit,
-// héros au clavier, collisions. Aucun post-traitement.
+// héros, puis lance la boucle. Étape 1b : lumière dorée, maisons, lanternes.
+// Aucun post-traitement.
 
 import * as THREE from 'three';
 import { createKeyboard, createLoadGate } from './core/input.js';
@@ -18,6 +18,7 @@ import { hero } from './data/characters.js';
 const gate = createLoadGate(6);
 
 const MAX_FRAME_SECONDS = 0.1; // au retour d'un onglet en veille, pas de saut
+const NARROW_SCREEN = 600; // en dessous (en pixels CSS), ombres moins définies
 
 const canvas = document.getElementById('scene');
 
@@ -52,7 +53,8 @@ function start() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(backgroundColor);
 
-  const village = createVillage(scene);
+  const narrowScreen = Math.min(window.innerWidth, window.innerHeight) < NARROW_SCREEN;
+  const village = createVillage(scene, { narrowScreen });
   const follow = createFollowCamera();
   const keyboard = createKeyboard();
 
@@ -74,7 +76,7 @@ function start() {
   window.addEventListener('resize', resize);
   resize();
 
-  const state = { frozen: false };
+  const state = { frozen: false, time: 0 };
   const debug = isDebugEnabled() ? createDebugPanel(renderer) : null;
 
   // Une image du jeu. force : avance même figé (tests image par image).
@@ -82,8 +84,10 @@ function start() {
     const step = state.frozen && !force ? 0 : dt;
     const zoom = keyboard.takeZoomSteps();
     if (zoom) follow.zoomBy(zoom);
+    state.time += step;
     player.update(step, keyboard.direction());
     follow.follow(player.worldPosition(focusTarget), step);
+    village.update(state.time, follow.focus, follow.distance);
     renderer.render(scene, follow.camera);
     gate.frameRendered();
   }

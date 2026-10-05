@@ -36,6 +36,11 @@ export function createFollowCamera() {
 
   return {
     camera,
+    // Point visé et recul actuel : l'ombre du soleil et la brume s'y calent.
+    focus,
+    get distance() {
+      return (DISTANCE * portrait) / zoom;
+    },
     setAspect(aspect) {
       camera.aspect = aspect;
       camera.updateProjectionMatrix();

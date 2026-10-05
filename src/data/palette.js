@@ -38,7 +38,11 @@ export const foliageGreys = ['#2c2b2e', '#4b4a4c', '#6f6d6c', '#96938c', '#bdb8a
 export const foliageTints = {
   vert: ['#9fce62', '#8fc257', '#b2d36c', '#86b85a'],
   automne: ['#f2a553', '#e3803f', '#f4c75e', '#d9693a'],
+  buisson: ['#7fb251', '#8bbd58', '#74a64b'],
 };
+
+// Fleurs des prés : pétales blancs, jaunes, roses, bleus.
+export const flowerColors = { blanc: '#f3eedf', jaune: '#f5cf48', rose: '#ee8aa2', bleu: '#8fb3f2' };
 
 // Effets : lucioles vert-jaune, poussière dorée, fumée gris chaud, rayons.
 export const effectColors = {

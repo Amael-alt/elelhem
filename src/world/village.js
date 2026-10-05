@@ -16,11 +16,12 @@ import {
   buildAnvil, buildBarrel, buildBench, buildCrate, buildHearth, buildSign, buildSite, buildTower, buildVegetables, buildWell,
 } from './landmarks.js';
 import {
-  ANVIL, BARRELS, BENCHES, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, SIGN, SITE, SPAWN, SUN_RAYS,
+  ANVIL, BARRELS, BENCHES, BUSHES, MEADOWS, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, SIGN, SITE, SPAWN, SUN_RAYS,
   PIGEONS, TOWERS, TREES, VEGETABLES, WELL,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createFoliage, crownClumps } from '../gfx/foliage.js';
+import { createGrass, scatterTufts } from '../gfx/grass.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
@@ -167,7 +168,22 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
     createSmoke(buildings.chimneys, fx),
     createSunRays(SUN_RAYS, sunDirection, fx),
   );
-  scene.add(createFoliage(buildings.clumps, fx.uTime));
+  // Buissons : deux ou trois grappes posées au sol.
+  const bushClumps = BUSHES.flatMap(([x, z, size], i) => {
+    const tint = foliageTints.buisson[i % foliageTints.buisson.length];
+    const r = 0.42 * size;
+    return [
+      { x, y: r * 0.9, z, size: r * 2.1, tint },
+      { x: x + r * 0.7, y: r * 0.7, z: z + r * 0.3, size: r * 1.6, tint },
+      { x: x - r * 0.6, y: r * 0.65, z: z + r * 0.4, size: r * 1.5, tint },
+    ];
+  });
+  for (const [x, z, size] of BUSHES) posts.push({ x, z, radius: 0.4 * size });
+  scene.add(createFoliage([...buildings.clumps, ...bushClumps], fx.uTime));
+
+  // Herbe en touffes : partout où il y a de l'herbe libre.
+  const blocked = (x, z) => posts.some((post) => Math.hypot(x - post.x, z - post.z) < post.radius + 0.15);
+  scene.add(createGrass(scatterTufts(map, { meadows: MEADOWS, blocked }), fx.uTime));
   const pigeons = createPigeons(PIGEONS);
   scene.add(pigeons.mesh);
   const sun = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);

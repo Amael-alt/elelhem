@@ -27,6 +27,8 @@ const BANK_FOOT_AO = 0.7;
 const BASE_FOOT_AO = 0.45;
 const TALLER = 0.25;
 const SOIL_DEPTH = 0.55; // épaisseur de terre au bord du socle, la roche dessous
+const LIP_DEPTH = 0.2; // l'herbe déborde sur le haut des flancs (falaises, socle)
+const LIP_OUT = 0.025; // juste devant le flanc, pour ne pas le traverser
 
 export function createTerrain(map, materials) {
   const builders = {};
@@ -72,6 +74,18 @@ export function createTerrain(map, materials) {
           [[ua, u(y0)], [ub, u(y0)], [ub, u(y1)], [ua, u(y1)]],
           [ao0, ao0, ao1, ao1],
         );
+        // Lèvre d'herbe : sur les flancs hauts sous de l'herbe, une bande d'herbe
+        // pend par-dessus la terre ou la roche.
+        if (cell.matter === 'grass' && h - low > 0.4) {
+          const ox = edge.dx * LIP_OUT;
+          const oz = edge.dz * LIP_OUT;
+          pushPolygon(
+            builderFor('grass'),
+            [[ax + ox, h - LIP_DEPTH, az + oz], [bx + ox, h - LIP_DEPTH, bz + oz], [bx + ox, h, bz + oz], [ax + ox, h, az + oz]],
+            [[ua, u(h - LIP_DEPTH)], [ub, u(h - LIP_DEPTH)], [ub, u(h)], [ua, u(h)]],
+            [0.8, 0.8, 1, 1],
+          );
+        }
         if (neighbor) {
           band(cell.side, low, h, BANK_FOOT_AO, 1);
         } else {

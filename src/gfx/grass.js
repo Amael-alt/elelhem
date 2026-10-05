@@ -15,7 +15,8 @@ import { flowerColors, terrainRamps } from '../data/palette.js';
 
 const TUFT_PIXELS = 12;
 const GRASS_VARIANTS = 3; // touffes d'herbe seule
-const FLOWER_VARIANTS = 4; // touffes fleuries
+export const FLOWER_VARIANTS = 4; // touffes fleuries
+export const FIRST_FLOWER_VARIANT = GRASS_VARIANTS;
 export const TUFT_VARIANTS = GRASS_VARIANTS + FLOWER_VARIANTS;
 const PIXELS_PER_UNIT = 16;
 const SWAY = 0.07;

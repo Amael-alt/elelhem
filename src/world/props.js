@@ -48,13 +48,21 @@ function rectangleOn(side, t0, t1, y0, y1, off) {
 const FULL_UV = [[0, 0], [1, 0], [1, 1], [0, 1]];
 
 // builders : un constructeur de géométrie par matière (plaster, wood, roof,
-// stone, brick, door, window). Renvoie le haut de la cheminée, d'où monte la
-// fumée (null s'il n'y en a pas).
+// slate, thatch, stonewall, stone, brick, door, window). house.walls choisit
+// la matière des murs (plaster par défaut, stonewall, brick), house.roof celle
+// du toit (roof : tuiles par défaut, slate : ardoise, thatch : chaume), et
+// house.planters ajoute une jardinière sous chaque fenêtre du rez-de-chaussée.
+// Renvoie { chimney, planters } : le haut de la cheminée, d'où monte la fumée
+// (null s'il n'y en a pas), et les points où poser des fleurs.
+const PLANTER = { width: 0.95, depth: 0.24, height: 0.18 };
+
 export function buildHouse(house, builders) {
   const swap = house.ridge === 'z';
   const L = swap ? house.sizeZ : house.sizeX;
   const S = swap ? house.sizeX : house.sizeZ;
   const { wall, rise } = house;
+  const wallKey = house.walls ?? 'plaster';
+  const roofKey = house.roof ?? 'roof';
   const frames = {};
   for (const key of Object.keys(builders)) frames[key] = createFrame(builders[key], [house.x, 0, house.z], swap);
 
@@ -64,13 +72,13 @@ export function buildHouse(house, builders) {
   // Murs d'enduit, plus sombres au pied, et pignons.
   for (const key of ['+w', '-w', '+u', '-u']) {
     const side = sideOf(key, L, S);
-    frames.plaster.polygon(
+    frames[wallKey].polygon(
       rectangleOn(side, 0, side.length, FOUNDATION, wall, 0),
       [[0, tile(FOUNDATION)], [tile(side.length), tile(FOUNDATION)], [tile(side.length), tile(wall)], [0, tile(wall)]],
       [0.78, 0.78, 1, 1],
     );
     if (key === '+u' || key === '-u') {
-      frames.plaster.polygon(
+      frames[wallKey].polygon(
         [side.at(0, wall), side.at(S, wall), side.at(S / 2, wall + rise - 0.06)],
         [[0, tile(wall)], [tile(S), tile(wall)], [tile(S / 2), tile(wall + rise)]],
       );
@@ -104,6 +112,23 @@ export function buildHouse(house, builders) {
   if (house.door) opening(frames.door, house.door, DOOR.width, 0, DOOR.height);
   for (const spec of house.windows ?? []) opening(frames.window, spec, WINDOW.size, spec.y ?? WINDOW.y, WINDOW.size);
 
+  // Jardinières : une caisse de bois sous chaque fenêtre basse, des fleurs
+  // dessus (posées par le village en touffes fleuries).
+  const toWorld = ([u, y, w]) => (swap ? { x: house.x + w, y, z: house.z + u } : { x: house.x + u, y, z: house.z + w });
+  const planters = [];
+  if (house.planters) {
+    for (const spec of house.windows ?? []) {
+      if ((spec.y ?? WINDOW.y) > 1.5) continue;
+      const side = sideOf(LOCAL_SIDE[house.ridge][spec.side], L, S);
+      const center = side.length / 2 + (spec.offset ?? 0);
+      const top = WINDOW.y - 0.03;
+      const a = side.at(center - PLANTER.width / 2, top - PLANTER.height, 0);
+      const b = side.at(center + PLANTER.width / 2, top, PLANTER.depth);
+      pushBox(frames.wood, [Math.min(a[0], b[0]), a[1], Math.min(a[2], b[2])], [Math.max(a[0], b[0]), b[1], Math.max(a[2], b[2])]);
+      for (const d of [-0.3, 0, 0.3]) planters.push(toWorld(side.at(center + d, top, PLANTER.depth / 2)));
+    }
+  }
+
   // Toit à deux pans : tuiles dessus, planches dessous, rives et égouts en
   // bois. Fermé de tous côtés, il projette son ombre comme un volume.
   const slope = rise / (S / 2);
@@ -118,9 +143,9 @@ export function buildHouse(house, builders) {
   const slopeLength = tile(Math.hypot(mid + EAVE_OVERHANG, rise + EAVE_OVERHANG * slope));
   const plain = (n) => FULL_UV.slice(0, n);
 
-  frames.roof.polygon([[u0, eaveY, front], [u1, eaveY, front], [u1, ridgeY, mid], [u0, ridgeY, mid]],
+  frames[roofKey].polygon([[u0, eaveY, front], [u1, eaveY, front], [u1, ridgeY, mid], [u0, ridgeY, mid]],
     [[tile(u0), 0], [tile(u1), 0], [tile(u1), slopeLength], [tile(u0), slopeLength]]);
-  frames.roof.polygon([[u1, eaveY, back], [u0, eaveY, back], [u0, ridgeY, mid], [u1, ridgeY, mid]],
+  frames[roofKey].polygon([[u1, eaveY, back], [u0, eaveY, back], [u0, ridgeY, mid], [u1, ridgeY, mid]],
     [[tile(u1), 0], [tile(u0), 0], [tile(u0), slopeLength], [tile(u1), slopeLength]]);
   frames.wood.polygon([[u0, ridgeY - T, mid], [u1, ridgeY - T, mid], [u1, eaveY - T, front], [u0, eaveY - T, front]], plain(4));
   frames.wood.polygon([[u1, ridgeY - T, mid], [u0, ridgeY - T, mid], [u0, eaveY - T, back], [u1, eaveY - T, back]], plain(4));
@@ -132,12 +157,12 @@ export function buildHouse(house, builders) {
   frames.wood.polygon([[u0, ridgeY - T, mid], [u0, eaveY - T, front], [u0, eaveY, front], [u0, ridgeY, mid]], plain(4));
   pushBox(frames.wood, [u0, ridgeY - 0.04, mid - 0.09], [u1, ridgeY + 0.08, mid + 0.09]);
 
-  if (!house.chimney) return null;
+  if (!house.chimney) return { chimney: null, planters };
   const [cu, cw] = [house.chimney[0] * L, house.chimney[1] * S];
   const size = house.chimneySize ?? CHIMNEY;
   const top = ridgeY + (house.chimneyRise ?? 0.6);
   pushBox(frames.brick, [cu - size / 2, wall, cw - size / 2], [cu + size / 2, top, cw + size / 2]);
-  return swap ? [house.x + cw, top, house.z + cu] : [house.x + cu, top, house.z + cw];
+  return { chimney: swap ? [house.x + cw, top, house.z + cu] : [house.x + cu, top, house.z + cw], planters };
 }
 
 // Lanterne sur poteau : poteau de bois, cage de fer ouverte, chapeau. Renvoie

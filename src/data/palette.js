@@ -19,6 +19,11 @@ export const buildingRamps = {
   briques: ['#3a1d18', '#552a20', '#71382a', '#8c4733', '#a5593f'],
   porte: ['#17241e', '#203328', '#2a4333', '#355440', '#43664e'],
   vitre: ['#6e3410', '#a8561a', '#dc862b', '#f7b852', '#ffdc93'],
+  ardoise: ['#1c2131', '#283146', '#364260', '#47577b', '#5d6f95', '#7889ae'],
+  chaume: ['#3f2c14', '#5f431d', '#82602a', '#a67f38', '#c69f4c', '#e0bf66'],
+  pierre: ['#4a4440', '#5f5852', '#766e66', '#8d857a', '#a49b8e', '#bcb3a4'],
+  toileRouge: ['#5a1414', '#851f1c', '#b03028', '#d0483a'],
+  toileCreme: ['#9c8a6c', '#c4b08c', '#e2d0aa', '#f5e8c8'],
 };
 
 // Nature et socle : feuillage plus sombre et plus bleu que l'herbe, écorce,

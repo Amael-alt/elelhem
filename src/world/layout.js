@@ -7,20 +7,23 @@
 // (south, north, east, west) et décalage depuis le milieu du mur (voir
 // world/props.js). Les positions des habitants sont dans data/characters.js.
 
-// Maisons à colombages. wall : hauteur des murs, rise : montée du toit, ridge :
-// axe du faîtage, chimney : position de la cheminée (part de la longueur et de
-// la portée) avec chimneySize et chimneyRise pour une cheminée forte.
+// Maisons. wall : hauteur des murs, rise : montée du toit, ridge : axe du
+// faîtage, chimney : position de la cheminée (part de la longueur et de la
+// portée) avec chimneySize et chimneyRise pour une cheminée forte. walls :
+// plaster (enduit et colombages, par défaut), stonewall (pierre de taille) ;
+// roof : roof (tuiles, par défaut), slate (ardoise), thatch (chaume) ;
+// planters : jardinières fleuries sous les fenêtres basses.
 export const HOUSES = {
   // La forge : basse et large, une cheminée de brique très forte.
   forge: {
-    x: 4, z: 7, sizeX: 5, sizeZ: 3, wall: 2.5, rise: 1.4, ridge: 'x',
+    x: 4, z: 7, sizeX: 5, sizeZ: 3, wall: 2.5, rise: 1.4, ridge: 'x', walls: 'stonewall', roof: 'slate',
     door: { side: 'south', offset: -0.7 },
     windows: [{ side: 'south', offset: 1.5 }],
     chimney: [0.82, 0.4], chimneySize: 0.9, chimneyRise: 1.4,
   },
   // La bibliothèque : haute, deux rangées de fenêtres.
   bibliotheque: {
-    x: 11, z: 5, sizeX: 5, sizeZ: 4, wall: 3.4, rise: 1.8, ridge: 'x',
+    x: 11, z: 5, sizeX: 5, sizeZ: 4, wall: 3.4, rise: 1.8, ridge: 'x', roof: 'slate', planters: true,
     door: { side: 'south', offset: 0 },
     windows: [
       { side: 'south', offset: -1.7 }, { side: 'south', offset: 1.7 },
@@ -31,20 +34,20 @@ export const HOUSES = {
   },
   // L'apothicairerie : étroite, ouverte sur son jardin de simples à l'est.
   apothicairerie: {
-    x: 23, z: 6, sizeX: 3, sizeZ: 3, wall: 2.5, rise: 1.5, ridge: 'x',
+    x: 23, z: 6, sizeX: 3, sizeZ: 3, wall: 2.5, rise: 1.7, ridge: 'x', roof: 'thatch', planters: true,
     door: { side: 'south', offset: 0 },
     windows: [{ side: 'east', offset: 0 }, { side: 'west', offset: 0 }],
     chimney: [0.25, 0.5],
   },
   // La guérite de la porte de la muraille.
   guerite: {
-    x: 3, z: 10, sizeX: 2, sizeZ: 2, wall: 2.2, rise: 1.0, ridge: 'x',
+    x: 3, z: 10, sizeX: 2, sizeZ: 2, wall: 2.2, rise: 1.0, ridge: 'x', walls: 'stonewall', roof: 'slate',
     door: { side: 'south', offset: 0 },
     windows: [{ side: 'east', offset: 0 }],
   },
   // L'auberge : la plus grande maison, cheminée qui fume.
   auberge: {
-    x: 7, z: 19, sizeX: 6, sizeZ: 4, wall: 2.8, rise: 1.7, ridge: 'x',
+    x: 7, z: 19, sizeX: 6, sizeZ: 4, wall: 2.8, rise: 1.7, ridge: 'x', planters: true,
     door: { side: 'south', offset: 0.5 },
     windows: [{ side: 'south', offset: -1.7 }, { side: 'south', offset: 1.9 }, { side: 'west', offset: 0 }],
     chimney: [0.8, 0.4],
@@ -53,8 +56,8 @@ export const HOUSES = {
 
 // Tours à toit en pyramide.
 export const TOWERS = {
-  architecte: { x: 18, z: 2, size: 3, wall: 5.6, rise: 2.6, windowHeights: [2.6, 4.2] },
-  colombier: { x: 26, z: 18, size: 2, wall: 3.6, rise: 1.6, holes: true },
+  architecte: { x: 18, z: 2, size: 3, wall: 5.6, rise: 2.6, windowHeights: [2.6, 4.2], roof: 'slate' },
+  colombier: { x: 26, z: 18, size: 2, wall: 3.6, rise: 1.6, holes: true, roof: 'thatch' },
 };
 
 // Le chantier : bâtiment à moitié monté, échafaudage sur ses faces sud et ouest.
@@ -78,6 +81,20 @@ export const VEGETABLES = [
   { x0: 27.5, z0: 6.5, x1: 28.5, z1: 8.5 }, // jardin de simples de l'apothicaire
   { x0: 14.4, z0: 22.5, x1: 16.4, z1: 22.5 }, // potager de l'auberge
 ];
+
+// Étal de marché sur la place, barrières (tracés de segments droits), meules,
+// rochers et feu de camp dans la prairie de l'est.
+export const STALLS = [{ x: 22.6, z: 12.9 }];
+export const FENCES = [
+  [[34.2, 19.0], [37.6, 19.0]], [[34.2, 19.0], [34.2, 25.6]], [[34.2, 25.6], [37.6, 25.6]],
+  [[3.2, 24.6], [6.6, 24.6]], [[21.6, 27.0], [24.0, 27.0]],
+];
+export const HAYSTACKS = [{ x: 35.6, z: 21.0 }, { x: 36.6, z: 23.6 }, { x: 31.6, z: 25.4 }];
+export const ROCKS = [
+  { x: 33.5, z: 27.2, size: 1.1 }, { x: 28.5, z: 28.6 }, { x: 3.5, z: 5.6, size: 1.2 }, { x: 15.2, z: 28.3, size: 0.8 },
+  { x: 33.4, z: 8.8 }, { x: 8.0, z: 16.6, size: 0.7 }, { x: 24.2, z: 4.6, size: 0.8 },
+];
+export const CAMPFIRE = { x: 36.0, z: 11.6 };
 
 // Quatre lanternes éclairantes (une vraie lumière, des ombres calculées une
 // seule fois) aux coins de la place, et des lanternes d'ambiance (flamme

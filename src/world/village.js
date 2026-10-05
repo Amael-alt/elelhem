@@ -13,15 +13,16 @@ import { createTerrain } from './terrain.js';
 import { createCollider } from './collision.js';
 import { buildHouse, buildLantern, buildTree, LANTERN_FLAME, LANTERN_POST_RADIUS, TREE_TRUNK_RADIUS } from './props.js';
 import {
-  buildAnvil, buildBarrel, buildBench, buildCrate, buildHearth, buildSign, buildSite, buildTower, buildVegetables, buildWell,
+  buildAnvil, buildBarrel, buildBench, buildCampfire, buildCrate, buildFence, buildHaystack, buildHearth, buildRock, buildSign,
+  buildSite, buildStall, buildTower, buildVegetables, buildWell,
 } from './landmarks.js';
 import {
-  ANVIL, BARRELS, BENCHES, BUSHES, MEADOWS, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, SIGN, SITE, SPAWN, SUN_RAYS,
+  ANVIL, BARRELS, BENCHES, BUSHES, CAMPFIRE, FENCES, HAYSTACKS, MEADOWS, ROCKS, STALLS, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, SIGN, SITE, SPAWN, SUN_RAYS,
   PIGEONS, TOWERS, TREES, VEGETABLES, WELL,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createFoliage, crownClumps } from '../gfx/foliage.js';
-import { createGrass, scatterTufts } from '../gfx/grass.js';
+import { createGrass, FIRST_FLOWER_VARIANT, FLOWER_VARIANTS, scatterTufts } from '../gfx/grass.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
@@ -34,7 +35,7 @@ import { createSunRays } from '../gfx/fx/sunrays.js';
 import {
   createBrickTextures, createCobbleTextures, createDirtTextures, createDoorTexture, createGrassTextures,
   createLeafTextures, createPlasterTextures, createRockTextures, createRoofTextures, createWaterTextures,
-  createWindowTextures, createWoodTextures,
+  createWindowTextures, createWoodTextures, createAwningTexture, createSlateTextures, createStoneWallTextures, createThatchTextures,
 } from '../gfx/textures.js';
 import { foliageTints, hazeColor, ironColor, lanternColor, natureRamps } from '../data/palette.js';
 
@@ -84,17 +85,33 @@ function createMaterials() {
     bark: tile(createWoodTextures(83, natureRamps.ecorce), { normalStrength: 0.7, roughness: 0.95 }),
     leaves: tile(createLeafTextures(89), { normalStrength: 1, roughness: 0.9 }),
     rock: tile(createRockTextures(97), { normalStrength: 0.9, roughness: 0.95 }),
+    slate: tile(createSlateTextures(101), { normalStrength: 1.0, roughness: 0.7 }),
+    thatch: tile(createThatchTextures(103), { normalStrength: 0.9, roughness: 1 }),
+    stonewall: tile(createStoneWallTextures(107), { normalStrength: 0.8, roughness: 0.9 }),
+    awning: createPixelMaterial({ ...createAwningTexture(), roughness: 0.9 }),
   };
 }
 
 // Une géométrie fusionnée par matière pour tout ce qui est bâti ou planté.
 // flames : { lit, decor, hearth }, les points où se posent les flammes.
 function createBuildings(materials, posts) {
-  const keys = ['plaster', 'wood', 'roof', 'stone', 'brick', 'door', 'window', 'post', 'iron', 'bark', 'leaves'];
+  const keys = [
+    'plaster', 'stonewall', 'wood', 'roof', 'slate', 'thatch', 'stone', 'brick', 'door', 'window', 'post', 'iron', 'bark',
+    'leaves', 'rock', 'awning',
+  ];
   const builders = Object.fromEntries(keys.map((key) => [key, createMeshBuilder()]));
   const addPosts = (list) => posts.push(...[list].flat());
 
-  const chimneys = Object.values(HOUSES).map((house) => buildHouse(house, builders)).filter(Boolean);
+  const houses = Object.values(HOUSES).map((house) => buildHouse(house, builders));
+  const chimneys = houses.map((house) => house.chimney).filter(Boolean);
+  const planters = houses.flatMap((house) => house.planters);
+  for (const stall of STALLS) addPosts(buildStall(stall, builders));
+  for (const fence of FENCES) addPosts(buildFence(fence, builders));
+  for (const stack of HAYSTACKS) addPosts(buildHaystack(stack, builders));
+  for (const rock of ROCKS) addPosts(buildRock(rock, builders));
+  const campfire = buildCampfire(CAMPFIRE, builders);
+  addPosts(campfire.obstacle);
+  chimneys.push(campfire.smoke);
   for (const tower of Object.values(TOWERS)) addPosts(buildTower(tower, builders));
   addPosts(buildSite(SITE, builders));
   addPosts(buildWell(WELL, builders));
@@ -118,7 +135,7 @@ function createBuildings(materials, posts) {
     posts.push({ x, z, radius: LANTERN_POST_RADIUS });
     return buildLantern(x, z, builders);
   };
-  const flames = { lit: LANTERNS.map(lanternFlame), decor: DECOR_LANTERNS.map(lanternFlame), hearth: [hearth.flame] };
+  const flames = { lit: LANTERNS.map(lanternFlame), decor: DECOR_LANTERNS.map(lanternFlame), hearth: [hearth.flame, campfire.flame] };
 
   const group = new THREE.Group();
   group.name = 'constructions';
@@ -136,7 +153,7 @@ function createBuildings(materials, posts) {
     mesh.matrixAutoUpdate = false;
     group.add(mesh);
   }
-  return { group, flames, chimneys, clumps };
+  return { group, flames, chimneys, clumps, planters };
 }
 
 export function createVillage(scene, { narrowScreen = false } = {}) {
@@ -183,7 +200,8 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
 
   // Herbe en touffes : partout où il y a de l'herbe libre.
   const blocked = (x, z) => posts.some((post) => Math.hypot(x - post.x, z - post.z) < post.radius + 0.15);
-  scene.add(createGrass(scatterTufts(map, { meadows: MEADOWS, blocked }), fx.uTime));
+  const planterFlowers = buildings.planters.map((point, i) => ({ ...point, variant: FIRST_FLOWER_VARIANT + (i % FLOWER_VARIANTS) }));
+  scene.add(createGrass([...scatterTufts(map, { meadows: MEADOWS, blocked }), ...planterFlowers], fx.uTime));
   const pigeons = createPigeons(PIGEONS);
   scene.add(pigeons.mesh);
   const sun = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);

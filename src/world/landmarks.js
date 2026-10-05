@@ -49,7 +49,7 @@ const FULL_UV = [[0, 0], [1, 0], [1, 1], [0, 1]];
 // les quatre faces (étages donnés par windowHeights) et toit en pyramide.
 // holes : trous de colombier (petits carrés sombres) au lieu de fenêtres.
 // Renvoie l'obstacle rond qui la couvre.
-export function buildTower({ x, z, size, wall, rise, doorOffset = 0, windowHeights = [], holes = false }, builders) {
+export function buildTower({ x, z, size, wall, rise, doorOffset = 0, windowHeights = [], holes = false, roof = 'roof' }, builders) {
   const frames = Object.fromEntries(Object.keys(builders).map((key) => [key, createFrame(builders[key], [x, 0, z])]));
   const S = size;
   pushBox(frames.stone, [-0.06, 0, -0.06], [S + 0.06, FOUNDATION, S + 0.06]);
@@ -92,7 +92,7 @@ export function buildTower({ x, z, size, wall, rise, doorOffset = 0, windowHeigh
       opening(0, py, S / 2, 'west', 0.4, frames.window);
     }
   }
-  pyramidRoof(frames, [0, 0, S, S], wall, wall + rise, 0.4);
+  pyramidRoof({ roof: frames[roof], wood: frames.wood }, [0, 0, S, S], wall, wall + rise, 0.4);
   pushBox(frames.wood, [S / 2 - 0.07, wall + rise - 0.05, S / 2 - 0.07], [S / 2 + 0.07, wall + rise + 0.55, S / 2 + 0.07]);
   return [{ x: x + S / 2, z: z + S / 2, radius: S / 2 }];
 }
@@ -232,4 +232,97 @@ export function buildVegetables({ x0, z0, x1, z1 }, builders) {
       pushBox(leaves, [px - 0.2, 0, pz - 0.2], [px + 0.2, 0.3, pz + 0.2], { groundAo: 0.6 });
     }
   }
+}
+
+// Étal de marché : comptoir, quatre poteaux, auvent de toile rayée en pente
+// vers l'avant (le sud) avec son lambrequin, et des cageots de légumes.
+export function buildStall({ x, z }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const awning = createFrame(builders.awning, [x, 0, z]);
+  const leaves = createFrame(builders.leaves, [x, 0, z]);
+  const w = 1.1; // demi-largeur
+  for (const [px, pz, h] of [[-w, -0.55, 2.15], [w, -0.55, 2.15], [-w, 0.65, 1.8], [w, 0.65, 1.8]]) {
+    pushBox(wood, [px - 0.05, 0, pz - 0.05], [px + 0.05, h, pz + 0.05]);
+  }
+  pushBox(wood, [-w + 0.05, 0, 0.1], [w - 0.05, 0.85, 0.6]);
+  pushBox(wood, [-w, 0.85, 0.05], [w, 0.92, 0.7]);
+  // Auvent : dessus et dessous, du haut à l'arrière au bas à l'avant.
+  const back = [-0.75, 2.2];
+  const front = [0.95, 1.78];
+  const span = tile(2 * w + 0.2);
+  const uv = [[0, 0], [span, 0], [span, tile(1.8)], [0, tile(1.8)]];
+  awning.polygon([[-w - 0.1, front[1], front[0]], [w + 0.1, front[1], front[0]], [w + 0.1, back[1], back[0]], [-w - 0.1, back[1], back[0]]], uv);
+  awning.polygon([[w + 0.1, front[1], front[0]], [-w - 0.1, front[1], front[0]], [-w - 0.1, back[1], back[0]], [w + 0.1, back[1], back[0]]], uv);
+  awning.polygon([[-w - 0.1, front[1] - 0.25, front[0]], [w + 0.1, front[1] - 0.25, front[0]], [w + 0.1, front[1], front[0]], [-w - 0.1, front[1], front[0]]],
+    [[0, 0], [span, 0], [span, tile(0.25)], [0, tile(0.25)]]);
+  // Cageots et légumes sur le comptoir.
+  for (const cx of [-0.65, 0, 0.65]) {
+    pushBox(wood, [cx - 0.25, 0.92, 0.15], [cx + 0.25, 1.06, 0.6]);
+    pushBox(leaves, [cx - 0.2, 1.06, 0.2], [cx + 0.2, 1.2, 0.55]);
+  }
+  return [{ x, z: z + 0.2, radius: 1.15 }];
+}
+
+// Barrière de bois le long d'un tracé de segments droits (points [x, z]) :
+// poteaux tous les 1,2 m environ, deux lisses. Les obstacles sont de petits
+// cercles serrés le long du tracé : on ne passe pas entre deux poteaux.
+export function buildFence(points, builders) {
+  const wood = createFrame(builders.wood, [0, 0, 0]);
+  const obstacles = [];
+  for (let i = 0; i + 1 < points.length; i += 1) {
+    const [ax, az] = points[i];
+    const [bx, bz] = points[i + 1];
+    const length = Math.hypot(bx - ax, bz - az);
+    const posts = Math.max(1, Math.round(length / 1.2));
+    for (let p = 0; p <= posts; p += 1) {
+      const t = p / posts;
+      const px = ax + (bx - ax) * t;
+      const pz = az + (bz - az) * t;
+      pushBox(wood, [px - 0.06, 0, pz - 0.06], [px + 0.06, 0.85, pz + 0.06], { groundAo: 0.6 });
+    }
+    const alongX = Math.abs(bx - ax) > Math.abs(bz - az);
+    for (const y of [0.35, 0.68]) {
+      if (alongX) pushBox(wood, [Math.min(ax, bx), y, az - 0.03], [Math.max(ax, bx), y + 0.08, az + 0.03]);
+      else pushBox(wood, [ax - 0.03, y, Math.min(az, bz)], [ax + 0.03, y + 0.08, Math.max(az, bz)]);
+    }
+    const steps = Math.max(1, Math.ceil(length / 0.4));
+    for (let s = 0; s <= steps; s += 1) {
+      obstacles.push({ x: ax + ((bx - ax) * s) / steps, z: az + ((bz - az) * s) / steps, radius: 0.12 });
+    }
+  }
+  return obstacles;
+}
+
+// Meule de foin : trois blocs de chaume, de plus en plus étroits.
+export function buildHaystack({ x, z }, builders) {
+  const thatch = createFrame(builders.thatch, [x, 0, z]);
+  pushBox(thatch, [-0.55, 0, -0.45], [0.55, 0.6, 0.45], { groundAo: 0.6 });
+  pushBox(thatch, [-0.42, 0.6, -0.34], [0.42, 0.95, 0.34]);
+  pushBox(thatch, [-0.25, 0.95, -0.2], [0.25, 1.1, 0.2]);
+  return { x, z, radius: 0.6 };
+}
+
+// Rocher : deux blocs de roche qui se chevauchent.
+export function buildRock({ x, z, size = 1 }, builders) {
+  const rock = createFrame(builders.rock, [x, 0, z]);
+  const s = size;
+  pushBox(rock, [-0.45 * s, 0, -0.35 * s], [0.4 * s, 0.45 * s, 0.35 * s], { groundAo: 0.6 });
+  pushBox(rock, [-0.2 * s, 0.3 * s, -0.25 * s], [0.3 * s, 0.62 * s, 0.2 * s]);
+  return { x, z, radius: 0.45 * s };
+}
+
+// Feu de camp : un cercle de pierres, deux bûches croisées. Renvoie
+// l'obstacle, la flamme et le point d'où monte la fumée.
+export function buildCampfire({ x, z }, builders) {
+  const rock = createFrame(builders.rock, [x, 0, z]);
+  const bark = createFrame(builders.bark, [x, 0, z]);
+  for (let i = 0; i < 7; i += 1) {
+    const a = (i / 7) * Math.PI * 2;
+    const px = Math.cos(a) * 0.45;
+    const pz = Math.sin(a) * 0.45;
+    pushBox(rock, [px - 0.12, 0, pz - 0.1], [px + 0.12, 0.18, pz + 0.1], { groundAo: 0.6 });
+  }
+  pushBox(bark, [-0.35, 0.02, -0.07], [0.35, 0.16, 0.07]);
+  pushBox(bark, [-0.07, 0.02, -0.35], [0.07, 0.16, 0.35]);
+  return { obstacle: { x, z, radius: 0.6 }, flame: { x, y: 0.42, z }, smoke: [x, 0.8, z] };
 }

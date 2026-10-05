@@ -186,6 +186,88 @@ export function createRoofTextures(seed) {
   return finish(buildingRamps.tuiles, tones, heights, 1.4);
 }
 
+// Ardoise : rangs de 6 pixels, plaques de 5 à 8 de large décalées d'un rang
+// à l'autre, chaque plaque d'un ton à elle, bord bas plus clair (il accroche
+// la lumière), joints sombres.
+export function createSlateTextures(seed) {
+  const grain = fbm(seed + 3, SIZE, 16, 2);
+  const tones = new Float32Array(SIZE * SIZE);
+  const heights = new Float32Array(SIZE * SIZE);
+  const ROW = 6;
+  for (let y = 0; y < SIZE; y += 1) {
+    const row = Math.floor(y / ROW);
+    const inRow = y % ROW;
+    for (let x = 0; x < SIZE; x += 1) {
+      const width = 8;
+      const shifted = wrap(x + (row % 2) * 4 + (row % 3));
+      const plate = Math.floor(shifted / width);
+      const seam = shifted % width === 0;
+      const i = y * SIZE + x;
+      const edge = inRow === 0 ? 1 : 0; // bas de la plaque (v croît vers le faîtage)
+      tones[i] = seam ? 0.08 : 0.28 + hash2(plate, row, seed) * 0.32 + edge * 0.18 - (inRow / ROW) * 0.12 + (grain(x, y) - 0.5) * 0.1;
+      heights[i] = seam ? 0 : 0.6 + edge * 0.4 - (inRow / ROW) * 0.3;
+    }
+  }
+  return finish(buildingRamps.ardoise, tones, heights, 1.3);
+}
+
+// Chaume : brins de paille verticaux, couches qui se recouvrent tous les 10
+// pixels (le bas de chaque couche plus sombre), quelques mèches claires.
+export function createThatchTextures(seed) {
+  const strands = fbm(seed, SIZE, 32, 2);
+  const patches = fbm(seed + 7, SIZE, 4, 3);
+  const tones = new Float32Array(SIZE * SIZE);
+  const heights = new Float32Array(SIZE * SIZE);
+  const LAYER = 10;
+  for (let y = 0; y < SIZE; y += 1) {
+    const inLayer = y % LAYER;
+    for (let x = 0; x < SIZE; x += 1) {
+      const i = y * SIZE + x;
+      const strand = Math.abs(Math.sin((x + strands(x, y) * 6) * 1.9));
+      const shade = inLayer < 2 ? -0.22 : 0;
+      tones[i] = 0.3 + strand * 0.3 + (patches(x, y) - 0.5) * 0.3 + shade + (inLayer / LAYER) * 0.12;
+      heights[i] = strand * 0.5 + inLayer / LAYER * 0.5;
+    }
+  }
+  return finish(buildingRamps.chaume, tones, heights, 1.2);
+}
+
+// Pierre de taille des murs : assises de 8 pixels, blocs de 10 à 14, joints
+// clairs de mortier, grain fin.
+export function createStoneWallTextures(seed) {
+  const grain = fbm(seed + 5, SIZE, 16, 3);
+  const tones = new Float32Array(SIZE * SIZE);
+  const heights = new Float32Array(SIZE * SIZE);
+  for (let y = 0; y < SIZE; y += 1) {
+    const course = Math.floor(y / 8);
+    for (let x = 0; x < SIZE; x += 1) {
+      const shifted = wrap(x + (course % 2) * 6);
+      const block = Math.floor(shifted / 16);
+      const joint = y % 8 === 0 || shifted % 16 === 0;
+      const i = y * SIZE + x;
+      tones[i] = joint ? 0.72 : 0.22 + hash2(block, course, seed) * 0.3 + (grain(x, y) - 0.5) * 0.25;
+      heights[i] = joint ? 0 : 0.6 + grain(x, y) * 0.4;
+    }
+  }
+  return finish(buildingRamps.pierre, tones, heights, 1.2);
+}
+
+// Toile d'auvent : bandes alternées de 8 pixels (rouge et crème), plis doux.
+export function createAwningTexture() {
+  const buffer = createPixelBuffer(SIZE, SIZE);
+  const red = createRamp(buildingRamps.toileRouge);
+  const cream = createRamp(buildingRamps.toileCreme);
+  for (let y = 0; y < SIZE; y += 1) {
+    for (let x = 0; x < SIZE; x += 1) {
+      const stripe = Math.floor(x / 8) % 2 === 0 ? red : cream;
+      const fold = 0.5 + 0.5 * Math.cos(((x % 8) / 8) * Math.PI * 2);
+      const tone = 0.35 + fold * 0.45 + (y / SIZE) * 0.15;
+      setPixel(buffer, x, y, stripe[rampIndex(tone, stripe.length, x, y)]);
+    }
+  }
+  return { map: toDataTexture(buffer) };
+}
+
 // Briques des cheminées : rangs de 4 pixels, briques de 8, joints sombres.
 export function createBrickTextures(seed) {
   const grain = fbm(seed + 2, SIZE, 16, 2);

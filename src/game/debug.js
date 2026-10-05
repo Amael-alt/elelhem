@@ -117,14 +117,19 @@ export function installDebugApi(game) {
       const canvas = renderer.domElement;
       return this.pixel((point.x * 0.5 + 0.5) * canvas.clientWidth, (0.5 - point.y * 0.5) * canvas.clientHeight, radius);
     },
-    // Part des pixels saturés (une composante à 250 ou plus) dans l'image.
+    // Part des pixels saturés (une composante à 250 ou plus) et blanchis
+    // (les trois composantes à 250 ou plus) dans l'image.
     stats() {
       const { pixels } = readFrame();
       let saturated = 0;
+      let whitened = 0;
       for (let i = 0; i < pixels.length; i += 4) {
-        if (pixels[i] >= 250 || pixels[i + 1] >= 250 || pixels[i + 2] >= 250) saturated += 1;
+        const high = (pixels[i] >= 250) + (pixels[i + 1] >= 250) + (pixels[i + 2] >= 250);
+        if (high > 0) saturated += 1;
+        if (high === 3) whitened += 1;
       }
-      return { saturatedPercent: Number(((saturated / (pixels.length / 4)) * 100).toFixed(2)), ...info() };
+      const percent = (count) => Number(((count / (pixels.length / 4)) * 100).toFixed(2));
+      return { saturatedPercent: percent(saturated), whitenedPercent: percent(whitened), ...info() };
     },
     teleport(x, z) {
       player.teleport(x, z);

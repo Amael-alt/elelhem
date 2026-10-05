@@ -14,12 +14,13 @@ import { COC_GLSL } from './dof.js';
 import { FULLSCREEN_VERTEX } from './fullscreen.js';
 
 export const EXPOSURE = 1.25;
-const SPLIT_TONE = 0.04;
+const SPLIT_TONE = 0.05;
+const SHADOW_LIFT = 0.035; // les ombres remontent vers le bleu-vert au lieu de boucher
 const SATURATION = 1.12;
 const CONTRAST = 1.07;
 const VIGNETTE = 0.45;
 const GRAIN = 0.02;
-const BLOOM_STRENGTH = 0.5;
+const BLOOM_STRENGTH = 0.62;
 const SHOULDER = 0.85;
 
 const f = (value) => value.toFixed(4);
@@ -56,6 +57,7 @@ vec3 gradeToDisplay( vec3 hdr, vec2 uv ) {
   vec3 color = gradeAces( hdr );
   float luma = dot( color, vec3( 0.2126, 0.7152, 0.0722 ) );
   color += mix( vec3( -0.6, -0.1, 0.7 ), vec3( 0.7, 0.25, -0.6 ), smoothstep( 0.1, 0.7, luma ) ) * ${f(SPLIT_TONE)};
+  color += vec3( 0.25, 0.75, 1.0 ) * ${f(SHADOW_LIFT)} * ( 1.0 - smoothstep( 0.0, 0.3, luma ) );
   color = gradeToSrgb( clamp( color, 0.0, 1.0 ) );
   float l = dot( color, vec3( 0.2126, 0.7152, 0.0722 ) );
   color = mix( vec3( l ), color, ${f(SATURATION)} );

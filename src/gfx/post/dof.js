@@ -20,10 +20,10 @@ import { FULLSCREEN_VERTEX } from './fullscreen.js';
 const SHARP_RANGE = 2.2;
 const NEAR_RAMP = 7;
 const FAR_RAMP = 11;
-const BAND_HALF_WIDTH = 0.12;
+const BAND_HALF_WIDTH = 0.1;
 const BAND_SOFTNESS = 0.4;
 const DEPTH_MIX = 0.3;
-export const MAX_BLUR = 0.019; // rayon maximal, en part de la hauteur d'écran
+export const MAX_BLUR = 0.024; // rayon maximal, en part de la hauteur d'écran
 const GOLDEN_ANGLE = 2.39996323;
 
 const f = (value) => value.toFixed(4);

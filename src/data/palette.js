@@ -33,6 +33,13 @@ export const natureRamps = {
 // du côté du soleil.
 export const skyColors = { bas: '#f6c9a0', haut: '#6f8fd1', soleil: '#ffd8a0' };
 
+// Feuillage en grappes : une rampe de gris, teintée grappe par grappe.
+export const foliageGreys = ['#2c2b2e', '#4b4a4c', '#6f6d6c', '#96938c', '#bdb8ac', '#e6dfcf'];
+export const foliageTints = {
+  vert: ['#9fce62', '#8fc257', '#b2d36c', '#86b85a'],
+  automne: ['#f2a553', '#e3803f', '#f4c75e', '#d9693a'],
+};
+
 // Effets : lucioles vert-jaune, poussière dorée, fumée gris chaud, rayons.
 export const effectColors = {
   luciole: '#d9ff7a',

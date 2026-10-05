@@ -20,6 +20,7 @@ import {
   PIGEONS, TOWERS, TREES, VEGETABLES, WELL,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
+import { createFoliage, crownClumps } from '../gfx/foliage.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
@@ -34,15 +35,15 @@ import {
   createLeafTextures, createPlasterTextures, createRockTextures, createRoofTextures, createWaterTextures,
   createWindowTextures, createWoodTextures,
 } from '../gfx/textures.js';
-import { hazeColor, ironColor, lanternColor, natureRamps } from '../data/palette.js';
+import { foliageTints, hazeColor, ironColor, lanternColor, natureRamps } from '../data/palette.js';
 
 const SUN_COLOR = 0xffc07a;
 const SUN_INTENSITY = 6.5;
-const SUN_ELEVATION_DEG = 23;
+const SUN_ELEVATION_DEG = 28; // assez bas pour des ombres longues, assez haut pour ne pas noyer la place
 const SUN_AZIMUTH_DEG = -60;
-const SKY_COLOR = 0x8fa4e6;
+const SKY_COLOR = 0x86a8e8;
 const GROUND_COLOR = 0x4a3a2c;
-const HEMI_INTENSITY = 1.7;
+const HEMI_INTENSITY = 2.6; // les ombres restent lisibles, bleutées plutôt que noires
 const SHADOW_EXTENT = 22; // demi-largeur du cadrage d'ombre, centré sur la caméra
 const SHADOW_BIAS = -0.0004;
 const SHADOW_NORMAL_BIAS = 0.03;
@@ -104,9 +105,13 @@ function createBuildings(materials, posts) {
   for (const bench of BENCHES) addPosts(buildBench(bench, builders));
   buildSign(SIGN, builders);
   for (const garden of VEGETABLES) buildVegetables(garden, builders);
-  TREES.forEach(([x, z, size], i) => {
+  // Couronnes : les grappes de tous les arbres, dessinées ensemble (voir createVillage).
+  const clumps = [];
+  TREES.forEach(([x, z, size, kind = 'vert'], i) => {
     posts.push({ x, z, radius: TREE_TRUNK_RADIUS * size });
-    buildTree(x, z, { size, seed: i }, builders);
+    const crown = buildTree(x, z, { size }, builders);
+    const tints = foliageTints[kind];
+    clumps.push(...crownClumps(crown.center, crown.radius, tints[i % tints.length], i));
   });
   const lanternFlame = ([x, z]) => {
     posts.push({ x, z, radius: LANTERN_POST_RADIUS });
@@ -130,7 +135,7 @@ function createBuildings(materials, posts) {
     mesh.matrixAutoUpdate = false;
     group.add(mesh);
   }
-  return { group, flames, chimneys };
+  return { group, flames, chimneys, clumps };
 }
 
 export function createVillage(scene, { narrowScreen = false } = {}) {
@@ -162,6 +167,7 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
     createSmoke(buildings.chimneys, fx),
     createSunRays(SUN_RAYS, sunDirection, fx),
   );
+  scene.add(createFoliage(buildings.clumps, fx.uTime));
   const pigeons = createPigeons(PIGEONS);
   scene.add(pigeons.mesh);
   const sun = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);

@@ -158,30 +158,19 @@ export function buildLantern(x, z, builders) {
   return { x, y: LANTERN_FLAME.y, z };
 }
 
-// Arbre en volumes : un tronc, une couronne d'un gros bloc et de deux ou trois
-// plus petits qui cassent la silhouette. size règle la taille (1 : moyen),
-// seed décale les blocs d'un arbre à l'autre.
+// Arbre : un tronc et deux branches en volumes ; la couronne est faite de
+// grappes de feuilles (gfx/foliage.js). size règle la taille (1 : moyen).
+// Renvoie le centre et le rayon de la couronne.
 export const TREE_TRUNK_RADIUS = 0.2;
 
-export function buildTree(x, z, { size = 1, seed = 0 }, builders) {
+export function buildTree(x, z, { size = 1 }, builders) {
   const bark = createFrame(builders.bark, [x, 0, z]);
-  const leaves = createFrame(builders.leaves, [x, 0, z]);
-  const trunk = 0.17 * size;
-  const crownBase = 1.35 * size;
-  pushBox(bark, [-trunk, 0, -trunk], [trunk, crownBase + 0.3, trunk], { groundAo: 0.6 });
-  const r = 0.95 * size;
-  pushBox(leaves, [-r, crownBase, -r], [r, crownBase + 1.7 * size, r]);
-  const random = (i) => {
-    const v = Math.sin((seed + 1) * 12.9898 + i * 78.233) * 43758.5453;
-    return v - Math.floor(v);
-  };
-  const lobes = 2 + Math.floor(random(0) * 2);
-  for (let i = 0; i < lobes; i += 1) {
-    const angle = random(i + 1) * Math.PI * 2;
-    const half = (0.45 + random(i + 5) * 0.2) * size;
-    const cx = Math.cos(angle) * r * 0.85;
-    const cz = Math.sin(angle) * r * 0.85;
-    const cy = crownBase + (0.4 + random(i + 9) * 0.9) * size;
-    pushBox(leaves, [cx - half, cy - half, cz - half], [cx + half, cy + half, cz + half]);
-  }
+  const trunk = 0.15 * size;
+  const crownBase = 1.25 * size;
+  pushBox(bark, [-trunk, 0, -trunk], [trunk, crownBase + 0.9 * size, trunk], { groundAo: 0.6 });
+  pushBox(bark, [-trunk - 0.04, 0, -trunk - 0.04], [trunk + 0.04, 0.25, trunk + 0.04], { groundAo: 0.6 }); // racines
+  const branch = 0.06 * size;
+  pushBox(bark, [trunk, crownBase - 0.1, -branch], [trunk + 0.45 * size, crownBase + 0.02, branch]);
+  pushBox(bark, [-branch, crownBase + 0.25, -trunk - 0.4 * size], [branch, crownBase + 0.37, -trunk]);
+  return { center: { x, y: crownBase + 0.95 * size, z }, radius: 1.05 * size };
 }

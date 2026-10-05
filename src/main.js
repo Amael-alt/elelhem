@@ -4,8 +4,10 @@
 // neuve.
 
 import * as THREE from 'three';
-import { createKeyboard, createLoadGate } from './core/input.js';
-import { createRenderer } from './core/renderer.js';
+import { createFloatingStick, createKeyboard, createLoadGate } from './core/input.js';
+import { createRenderer, MAX_PIXEL_RATIO } from './core/renderer.js';
+import { createQualityGovernor } from './core/quality.js';
+import { trackViewportHeight } from './core/viewport.js';
 import { createPipeline, SPRITE_LAYER } from './gfx/post/pipeline.js';
 import { createFollowCamera } from './core/camera.js';
 import { createVillage } from './world/village.js';
@@ -30,6 +32,7 @@ const NARROW_SCREEN = 600; // en dessous (en pixels CSS), ombres moins définies
 const STANDING = { x: 0, z: 0 }; // direction du héros pendant une conversation
 
 const canvas = document.getElementById('scene');
+trackViewportHeight();
 
 if (!hasWebGL2()) {
   showFatal("Ce village a besoin de WebGL2 pour s'afficher. Ouvre la page dans une version récente de Chrome, Firefox, Safari ou Edge, et vérifie que l'accélération matérielle est activée.");
@@ -70,6 +73,7 @@ function start() {
   const village = createVillage(scene, { narrowScreen });
   const follow = createFollowCamera();
   const keyboard = createKeyboard();
+  const stick = createFloatingStick(canvas, document.getElementById('stick'));
 
   const gameState = createGameState({ restore: !params.has('reset') });
   const sheet = createCharacterSheet(hero);
@@ -94,10 +98,17 @@ function start() {
   const drawingBuffer = new THREE.Vector2();
   follow.snap(player.worldPosition(focusTarget));
 
+  // Définition de dessin : ratio de l'écran (plafonné) fois l'échelle que
+  // choisit le gouverneur de qualité quand l'appareil peine.
+  const basePixelRatio = Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO);
+  const forcedScale = Number(params.get('scale'));
+  let renderScale = 1;
+
   function resize() {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
     if (width === 0 || height === 0) return; // page pas encore affichée
+    renderer.setPixelRatio(basePixelRatio * renderScale);
     renderer.setSize(width, height, false);
     renderer.getDrawingBufferSize(drawingBuffer);
     pipeline.setSize(drawingBuffer.x, drawingBuffer.y);
@@ -107,9 +118,16 @@ function start() {
   // Suit la taille réelle du canvas (fenêtre redimensionnée, page affichée).
   new ResizeObserver(resize).observe(canvas);
   resize();
+  const quality = createQualityGovernor({
+    fixed: forcedScale > 0 && forcedScale <= 1 ? forcedScale : null,
+    onChange(scale) {
+      renderScale = scale;
+      resize();
+    },
+  });
 
   const state = { frozen: false, time: 0 };
-  const debug = isDebugEnabled() ? createDebugPanel(renderer) : null;
+  const debug = isDebugEnabled() ? createDebugPanel(renderer, () => quality.scale) : null;
 
   // Conversations : boîte de dialogue et bulle en DOM, logique dans interaction.js.
   const dialogue = createDialogueBox(document.getElementById('dialogue'));
@@ -125,7 +143,9 @@ function start() {
     const zoom = keyboard.takeZoomSteps();
     if (zoom) follow.zoomBy(zoom);
     state.time += step;
-    player.update(step, interaction.isTalking ? STANDING : keyboard.direction());
+    const pushed = stick.direction();
+    const wanted = pushed.x !== 0 || pushed.z !== 0 ? pushed : keyboard.direction();
+    player.update(step, interaction.isTalking ? STANDING : wanted);
     for (const npc of npcs) npc.update(step, state.time, player.position);
     follow.follow(player.worldPosition(focusTarget), step);
     // Après la caméra : la bulle se pose sur l'image qui va être dessinée.
@@ -145,9 +165,11 @@ function start() {
 
   let last = performance.now();
   renderer.setAnimationLoop((now) => {
-    const dt = Math.min(Math.max((now - last) / 1000, 0), MAX_FRAME_SECONDS);
+    const real = Math.max((now - last) / 1000, 0);
+    const dt = Math.min(real, MAX_FRAME_SECONDS);
     last = now;
     tick(dt);
+    quality.update(real);
     debug?.update(dt);
   });
 }

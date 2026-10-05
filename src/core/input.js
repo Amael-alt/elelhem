@@ -119,3 +119,88 @@ export function createKeyboard() {
     },
   };
 }
+
+// Joystick flottant, version minimale (étape 1f) : on pose le pouce dans la
+// moitié gauche de l'écran, le stick apparaît là, et glisser donne la
+// direction. Rayon 64 px, zone morte 13 %, un seul doigt. Si le doigt dépasse
+// le rayon, le centre le suit : on n'a jamais à revenir en arrière. Souris
+// exclue (le clavier suffit au bureau), toucher et stylet seulement.
+// Le bouton d'action et l'option main gauche viennent à l'étape 4.
+const STICK_RADIUS = 64;
+const STICK_DEAD_ZONE = 0.13;
+
+export function createFloatingStick(canvas, element) {
+  const knob = element.querySelector('.stick-bille');
+  let pointerId = null;
+  const center = { x: 0, y: 0 };
+  const vector = { x: 0, z: 0 };
+
+  function place(x, y) {
+    element.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+  }
+
+  function release() {
+    pointerId = null;
+    vector.x = 0;
+    vector.z = 0;
+    element.hidden = true;
+  }
+
+  canvas.addEventListener('pointerdown', (event) => {
+    if (pointerId !== null || event.pointerType === 'mouse') return;
+    if (event.clientX > window.innerWidth / 2) return;
+    pointerId = event.pointerId;
+    try {
+      canvas.setPointerCapture(pointerId);
+    } catch {
+      // Pointeur déjà fini (événement rejoué) : le stick marche sans capture.
+    }
+    center.x = event.clientX;
+    center.y = event.clientY;
+    place(center.x, center.y);
+    knob.style.transform = 'translate(0px, 0px)';
+    element.hidden = false;
+    event.preventDefault();
+  });
+
+  canvas.addEventListener('pointermove', (event) => {
+    if (event.pointerId !== pointerId) return;
+    let dx = event.clientX - center.x;
+    let dy = event.clientY - center.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance > STICK_RADIUS) {
+      // Le centre suit le doigt : le stick reste tendu au maximum.
+      const over = (distance - STICK_RADIUS) / distance;
+      center.x += dx * over;
+      center.y += dy * over;
+      place(center.x, center.y);
+      dx = event.clientX - center.x;
+      dy = event.clientY - center.y;
+    }
+    knob.style.transform = `translate(${Math.round(dx)}px, ${Math.round(dy)}px)`;
+    const length = Math.hypot(dx, dy);
+    const strength = Math.min(1, length / STICK_RADIUS);
+    if (strength < STICK_DEAD_ZONE) {
+      vector.x = 0;
+      vector.z = 0;
+    } else {
+      vector.x = (dx / length) * strength;
+      vector.z = (dy / length) * strength;
+    }
+  });
+
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    canvas.addEventListener(type, (event) => {
+      if (event.pointerId === pointerId) release();
+    });
+  }
+  window.addEventListener('blur', release);
+
+  return {
+    // Direction voulue, longueur 1 au plus, nulle au repos.
+    direction: () => vector,
+    get active() {
+      return pointerId !== null;
+    },
+  };
+}

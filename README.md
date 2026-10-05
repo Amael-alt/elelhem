@@ -4,7 +4,7 @@ Un petit RPG en HD-2D, jouable dans le navigateur, dans la contrée d'Ellelhem. 
 
 **Aucune image n'est chargée par le jeu.** Textures, personnages, ciel et effets de lumière sont générés par le code au chargement de la page.
 
-> **En construction, en public.** Le village se bâtit étape par étape. Pour l'instant, on promène un voyageur à capuche dans un village provisoire à l'heure dorée (place pavée, maisons à colombages, lanternes allumées, rivière et gué), au clavier : ZQSD, WASD ou flèches, molette pour le zoom. Le récit de la construction est dans [`docs/construction.md`](docs/construction.md).
+> **En construction, en public.** Le village se bâtit étape par étape. Pour l'instant, on promène un voyageur à capuche dans un village provisoire à l'heure dorée (place pavée, maisons à colombages, arbres, lanternes allumées, fumée des cheminées, lucioles, rivière et gué), au clavier : ZQSD, WASD ou flèches, molette pour le zoom. Le récit de la construction est dans [`docs/construction.md`](docs/construction.md).
 
 - **Jouer** : https://amael-alt.github.io/village-de-lia/
 - **Mesurer** : ajouter `?debug` à l'adresse pour afficher les images par seconde et le coût du rendu.

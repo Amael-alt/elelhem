@@ -1,4 +1,6 @@
 // Outils de mesure et de test.
+
+import * as THREE from 'three';
 // - Le panneau ?debug : images par seconde, coût d'une image, appels de
 //   dessin, triangles et définition réelle du canvas.
 // - window.__lia : commandes pour des captures reproductibles et des tests
@@ -75,8 +77,55 @@ export function installDebugApi(game) {
     programs: renderer.info.programs?.length ?? 0,
   });
 
+  // Dessine une image et la relit aussitôt, avant que le navigateur ne
+  // l'efface : base des mesures sur les pixels.
+  function readFrame() {
+    tick(0, true);
+    const gl = renderer.getContext();
+    const { width, height } = renderer.domElement;
+    const pixels = new Uint8Array(width * height * 4);
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    return { width, height, pixels };
+  }
+
   window.__lia = {
     info,
+    // Couleur moyenne d'un carré de pixels autour d'un point de l'écran, en
+    // pixels CSS depuis le coin haut gauche.
+    pixel(x, y, radius = 2) {
+      const { width, height, pixels } = readFrame();
+      const ratio = renderer.getPixelRatio();
+      const cx = Math.round(x * ratio);
+      const cy = height - 1 - Math.round(y * ratio);
+      const sum = [0, 0, 0];
+      let count = 0;
+      for (let py = cy - radius; py <= cy + radius; py += 1) {
+        for (let px = cx - radius; px <= cx + radius; px += 1) {
+          if (px < 0 || py < 0 || px >= width || py >= height) continue;
+          const i = (py * width + px) * 4;
+          sum[0] += pixels[i];
+          sum[1] += pixels[i + 1];
+          sum[2] += pixels[i + 2];
+          count += 1;
+        }
+      }
+      return sum.map((v) => Math.round(v / count));
+    },
+    // Couleur d'un point du monde, vu par la caméra (il doit être visible).
+    probe(x, y, z, radius = 1) {
+      const point = new THREE.Vector3(x, y, z).project(follow.camera);
+      const canvas = renderer.domElement;
+      return this.pixel((point.x * 0.5 + 0.5) * canvas.clientWidth, (0.5 - point.y * 0.5) * canvas.clientHeight, radius);
+    },
+    // Part des pixels saturés (une composante à 250 ou plus) dans l'image.
+    stats() {
+      const { pixels } = readFrame();
+      let saturated = 0;
+      for (let i = 0; i < pixels.length; i += 4) {
+        if (pixels[i] >= 250 || pixels[i + 1] >= 250 || pixels[i + 2] >= 250) saturated += 1;
+      }
+      return { saturatedPercent: Number(((saturated / (pixels.length / 4)) * 100).toFixed(2)), ...info() };
+    },
     teleport(x, z) {
       player.teleport(x, z);
       follow.snap(player.worldPosition(game.focusTarget));

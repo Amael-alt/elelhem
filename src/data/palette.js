@@ -81,6 +81,9 @@ export const leatherRamp = ['#2a1b16', '#46302a', '#634435', '#815b43'];
 // sombre au presque blanc. Ces pixels brillent même dans l'ombre.
 export const glowRamp = ['#ffc56e', '#ffd88f', '#ffeab5', '#fff6dc'];
 
+// Visage des personnages : bouche, joues, reflet des yeux.
+export const faceColors = { bouche: '#8e4a40', joue: '#e8907f', reflet: '#fbf7ee' };
+
 // Contour des personnages : sombre et bleuté, jamais noir pur.
 export const outlineColor = '#1b1a2e';
 

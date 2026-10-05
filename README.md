@@ -4,7 +4,7 @@ Un petit RPG en HD-2D, jouable dans le navigateur, dans la contrée d'Ellelhem. 
 
 **Aucune image n'est chargée par le jeu.** Textures, personnages, ciel et effets de lumière sont générés par le code au chargement de la page.
 
-> **En construction, en public.** Le village se bâtit étape par étape. Pour l'instant, on promène (au clavier ou au pouce) un voyageur à capuche dans un village provisoire à l'heure dorée (place pavée, maisons à colombages, arbres, lanternes allumées, fumée des cheminées, lucioles, rivière et gué), au clavier : ZQSD, WASD ou flèches, molette pour le zoom. Lia, la guide, attend sur la place : on lui parle avec E, Entrée ou Espace, ou en touchant la bulle qui apparaît au-dessus d'elle. Le récit de la construction est dans [`docs/construction.md`](docs/construction.md).
+> **En construction, en public.** Le village se bâtit étape par étape. Pour l'instant, on le parcourt (au clavier ou au pouce) à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. Neuf habitants s'y tiennent, dont Lia, la guide, qui parle déjà ; les huit artisans portent leur nom mais ne répondent pas encore. Commandes : ZQSD, WASD ou flèches, molette pour le zoom, E, Entrée ou Espace pour parler. Le récit de la construction est dans [`docs/construction.md`](docs/construction.md).
 
 - **Jouer** : https://amael-alt.github.io/village-de-lia/
 - **Mesurer** : ajouter `?debug` à l'adresse pour afficher les images par seconde et le coût du rendu.
@@ -36,7 +36,7 @@ vendor/three/     three.js, avec sa licence
 src/main.js       démarrage, boucle, redimensionnement
 src/core/         rendu, caméra, entrées (clavier, joystick)
 src/gfx/          pixels, textures, matériaux, sprites, post-traitement, effets
-src/world/        carte, terrain, bâtiments, collisions
+src/world/        carte, implantation (layout), terrain, maisons, tours, chantier, collisions
 src/game/         joueur, habitants, dialogues, quête, interface, débogage
 src/data/         palette, habitants, textes des dialogues
 docs/             journal de construction

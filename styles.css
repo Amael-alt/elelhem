@@ -293,3 +293,26 @@ body {
   background: rgb(243 223 184 / 0.55);
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
 }
+
+/* Étiquette de nom : posée par le jeu au-dessus de la tête de l'habitant. */
+#nom {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 12;
+  margin: -64px 0 0;
+  padding: 3px 10px 4px;
+  border: 1px solid rgb(255 208 138 / 0.45);
+  border-radius: 6px;
+  background: rgb(24 17 31 / 0.82);
+  color: var(--or);
+  font: 600 0.95rem/1.2 var(--police);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  pointer-events: none;
+  translate: -50% 0;
+}
+
+#nom[hidden] {
+  display: none;
+}

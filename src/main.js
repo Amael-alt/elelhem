@@ -16,12 +16,12 @@ import { createBlobShadow, createSprite } from './gfx/billboard.js';
 import { createPlayer } from './game/player.js';
 import { createNpc } from './game/npc.js';
 import { createDialogueBox } from './game/dialogue.js';
-import { createInteractionHint } from './game/ui.js';
+import { createInteractionHint, createNameLabel } from './game/ui.js';
 import { createInteraction } from './game/interaction.js';
 import { createGameState } from './game/state.js';
 import { createDebugPanel, installDebugApi, isDebugEnabled } from './game/debug.js';
 import { backgroundColor } from './data/palette.js';
-import { hero, villagers } from './data/characters.js';
+import { figurants, hero, villagers } from './data/characters.js';
 import { dialogues } from './data/dialogues.js';
 
 // Installée avant tout le reste, pour que rien ne passe avant elle.
@@ -85,7 +85,7 @@ function start() {
   const player = createPlayer({ sprite, shadow, village });
 
   // Les habitants : de la donnée (data/characters.js), une planche chacun.
-  const npcs = villagers.map((character) => {
+  const npcs = [...villagers, ...figurants].map((character) => {
     const npcSheet = createCharacterSheet(character);
     sheets[character.id] = npcSheet;
     const npc = createNpc({ character, sheet: npcSheet, village, sunDirection: village.sunDirection, post: pipeline.spriteHooks });
@@ -126,15 +126,16 @@ function start() {
     },
   });
 
-  const state = { frozen: false, time: 0 };
+  const state = { frozen: false, time: 0, autoDirection: null };
   const debug = isDebugEnabled() ? createDebugPanel(renderer, () => quality.scale) : null;
 
   // Conversations : boîte de dialogue et bulle en DOM, logique dans interaction.js.
   const dialogue = createDialogueBox(document.getElementById('dialogue'));
   let interaction = null;
   const hint = createInteractionHint(document.getElementById('indice'), () => interaction.request());
+  const label = createNameLabel(document.getElementById('nom'));
   interaction = createInteraction({
-    player, npcs, hint, dialogue, state: gameState, texts: dialogues, camera: follow.camera, canvas,
+    player, npcs, hint, label, dialogue, state: gameState, texts: dialogues, camera: follow.camera, canvas,
   });
 
   // Une image du jeu. force : avance même figé (tests image par image).
@@ -144,7 +145,8 @@ function start() {
     if (zoom) follow.zoomBy(zoom);
     state.time += step;
     const pushed = stick.direction();
-    const wanted = pushed.x !== 0 || pushed.z !== 0 ? pushed : keyboard.direction();
+    // autoDirection : direction imposée par les tests scriptés (__lia.walk).
+    const wanted = state.autoDirection ?? (pushed.x !== 0 || pushed.z !== 0 ? pushed : keyboard.direction());
     player.update(step, interaction.isTalking ? STANDING : wanted);
     for (const npc of npcs) npc.update(step, state.time, player.position);
     follow.follow(player.worldPosition(focusTarget), step);

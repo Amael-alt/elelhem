@@ -236,6 +236,37 @@ export function installDebugApi(game) {
       cible: interaction.target?.id ?? null,
       distances: Object.fromEntries(npcs.map((npc) => [npc.id, Number(npc.distanceTo(player.position).toFixed(2))])),
     }),
+    // Parcours scripté : le héros marche en ligne droite vers chaque point
+    // { x, z } de la liste, image par image, collisions comprises. S'arrête sur
+    // un point si l'on n'avance plus (coincé). Renvoie les points atteints.
+    walk(points, { arrive = 0.35, maxFrames = 20000 } = {}) {
+      const reached = [];
+      let stuck = null;
+      let frames = 0;
+      for (let i = 0; i < points.length && !stuck; i += 1) {
+        const [tx, tz] = points[i];
+        let still = 0;
+        let last = Infinity;
+        while (frames < maxFrames) {
+          const dx = tx - player.position.x;
+          const dz = tz - player.position.z;
+          const distance = Math.hypot(dx, dz);
+          if (distance < arrive) break;
+          state.autoDirection = { x: dx / distance, z: dz / distance };
+          tick(1 / 60, true);
+          frames += 1;
+          still = last - distance < 0.004 ? still + 1 : 0;
+          last = distance;
+          if (still > 45) {
+            stuck = { index: i, cible: [tx, tz], position: [Number(player.position.x.toFixed(2)), Number(player.position.z.toFixed(2))] };
+            break;
+          }
+        }
+        if (!stuck) reached.push(i);
+      }
+      state.autoDirection = null;
+      return { atteints: reached.length, sur: points.length, coince: stuck, images: frames, ...info() };
+    },
     // Cache ou montre les habitants : mesure leur coût en appels de dessin.
     showNpcs(on = true) {
       for (const npc of npcs) for (const object of npc.objects) object.visible = on;

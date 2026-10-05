@@ -4,24 +4,28 @@
 // endroit où le moteur lit data/dialogues.js, et il ne lit que l'état.
 
 import * as THREE from 'three';
-import { directionToward, INTERACTION_RADIUS } from './npc.js';
+import { directionToward, INTERACTION_RADIUS, NAME_RADIUS } from './npc.js';
 import { recordVisit } from './state.js';
 import { projectToScreen } from './ui.js';
 
+const LABEL_LIFT = 52; // pixels : l'étiquette passe au-dessus de la bulle
+
 // player : { position, facing, face } ; npcs : liste ; hint, dialogue : voir
 // ui.js et dialogue.js ; state : voir state.js ; texts : data/dialogues.js ;
-// camera et canvas servent à ancrer l'indicateur à l'écran.
-export function createInteraction({ player, npcs, hint, dialogue, state, texts, camera, canvas }) {
+// camera et canvas servent à ancrer l'indicateur à l'écran ; label : l'étiquette
+// de nom (ui.js).
+export function createInteraction({ player, npcs, hint, label, dialogue, state, texts, camera, canvas }) {
   const head = new THREE.Vector3();
   const screen = { x: 0, y: 0 };
   let requested = false;
   let target = null;
 
-  function nearestInRange() {
+  // Le plus proche des habitants (pas des figurants) dans un rayon donné.
+  function nearest(radius, needsDialogue) {
     let best = null;
-    let bestDistance = INTERACTION_RADIUS;
+    let bestDistance = radius;
     for (const npc of npcs) {
-      if (!npc.character.dialogue) continue;
+      if (npc.isExtra || (needsDialogue && !npc.character.dialogue)) continue;
       const distance = npc.distanceTo(player.position);
       if (distance <= bestDistance) {
         best = npc;
@@ -41,6 +45,7 @@ export function createInteraction({ player, npcs, hint, dialogue, state, texts, 
     npc.faceToward(player.position);
     player.face(directionToward(npc.position.x - player.position.x, npc.position.z - player.position.z, player.facing));
     hint.hide();
+    label.hide();
     dialogue.open(entry.nom, pages);
   }
 
@@ -66,18 +71,22 @@ export function createInteraction({ player, npcs, hint, dialogue, state, texts, 
         target = null;
         return;
       }
-      target = nearestInRange();
-      if (!target) {
-        hint.hide();
-        return;
-      }
-      if (wanted) {
+      target = nearest(INTERACTION_RADIUS, true);
+      if (wanted && target) {
         start(target);
         return;
       }
-      const anchor = projectToScreen(target.headPoint(head), camera, canvas, screen);
-      if (anchor) hint.show(anchor, `Parler à ${target.character.nom}`);
+      // Le nom s'affiche dès qu'on approche, la bulle seulement à portée de parole.
+      const named = target ?? nearest(NAME_RADIUS, false);
+      const anchor = named ? projectToScreen(named.headPoint(head), camera, canvas, screen) : null;
+      if (!anchor) {
+        hint.hide();
+        label.hide();
+        return;
+      }
+      if (target) hint.show(anchor, `Parler à ${target.character.nom}`);
       else hint.hide();
+      label.show(anchor, named.character.nom, target ? LABEL_LIFT : 0);
     },
   };
 }

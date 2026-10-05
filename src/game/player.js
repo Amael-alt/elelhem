@@ -1,11 +1,10 @@
 // Le héros : déplacement, collisions, direction du regard et animation.
 
-import { DIRECTIONS, IDLE_FRAMES, WALK_FRAMES } from '../gfx/sprites.js';
+import { DIRECTIONS, IDLE_FPS, IDLE_FRAMES, WALK_FRAMES } from '../gfx/sprites.js';
 
 const SPEED = 3.4; // unités par seconde
 const RADIUS = 0.3;
 const WALK_FPS = 7;
-const IDLE_FPS = 1.6;
 
 // En diagonale, on garde la direction en cours si elle fait partie du
 // mouvement : le personnage ne tremble pas entre deux vues.
@@ -57,6 +56,10 @@ export function createPlayer({ sprite, shadow, village }) {
       const fps = moving ? WALK_FPS : IDLE_FPS;
       sprite.setFrame(DIRECTIONS.indexOf(facing), frames[Math.floor(clock * fps) % frames.length]);
       place();
+    },
+    // Tourne le héros vers une direction ('down', 'left', 'right', 'up').
+    face(direction) {
+      facing = direction;
     },
     teleport(x, z) {
       position.x = x;

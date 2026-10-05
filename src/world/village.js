@@ -236,6 +236,10 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
   return {
     map,
     collider: createCollider(map, posts),
+    // Obstacle rond posé après coup (un habitant) : le collider lit la même liste.
+    addObstacle(x, z, radius) {
+      posts.push({ x, z, radius });
+    },
     sunDirection,
     spawn: { x: 15.5, z: 12.5 },
     groundHeight(x, z) {

@@ -3,9 +3,9 @@
 // côte à côte, aucune couture ne se voit. Chaque générateur rend une texture
 // de couleur et, quand le relief compte, une texture de normales.
 
-import { terrainRamps } from '../data/palette.js';
+import { buildingRamps, ironColor, terrainRamps } from '../data/palette.js';
 import {
-  createPixelBuffer, createRamp, createRng, fbm, hash2, rampIndex, setPixel, sobelNormals, toDataTexture, voronoi,
+  createPixelBuffer, createRamp, createRng, fbm, hash2, hexToRgb, rampIndex, setPixel, sobelNormals, toDataTexture, voronoi,
 } from './pixels.js';
 
 export const TILE_PIXELS = 64;
@@ -122,4 +122,152 @@ export function createWaterTextures(seed) {
     }
   }
   return finish(terrainRamps.eau, tones, null, 0);
+}
+
+// --- Maisons ----------------------------------------------------------------
+
+// Enduit : blanc cassé, quelques taches douces et un grain fin.
+export function createPlasterTextures(seed) {
+  const stains = fbm(seed, SIZE, 2, 4, 0.6);
+  const grain = fbm(seed + 3, SIZE, 32, 1);
+  const tones = new Float32Array(SIZE * SIZE);
+  const heights = new Float32Array(SIZE * SIZE);
+  for (let y = 0; y < SIZE; y += 1) {
+    for (let x = 0; x < SIZE; x += 1) {
+      const s = stains(x, y);
+      const g = grain(x, y);
+      tones[y * SIZE + x] = 0.62 + (s - 0.5) * 0.45 + (g - 0.5) * 0.18;
+      heights[y * SIZE + x] = g * 0.6 + s * 0.4;
+    }
+  }
+  return finish(buildingRamps.enduit, tones, heights, 0.5);
+}
+
+// Bois des colombages : des fibres verticales, chaque colonne de pixels son ton.
+export function createWoodTextures(seed) {
+  const grain = fbm(seed + 1, SIZE, 8, 3);
+  const tones = new Float32Array(SIZE * SIZE);
+  const heights = new Float32Array(SIZE * SIZE);
+  for (let y = 0; y < SIZE; y += 1) {
+    for (let x = 0; x < SIZE; x += 1) {
+      const fiber = (hash2(x, 0, seed) + hash2(x, 1, seed) * 0.5) / 1.5;
+      tones[y * SIZE + x] = 0.38 + (fiber - 0.5) * 0.45 + (grain(x, y) - 0.5) * 0.3;
+      heights[y * SIZE + x] = fiber;
+    }
+  }
+  return finish(buildingRamps.bois, tones, heights, 0.8);
+}
+
+// Tuiles canal : colonnes de 4 pixels qui descendent la pente, alternance de
+// tuiles bombées (couvert) et creuses (courant), décalées d'une colonne à
+// l'autre ; le bas de chaque tuile fait une ombre sur la suivante.
+export function createRoofTextures(seed) {
+  const grain = fbm(seed + 1, SIZE, 16, 2);
+  const tones = new Float32Array(SIZE * SIZE);
+  const heights = new Float32Array(SIZE * SIZE);
+  for (let y = 0; y < SIZE; y += 1) {
+    for (let x = 0; x < SIZE; x += 1) {
+      const column = Math.floor(x / 4);
+      const across = ((x % 4) + 0.5) / 4;
+      const cover = column % 2 === 1;
+      const offset = (column * 3) % 8;
+      const along = ((y + offset) % 8) / 8;
+      const row = Math.floor((y + offset) / 8) % 8;
+      const bulge = Math.sin(Math.PI * across);
+      const relief = cover ? bulge : 0.35 * (1 - bulge);
+      const lip = along > 0.8 ? 1 : 0;
+      const i = y * SIZE + x;
+      tones[i] = 0.2 + relief * 0.42 + hash2(column, row, seed) * 0.22 - lip * 0.22
+        + (grain(x, y) - 0.5) * 0.12 + (cover ? 0.08 : -0.05);
+      heights[i] = relief * 0.9 + (1 - along) * 0.25 + (cover ? 0.3 : 0);
+    }
+  }
+  return finish(buildingRamps.tuiles, tones, heights, 1.4);
+}
+
+// Briques des cheminées : rangs de 4 pixels, briques de 8, joints sombres.
+export function createBrickTextures(seed) {
+  const grain = fbm(seed + 2, SIZE, 16, 2);
+  const tones = new Float32Array(SIZE * SIZE);
+  const heights = new Float32Array(SIZE * SIZE);
+  for (let y = 0; y < SIZE; y += 1) {
+    for (let x = 0; x < SIZE; x += 1) {
+      const course = Math.floor(y / 4);
+      const shift = course % 2 ? 4 : 0;
+      const brick = Math.floor((x + shift) / 8) % 8;
+      const joint = y % 4 === 3 || (x + shift) % 8 === 7;
+      const i = y * SIZE + x;
+      tones[i] = joint
+        ? 0.05 + grain(x, y) * 0.08
+        : 0.3 + hash2(brick, course, seed) * 0.35 + (grain(x, y) - 0.5) * 0.15 + (y % 4 === 0 ? 0.1 : 0);
+      heights[i] = joint ? 0 : 0.8;
+    }
+  }
+  return finish(buildingRamps.briques, tones, heights, 1.2);
+}
+
+// Porte : 16 × 32 pixels pour 1 × 2 unités. Planches vertes, deux pentures,
+// une poignée, un arc en plein cintre découpé dans l'enduit.
+export function createDoorTexture() {
+  const width = 16;
+  const height = 32;
+  const wood = createRamp(buildingRamps.porte);
+  const frame = createRamp(buildingRamps.bois);
+  const plaster = createRamp(buildingRamps.enduit);
+  const iron = hexToRgb(ironColor);
+  const buffer = createPixelBuffer(width, height);
+  const archY = 7;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const dx = x + 0.5 - width / 2;
+      const dy = y + 0.5 - archY;
+      const inArch = y >= archY || dx * dx + dy * dy <= 7.5 * 7.5;
+      let rgb;
+      if (!inArch) rgb = plaster[3];
+      else if (x === 0 || x === width - 1 || (y < archY && dx * dx + dy * dy > 6.3 * 6.3)) rgb = frame[1];
+      else if (y === 10 || y === 24) rgb = iron;
+      else if ((x === 11 || x === 12) && y === 17) rgb = iron;
+      else if ((x - 1) % 4 === 0) rgb = wood[0];
+      else rgb = wood[(x - 1) % 4 === 1 ? 3 : 2 - (hash2(x, y >> 2, 5) > 0.75 ? 1 : 0)];
+      setPixel(buffer, x, y, rgb);
+    }
+  }
+  return toDataTexture(buffer, { repeat: false, mipmaps: false });
+}
+
+// Fenêtre : 16 × 16 pixels pour une unité. Cadre de bois, croisée, quatre
+// carreaux éclairés de l'intérieur, appui d'enduit. La texture d'émission
+// reprend les carreaux seuls : c'est elle qui fera briller la fenêtre.
+export function createWindowTextures() {
+  const size = 16;
+  const frame = createRamp(buildingRamps.bois);
+  const glass = createRamp(buildingRamps.vitre);
+  const plaster = createRamp(buildingRamps.enduit);
+  const map = createPixelBuffer(size, size);
+  const glow = createPixelBuffer(size, size);
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const border = x < 2 || x > 13 || y < 2 || y > 13;
+      const mullion = x === 7 || x === 8 || y === 7 || y === 8;
+      if (y === size - 1) {
+        setPixel(map, x, y, plaster[4]);
+        setPixel(glow, x, y, [0, 0, 0]);
+      } else if (border || mullion) {
+        const lit = x === 0 || y === 0 || x === 9 || y === 9;
+        const dark = x === 13 || y === 13 || x === 6 || y === 6;
+        setPixel(map, x, y, frame[lit ? 3 : dark ? 1 : 2]);
+        setPixel(glow, x, y, [0, 0, 0]);
+      } else {
+        const reflection = x - y > 3 && x - y < 6 ? 0.18 : 0;
+        const t = 0.3 + (y / 15) * 0.35 + (1 - Math.abs(x - 7.5) / 6) * 0.25 + reflection;
+        const rgb = glass[rampIndex(t, glass.length, x, y)];
+        setPixel(map, x, y, rgb);
+        setPixel(glow, x, y, rgb);
+      }
+    }
+  }
+  return {
+    map: toDataTexture(map, { repeat: false, mipmaps: false }),
+    emissiveMap: toDataTexture(glow, { repeat: false, mipmaps: false }),
+  };
 }

@@ -57,13 +57,27 @@ export function createMap(rows = ROWS) {
 
   const cellAt = (x, z) => (x < 0 || z < 0 || x >= width || z >= depth ? null : CELL_TYPES[rows[z][x]]);
 
+  // Cases occupées par un bâtiment posé en code (voir world/props.js).
+  const built = new Set();
+  const isBuilt = (x, z) => built.has(z * width + x);
+
   return {
     width,
     depth,
     cellAt,
+    isBuilt,
     isSolid(x, z) {
       const cell = cellAt(x, z);
-      return cell === null || cell.solid;
+      return cell === null || cell.solid || isBuilt(x, z);
+    },
+    // Réserve un rectangle de cases pour un bâtiment.
+    build(x0, z0, sizeX, sizeZ) {
+      for (let z = z0; z < z0 + sizeZ; z += 1) {
+        for (let x = x0; x < x0 + sizeX; x += 1) {
+          if (!cellAt(x, z) || cellAt(x, z).solid) throw new Error(`Carte : on ne peut pas bâtir sur la case ${x}, ${z}.`);
+          built.add(z * width + x);
+        }
+      }
     },
   };
 }

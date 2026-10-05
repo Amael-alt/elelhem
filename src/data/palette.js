@@ -10,11 +10,32 @@ export const terrainRamps = {
   eau: ['#13273d', '#1a3551', '#234665', '#2e597a', '#3e7090', '#5a8ba7', '#84aec2'],
 };
 
+// Maisons : enduit blanc cassé, colombages rouge sang de bœuf et tuiles canal,
+// comme les maisons du Pays basque ; portes vertes, fenêtres éclairées.
+export const buildingRamps = {
+  enduit: ['#867a6b', '#9e917f', '#b6a994', '#cbbea8', '#dcd1bc', '#eae1ce'],
+  bois: ['#2b1411', '#401c17', '#56261d', '#6d3224', '#843f2c'],
+  tuiles: ['#3d1c17', '#5a2a20', '#7a3a28', '#984c31', '#b3623d', '#c97d4f'],
+  briques: ['#3a1d18', '#552a20', '#71382a', '#8c4733', '#a5593f'],
+  porte: ['#17241e', '#203328', '#2a4333', '#355440', '#43664e'],
+  vitre: ['#6e3410', '#a8561a', '#dc862b', '#f7b852', '#ffdc93'],
+};
+
+// Fer des lanternes et des ferrures.
+export const ironColor = '#2b2725';
+
+// Lumière chaude des lanternes et des flammes.
+export const lanternColor = '#ffb060';
+
+// Brume chaude de fin de journée.
+export const hazeColor = '#e8c9a0';
+
 // Cuir des bottes et des ceintures, commun à tous les personnages.
 export const leatherRamp = ['#2a1b16', '#46302a', '#634435', '#815b43'];
 
 // Contour des personnages : sombre et bleuté, jamais noir pur.
 export const outlineColor = '#1b1a2e';
 
-// Ciel provisoire, en attendant la sphère de ciel de l'étape 1d.
-export const backgroundColor = '#4b4466';
+// Ciel provisoire, en attendant la sphère de ciel de l'étape 1d : la couleur
+// de la brume, pour que le lointain s'y fonde.
+export const backgroundColor = hazeColor;

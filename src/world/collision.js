@@ -6,8 +6,23 @@
 const MAX_STEP = 0.2; // au-delà, on découpe le pas pour ne jamais traverser un mur
 const PASSES = 2;
 
-export function createCollider(map) {
+// posts : obstacles ronds posés hors de la grille (poteaux de lanterne),
+// liste de { x, z, radius }.
+export function createCollider(map, posts = []) {
+  function pushOutOfPosts(position, radius) {
+    for (const post of posts) {
+      const dx = position.x - post.x;
+      const dz = position.z - post.z;
+      const distance = Math.hypot(dx, dz);
+      const reach = radius + post.radius;
+      if (distance >= reach || distance < 1e-6) continue;
+      position.x += (dx / distance) * (reach - distance);
+      position.z += (dz / distance) * (reach - distance);
+    }
+  }
+
   function pushOut(position, radius) {
+    pushOutOfPosts(position, radius);
     const minX = Math.floor(position.x - radius);
     const maxX = Math.floor(position.x + radius);
     const minZ = Math.floor(position.z - radius);

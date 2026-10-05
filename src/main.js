@@ -1,26 +1,23 @@
-// Démarrage du Village de LIA : vérifie WebGL2, crée le rendu, lance la boucle.
-// Étape 0 du chantier : la scène n'est qu'un cube éclairé qui tourne, pour
-// valider la chaîne complète (carte d'import, three.js vendu, GitHub Pages).
+// Démarrage du Village de LIA : vérifie WebGL2, assemble le monde et le
+// héros, puis lance la boucle. Étape 1a : sol texturé, caméra qui suit,
+// héros au clavier, collisions. Aucun post-traitement.
 
 import * as THREE from 'three';
-import { createLoadGate } from './core/input.js';
-import { createDebugPanel, isDebugEnabled } from './game/debug.js';
+import { createKeyboard, createLoadGate } from './core/input.js';
+import { createRenderer } from './core/renderer.js';
+import { createFollowCamera } from './core/camera.js';
+import { createVillage } from './world/village.js';
+import { createCharacterSheet } from './gfx/sprites.js';
+import { createBlobShadow, createSprite } from './gfx/billboard.js';
+import { createPlayer } from './game/player.js';
+import { createDebugPanel, installDebugApi, isDebugEnabled } from './game/debug.js';
+import { backgroundColor } from './data/palette.js';
+import { hero } from './data/characters.js';
 
 // Installée avant tout le reste, pour que rien ne passe avant elle.
 const gate = createLoadGate(6);
 
-const MAX_PIXEL_RATIO = 1.5;
 const MAX_FRAME_SECONDS = 0.1; // au retour d'un onglet en veille, pas de saut
-
-// Lumière de fin de journée : soleil bas et chaud, ciel froid.
-const SUN_COLOR = 0xffc07a;
-const SUN_INTENSITY = 4;
-const SUN_ELEVATION_DEG = 22;
-const SUN_AZIMUTH_DEG = -60;
-const SKY_COLOR = 0x8fa4e6;
-const GROUND_COLOR = 0x4a3a2c;
-const HEMI_INTENSITY = 2;
-const BACKGROUND = 0x231b2b;
 
 const canvas = document.getElementById('scene');
 
@@ -51,55 +48,53 @@ function showFatal(text) {
 }
 
 function start() {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
-
+  const renderer = createRenderer(canvas);
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(BACKGROUND);
+  scene.background = new THREE.Color(backgroundColor);
 
-  // Focale étroite et plongée : le futur regard « sur une maquette ».
-  const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
-  camera.position.set(0, 5.6, 7.7);
-  camera.lookAt(0, 0, 0);
+  const village = createVillage(scene);
+  const follow = createFollowCamera();
+  const keyboard = createKeyboard();
 
-  const sun = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
-  const elevation = THREE.MathUtils.degToRad(SUN_ELEVATION_DEG);
-  const azimuth = THREE.MathUtils.degToRad(SUN_AZIMUTH_DEG);
-  sun.position.set(
-    Math.cos(elevation) * Math.sin(azimuth),
-    Math.sin(elevation),
-    Math.cos(elevation) * Math.cos(azimuth),
-  ).multiplyScalar(10);
-  scene.add(sun, new THREE.HemisphereLight(SKY_COLOR, GROUND_COLOR, HEMI_INTENSITY));
+  const sheet = createCharacterSheet(hero);
+  const sprite = createSprite(sheet, village.sunDirection);
+  const shadow = createBlobShadow();
+  scene.add(sprite.object, shadow);
+  const player = createPlayer({ sprite, shadow, village });
 
-  const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(1.6, 1.6, 1.6),
-    new THREE.MeshStandardMaterial({ color: 0xc9925f, roughness: 0.85 }),
-  );
-  cube.rotation.x = 0.35;
-  scene.add(cube);
+  const focusTarget = new THREE.Vector3();
+  follow.snap(player.worldPosition(focusTarget));
 
   function resize() {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
     renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
+    follow.setAspect(width / height);
   }
   window.addEventListener('resize', resize);
   resize();
 
+  const state = { frozen: false };
   const debug = isDebugEnabled() ? createDebugPanel(renderer) : null;
-  let last = performance.now();
 
-  renderer.setAnimationLoop((now) => {
-    const dt = Math.min((now - last) / 1000, MAX_FRAME_SECONDS);
-    last = now;
-
-    cube.rotation.y += dt * 0.6;
-    renderer.render(scene, camera);
-
+  // Une image du jeu. force : avance même figé (tests image par image).
+  function tick(dt, force = false) {
+    const step = state.frozen && !force ? 0 : dt;
+    const zoom = keyboard.takeZoomSteps();
+    if (zoom) follow.zoomBy(zoom);
+    player.update(step, keyboard.direction());
+    follow.follow(player.worldPosition(focusTarget), step);
+    renderer.render(scene, follow.camera);
     gate.frameRendered();
+  }
+
+  installDebugApi({ renderer, player, follow, tick, state, sheet, focusTarget });
+
+  let last = performance.now();
+  renderer.setAnimationLoop((now) => {
+    const dt = Math.min(Math.max((now - last) / 1000, 0), MAX_FRAME_SECONDS);
+    last = now;
+    tick(dt);
     debug?.update(dt);
   });
 }

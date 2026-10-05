@@ -1,0 +1,70 @@
+// Le héros : déplacement, collisions, direction du regard et animation.
+
+import { DIRECTIONS, IDLE_FRAMES, WALK_FRAMES } from '../gfx/sprites.js';
+
+const SPEED = 3.4; // unités par seconde
+const RADIUS = 0.3;
+const WALK_FPS = 7;
+const IDLE_FPS = 1.6;
+
+// En diagonale, on garde la direction en cours si elle fait partie du
+// mouvement : le personnage ne tremble pas entre deux vues.
+function chooseFacing(move, current) {
+  const horizontal = Math.abs(move.x) > 1e-3;
+  const vertical = Math.abs(move.z) > 1e-3;
+  const h = move.x < 0 ? 'left' : 'right';
+  const v = move.z < 0 ? 'up' : 'down';
+  if (horizontal && vertical) {
+    if (current === h || current === v) return current;
+    return Math.abs(move.x) >= Math.abs(move.z) ? h : v;
+  }
+  return horizontal ? h : v;
+}
+
+export function createPlayer({ sprite, shadow, village }) {
+  const position = { x: village.spawn.x, z: village.spawn.z };
+  let facing = 'down';
+  let moving = false;
+  let clock = 0;
+
+  function place() {
+    const y = village.groundHeight(position.x, position.z);
+    sprite.object.position.set(position.x, y, position.z);
+    shadow.position.set(position.x, y + 0.01, position.z);
+  }
+
+  place();
+
+  return {
+    position,
+    get facing() {
+      return facing;
+    },
+    get moving() {
+      return moving;
+    },
+    // direction : { x, z } de longueur 1 au plus.
+    update(dt, direction) {
+      const wasMoving = moving;
+      moving = Math.hypot(direction.x, direction.z) > 0.01;
+      if (moving !== wasMoving) clock = 0;
+      clock += dt;
+      if (moving) {
+        village.collider.move(position, direction.x * SPEED * dt, direction.z * SPEED * dt, RADIUS);
+        facing = chooseFacing(direction, facing);
+      }
+      const frames = moving ? WALK_FRAMES : IDLE_FRAMES;
+      const fps = moving ? WALK_FPS : IDLE_FPS;
+      sprite.setFrame(DIRECTIONS.indexOf(facing), frames[Math.floor(clock * fps) % frames.length]);
+      place();
+    },
+    teleport(x, z) {
+      position.x = x;
+      position.z = z;
+      place();
+    },
+    worldPosition(target) {
+      return target.set(position.x, village.groundHeight(position.x, position.z), position.z);
+    },
+  };
+}

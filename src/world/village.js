@@ -1,5 +1,6 @@
-// Composition du village : carte, sol, maisons, arbres, lanternes, lumières,
-// ciel et effets de vie (lucioles, poussière, fumée, rayons de soleil).
+// Composition du village : carte, sol, maisons, tours, chantier, puits,
+// arbres, lanternes, lumières, ciel et effets de vie (lucioles, poussière,
+// fumée, rayons de soleil). L'implantation est dans world/layout.js.
 //
 // Lumière dorée de fin de journée : un soleil bas et chaud venu de
 // l'ouest-sud-ouest, des ombres longues, un ciel froid en lumière d'ambiance
@@ -11,6 +12,14 @@ import { createMap } from './map.js';
 import { createTerrain } from './terrain.js';
 import { createCollider } from './collision.js';
 import { buildHouse, buildLantern, buildTree, LANTERN_FLAME, LANTERN_POST_RADIUS, TREE_TRUNK_RADIUS } from './props.js';
+import {
+  buildAnvil, buildBarrel, buildBench, buildCrate, buildHearth, buildSign, buildSite, buildTower, buildVegetables, buildWell,
+} from './landmarks.js';
+import {
+  ANVIL, BARRELS, BENCHES, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, SIGN, SITE, SPAWN, SUN_RAYS,
+  PIGEONS, TOWERS, TREES, VEGETABLES, WELL,
+} from './layout.js';
+import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
@@ -43,60 +52,6 @@ const LANTERN_SHADOW_SIZE = 256;
 const WINDOW_GLOW = 2.4;
 const HAZE_START = 4; // au-delà de la distance de la caméra
 const HAZE_DEPTH = 70;
-
-// Maisons : coin nord-ouest (x, z), emprise en cases, hauteur des murs, montée
-// du toit, axe du faîtage, porte et fenêtres (côté, décalage depuis le milieu
-// du mur, hauteur), cheminée (position relative dans le repère de la maison).
-const HOUSES = [
-  {
-    x: 17, z: 4, sizeX: 4, sizeZ: 3, wall: 2.6, rise: 1.5, ridge: 'x',
-    door: { side: 'south', offset: -0.6 },
-    windows: [{ side: 'south', offset: 1.0 }, { side: 'west', offset: 0 }],
-    chimney: [0.75, 0.3],
-  },
-  {
-    x: 3, z: 14, sizeX: 4, sizeZ: 3, wall: 2.6, rise: 1.6, ridge: 'z',
-    door: { side: 'south', offset: -0.8 },
-    windows: [{ side: 'south', offset: 0.9 }, { side: 'south', offset: 0, y: 2.75 }],
-    chimney: [0.3, 0.75],
-  },
-  {
-    x: 20, z: 15, sizeX: 4, sizeZ: 3, wall: 2.4, rise: 1.5, ridge: 'z',
-    door: { side: 'south', offset: 0.7 },
-    windows: [{ side: 'south', offset: -0.9 }, { side: 'south', offset: 0, y: 2.6 }, { side: 'west', offset: 0 }],
-    chimney: [0.7, 0.3],
-  },
-  {
-    x: 16, z: 18, sizeX: 4, sizeZ: 3, wall: 2.6, rise: 1.4, ridge: 'x',
-    door: { side: 'south', offset: 0.6 },
-    windows: [{ side: 'south', offset: -1.0 }, { side: 'west', offset: 0 }],
-    chimney: [0.25, 0.7],
-  },
-];
-
-// Quatre lanternes avec ombre : les deux coins nord de la place, son coin
-// sud-ouest, et le gué.
-const LANTERNS = [[10.5, 9.5], [19.5, 9.5], [10.5, 15.5], [22.5, 11.4]];
-
-// Arbres : position du tronc, taille (1 : moyen).
-const TREES = [
-  [1.5, 1.5, 1.1], [12.8, 2.0, 0.9], [6.5, 5.0, 0.85], [21.0, 1.5, 1.0], [29.5, 6.5, 1.15],
-  [28.8, 15.5, 1.0], [1.8, 20.5, 1.2], [11.5, 21.0, 0.95], [23.0, 22.0, 1.05],
-];
-
-// Lucioles : [x, z, rayon] des coins où elles se rassemblent.
-const FIREFLY_ANCHORS = [
-  [7, 5, 2.5], [24, 6, 2.5], [29.5, 6.5, 2], [11.5, 21, 2.2], [2, 20, 2.5], [15, 12.5, 4], [27, 16, 2],
-];
-
-// Rayons de soleil : centre, longueur, largeur, opacité (0,06 à 0,12).
-const SUN_RAYS = [
-  { center: [9, 4.5, 11], length: 12, width: 1.6, opacity: 0.1 },
-  { center: [14, 4.5, 7.5], length: 11, width: 0.9, opacity: 0.08 },
-  { center: [17.5, 4.5, 13], length: 13, width: 2.0, opacity: 0.12 },
-  { center: [21, 4.5, 9], length: 10, width: 1.2, opacity: 0.07 },
-  { center: [12, 4.5, 16.5], length: 12, width: 1.4, opacity: 0.06 },
-];
 
 function sunDirectionFrom(elevationDeg, azimuthDeg) {
   const elevation = THREE.MathUtils.degToRad(elevationDeg);
@@ -131,18 +86,33 @@ function createMaterials() {
 }
 
 // Une géométrie fusionnée par matière pour tout ce qui est bâti ou planté.
+// flames : { lit, decor, hearth }, les points où se posent les flammes.
 function createBuildings(materials, posts) {
   const keys = ['plaster', 'wood', 'roof', 'stone', 'brick', 'door', 'window', 'post', 'iron', 'bark', 'leaves'];
   const builders = Object.fromEntries(keys.map((key) => [key, createMeshBuilder()]));
-  const chimneys = HOUSES.map((house) => buildHouse(house, builders)).filter(Boolean);
+  const addPosts = (list) => posts.push(...[list].flat());
+
+  const chimneys = Object.values(HOUSES).map((house) => buildHouse(house, builders)).filter(Boolean);
+  for (const tower of Object.values(TOWERS)) addPosts(buildTower(tower, builders));
+  addPosts(buildSite(SITE, builders));
+  addPosts(buildWell(WELL, builders));
+  addPosts(buildAnvil(ANVIL, builders));
+  const hearth = buildHearth(HEARTH, builders);
+  addPosts(hearth.obstacle);
+  for (const barrel of BARRELS) addPosts(buildBarrel(barrel, builders));
+  for (const crate of CRATES) addPosts(buildCrate(crate, builders));
+  for (const bench of BENCHES) addPosts(buildBench(bench, builders));
+  buildSign(SIGN, builders);
+  for (const garden of VEGETABLES) buildVegetables(garden, builders);
   TREES.forEach(([x, z, size], i) => {
     posts.push({ x, z, radius: TREE_TRUNK_RADIUS * size });
     buildTree(x, z, { size, seed: i }, builders);
   });
-  const flames = LANTERNS.map(([x, z]) => {
+  const lanternFlame = ([x, z]) => {
     posts.push({ x, z, radius: LANTERN_POST_RADIUS });
     return buildLantern(x, z, builders);
-  });
+  };
+  const flames = { lit: LANTERNS.map(lanternFlame), decor: DECOR_LANTERNS.map(lanternFlame), hearth: [hearth.flame] };
 
   const group = new THREE.Group();
   group.name = 'constructions';
@@ -165,7 +135,9 @@ function createBuildings(materials, posts) {
 
 export function createVillage(scene, { narrowScreen = false } = {}) {
   const map = createMap();
-  for (const house of HOUSES) map.build(house.x, house.z, house.sizeX, house.sizeZ);
+  for (const house of Object.values(HOUSES)) map.build(house.x, house.z, house.sizeX, house.sizeZ);
+  for (const tower of Object.values(TOWERS)) map.build(tower.x, tower.z, tower.size, tower.size);
+  map.build(SITE.x, SITE.z, SITE.sizeX, SITE.sizeZ);
 
   const materials = createMaterials();
   scene.add(createTerrain(map, materials));
@@ -173,7 +145,8 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
   const buildings = createBuildings(materials, posts);
   scene.add(buildings.group);
 
-  const flames = createFlames(buildings.flames, LANTERN_FLAME);
+  const { lit, decor, hearth } = buildings.flames;
+  const flames = createFlames([...lit, ...decor, ...hearth], LANTERN_FLAME);
   scene.add(flames.mesh);
 
   // Soleil. Son cadrage d'ombre suit la caméra (voir update) : 44 unités de
@@ -189,6 +162,8 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
     createSmoke(buildings.chimneys, fx),
     createSunRays(SUN_RAYS, sunDirection, fx),
   );
+  const pigeons = createPigeons(PIGEONS);
+  scene.add(pigeons.mesh);
   const sun = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
   const shadowSize = narrowScreen ? 1024 : 2048;
   sun.castShadow = true;
@@ -216,7 +191,7 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
   const snapped = new THREE.Vector3();
 
   // Lanternes : lumière chaude, ombres calculées une seule fois.
-  const lanterns = buildings.flames.map((flame, i) => {
+  const lanterns = buildings.flames.lit.map((flame, i) => {
     const light = new THREE.PointLight(lanternColor, LANTERN_INTENSITY, LANTERN_RANGE, 2);
     light.position.set(flame.x, flame.y + 0.12, flame.z);
     light.castShadow = true;
@@ -241,7 +216,7 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
       posts.push({ x, z, radius });
     },
     sunDirection,
-    spawn: { x: 15.5, z: 12.5 },
+    spawn: SPAWN,
     groundHeight(x, z) {
       return map.cellAt(Math.floor(x), Math.floor(z))?.height ?? 0;
     },
@@ -252,6 +227,7 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
     // focus : point visé par la caméra ; cameraDistance : son recul.
     update(time, focus, cameraDistance) {
       fx.uTime.value = time;
+      pigeons.update(time);
       fx.uFocus.value.copy(focus);
       const along = Math.round(focus.dot(lightRight) / texel) * texel;
       const across = Math.round(focus.dot(lightUp) / texel) * texel;

@@ -2,34 +2,46 @@
 // unité. Ligne 0 au nord (z = 0), colonne 0 à l'ouest (x = 0). Le type de
 // cellule donne sa hauteur, sa matière et si on peut y marcher.
 //
-// Carte provisoire de l'étape 1 : une place pavée, des chemins de terre, un
-// jardin clos de murets, une rivière franchie par un gué pavé.
+// Carte du village, 40 × 30 cases : une place pavée au centre, des routes de
+// terre vers chaque quartier, la muraille et sa porte à l'ouest, la rivière
+// et son pont à l'est, des falaises au nord et à l'est, des haies autour des
+// jardins. Les maisons, tours et le chantier sont posés par world/village.js
+// sur ces cases (map.build) ; leur emplacement est donc lisible là-bas.
+//
+//   . herbe   t terre   p pavés   ~ eau   # muret   b pont
+//   c falaise   W muraille   h haie
 
 const ROWS = [
-  '...............t........~~~.....',
-  '...............t........~~~.....',
-  '...............t.......~~~......',
-  '...#########...t.......~~~......',
-  '...#.......#...t......~~~.......',
-  '...#.......#...t......~~~.......',
-  '...#.......#...t......~~~.......',
-  '...####.####...t......~~~.......',
-  '.......t.......t......~~~.......',
-  '.......t..pppppppppp...~~~......',
-  '.......tttpppppppppp...~~~......',
-  '..........pppppppppp...~~~......',
-  'ttttttttttpppppppppptttppppttttt',
-  '..........pppppppppp....~~~.....',
-  '..........pppppppppp....~~~.....',
-  '..........pppppppppp.....~~~....',
-  '..............t..........~~~....',
-  '..............t..........~~~....',
-  '...#######....t...........~~~...',
-  '..............t...........~~~...',
-  '..............t............~~~..',
-  '..............t............~~~..',
-  '..............t............~~~..',
-  '..............t............~~~..',
+  'cccccccccccccccccccccccccccccccccccccccc',
+  'cccccccccccccccccccccccccccccccccccccccc',
+  'ccccccc.......................~~~.cccccc',
+  'cc.................tt.........~~~.....cc',
+  '..W................tt.........~~~.....cc',
+  '..W................tt.....hhhh~~~.....cc',
+  '..W................tt.....htth~~~.....cc',
+  '..W................tt.....htth~~~.....cc',
+  '..W................tt.....htth~~~.....cc',
+  '..W..........tt....tt.....htth~~~.....cc',
+  '..W..tt......tt....tt...tt....~~~.....cc',
+  '..W..tt.......pppppppppppp....~~~.....cc',
+  '..W..tt.......pppppppppppp....~~~.....cc',
+  '.....tt.......pppppppppppp....###.ttt.cc',
+  '...tttttttttttppppppppppppttttbbb.ttttcc',
+  '...tttttttttttppppppppppppttttbbb.ttttcc',
+  '..W...........pppppppppppp....###.ttt.cc',
+  '..W...........pppppppppppp.....~~~....cc',
+  '..W...........pppppppppppp.....~~~....cc',
+  '..W................tttttt......~~~....cc',
+  '..W................ttttt.......~~~....cc',
+  '..W..........hhhhh.ttttt.......~~~....cc',
+  '..W..........httth.ttttt.......~~~....cc',
+  '..W..........hhthh.ttttt.......~~~....cc',
+  '..W......ttttttttttttttt.......~~~....cc',
+  '..W......ttttttttttttttt.......~~~....cc',
+  '...................ttttt.......~~~....cc',
+  '..................htth.........~~~....cc',
+  '..................htth.........~~~....cc',
+  '...................tt..........~~~....cc',
 ];
 
 // matter : texture du dessus ; side : texture des flancs ; height : hauteur
@@ -40,6 +52,10 @@ export const CELL_TYPES = {
   p: { name: 'pavés', matter: 'cobble', side: 'dirt', height: 0, solid: false },
   '~': { name: 'eau', matter: 'water', side: 'dirt', height: -0.35, solid: true },
   '#': { name: 'muret', matter: 'cobble', side: 'cobble', height: 0.8, solid: true },
+  b: { name: 'pont', matter: 'cobble', side: 'cobble', height: 0, solid: false },
+  c: { name: 'falaise', matter: 'grass', side: 'rock', height: 1.8, solid: true },
+  W: { name: 'muraille', matter: 'cobble', side: 'cobble', height: 2.6, solid: true },
+  h: { name: 'haie', matter: 'leaves', side: 'leaves', height: 0.95, solid: true },
 };
 
 // Hauteur du dessous du socle : les flancs descendent jusque-là.

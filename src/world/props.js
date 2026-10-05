@@ -19,7 +19,7 @@ const ROOF_THICKNESS = 0.12;
 const OPENING_OUT = 0.07; // portes et fenêtres, juste devant le mur
 const DOOR = { width: 0.95, height: GIRT_Y };
 const WINDOW = { size: 0.8, y: 0.85 };
-const CHIMNEY = 0.5;
+const CHIMNEY = 0.5; // section de la cheminée, réglable par maison (chimneySize)
 
 const tile = (value) => value / TILE_UNITS;
 
@@ -134,8 +134,9 @@ export function buildHouse(house, builders) {
 
   if (!house.chimney) return null;
   const [cu, cw] = [house.chimney[0] * L, house.chimney[1] * S];
-  const top = ridgeY + 0.6;
-  pushBox(frames.brick, [cu - CHIMNEY / 2, wall, cw - CHIMNEY / 2], [cu + CHIMNEY / 2, top, cw + CHIMNEY / 2]);
+  const size = house.chimneySize ?? CHIMNEY;
+  const top = ridgeY + (house.chimneyRise ?? 0.6);
+  pushBox(frames.brick, [cu - size / 2, wall, cw - size / 2], [cu + size / 2, top, cw + size / 2]);
   return swap ? [house.x + cw, top, house.z + cu] : [house.x + cu, top, house.z + cw];
 }
 

@@ -40,6 +40,7 @@ export const effectColors = {
   fumeeSombre: '#58524f',
   fumeeClaire: '#d9c3ad',
   rayon: '#ffd9a0',
+  pigeon: '#9aa6bd',
 };
 
 // Fer des lanternes et des ferrures.

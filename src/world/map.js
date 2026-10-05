@@ -9,11 +9,11 @@
 // sur ces cases (map.build) ; leur emplacement est donc lisible là-bas.
 //
 //   . herbe   t terre   p pavés   ~ eau   # muret   b pont
-//   c falaise   W muraille   h haie
+//   c falaise   W muraille   h haie   r rivière haute (avant la cascade)
 
 const ROWS = [
-  'cccccccccccccccccccccccccccccccccccccccc',
-  'cccccccccccccccccccccccccccccccccccccccc',
+  'ccccccccccccccccccccccccccccccrrrccccccc',
+  'ccccccccccccccccccccccccccccccrrrccccccc',
   'ccccccc.......................~~~.cccccc',
   'cc.................tt.........~~~.....cc',
   '..W................tt.........~~~.....cc',
@@ -55,7 +55,8 @@ export const CELL_TYPES = {
   b: { name: 'pont', matter: 'cobble', side: 'cobble', height: 0, solid: false },
   c: { name: 'falaise', matter: 'grass', side: 'rock', height: 1.8, solid: true },
   W: { name: 'muraille', matter: 'cobble', side: 'cobble', height: 2.6, solid: true },
-  h: { name: 'haie', matter: 'leaves', side: 'leaves', height: 0.95, solid: true },
+  h: { name: 'haie', matter: 'leaves', side: 'leaves', height: 0.45, solid: true }, // basse : ses grappes la couvrent
+  r: { name: 'rivière haute', matter: 'water', side: 'rock', height: 1.55, solid: true },
 };
 
 // Hauteur du dessous du socle : les flancs descendent jusque-là.

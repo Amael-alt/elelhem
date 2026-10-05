@@ -13,16 +13,23 @@ import { createTerrain } from './terrain.js';
 import { createCollider } from './collision.js';
 import { buildHouse, buildLantern, buildTree, LANTERN_FLAME, LANTERN_POST_RADIUS, TREE_TRUNK_RADIUS } from './props.js';
 import {
-  buildAnvil, buildBarrel, buildBench, buildCampfire, buildCrate, buildFence, buildHaystack, buildHearth, buildRock, buildSign,
-  buildSite, buildStall, buildTower, buildVegetables, buildWell,
+  buildAnvil, buildBarrel, buildBench, buildCampfire, buildCrate, buildFence, buildFlowerPot, buildHaystack, buildHearth,
+  buildRock, buildSign, buildSignpost, buildSite, buildStall, buildTable, buildTower, buildVegetables, buildWell, buildWoodpile,
 } from './landmarks.js';
 import {
-  ANVIL, BARRELS, BENCHES, BUSHES, CAMPFIRE, FENCES, HAYSTACKS, MEADOWS, ROCKS, STALLS, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, SIGN, SITE, SPAWN, SUN_RAYS,
-  PIGEONS, TOWERS, TREES, VEGETABLES, WELL,
+  ANVIL, BARRELS, BENCHES, BUNTING, BUSHES, BUTTERFLIES, CAMPFIRE, FENCES, FLOWER_POTS, HAYSTACKS, MEADOWS, ROCKS, SIGNPOSTS,
+  STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, SIGN, SITE, SPAWN, SUN_RAYS,
+  PIGEONS, TOWERS, TREES, VEGETABLES, WATERFALL, WELL,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createFoliage, crownClumps } from '../gfx/foliage.js';
 import { createGrass, FIRST_FLOWER_VARIANT, FLOWER_VARIANTS, scatterTufts } from '../gfx/grass.js';
+import { createWaterfall } from '../gfx/fx/waterfall.js';
+import { createOutskirts } from './outskirts.js';
+import { createFringes } from '../gfx/fringes.js';
+import { createBunting } from '../gfx/bunting.js';
+import { createLightPools } from '../gfx/lightpools.js';
+import { createButterflies, createFallingLeaves } from '../gfx/fx/leaves.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
@@ -55,6 +62,8 @@ const LANTERN_SHADOW_SIZE = 256;
 const WINDOW_GLOW = 2.4;
 const HAZE_START = 4; // au-delà de la distance de la caméra
 const HAZE_DEPTH = 70;
+const WATER_FLOW = 0.12; // défilement de la rivière, en tuiles par seconde
+const GRASS_DENSITY_LIGHT = 0.65; // sur téléphone, un tiers de touffes en moins
 
 function sunDirectionFrom(elevationDeg, azimuthDeg) {
   const elevation = THREE.MathUtils.degToRad(elevationDeg);
@@ -109,6 +118,12 @@ function createBuildings(materials, posts) {
   for (const fence of FENCES) addPosts(buildFence(fence, builders));
   for (const stack of HAYSTACKS) addPosts(buildHaystack(stack, builders));
   for (const rock of ROCKS) addPosts(buildRock(rock, builders));
+  for (const table of TABLES) addPosts(buildTable(table, builders));
+  for (const post of SIGNPOSTS) addPosts(buildSignpost(post, builders));
+  addPosts(buildWoodpile(WOODPILE, builders));
+  const pots = FLOWER_POTS.map((pot) => buildFlowerPot(pot, builders));
+  for (const pot of pots) addPosts(pot.obstacle);
+  planters.push(...pots.map((pot) => pot.flowers));
   const campfire = buildCampfire(CAMPFIRE, builders);
   addPosts(campfire.obstacle);
   chimneys.push(campfire.smoke);
@@ -125,11 +140,14 @@ function createBuildings(materials, posts) {
   for (const garden of VEGETABLES) buildVegetables(garden, builders);
   // Couronnes : les grappes de tous les arbres, dessinées ensemble (voir createVillage).
   const clumps = [];
+  const autumnCrowns = []; // d'où tombent les feuilles
   TREES.forEach(([x, z, size, kind = 'vert'], i) => {
     posts.push({ x, z, radius: TREE_TRUNK_RADIUS * size });
     const crown = buildTree(x, z, { size }, builders);
     const tints = foliageTints[kind];
-    clumps.push(...crownClumps(crown.center, crown.radius, tints[i % tints.length], i));
+    const tint = tints[i % tints.length];
+    clumps.push(...crownClumps(crown.center, crown.radius, tint, i));
+    if (kind === 'automne') autumnCrowns.push({ ...crown.center, radius: crown.radius, tint });
   });
   const lanternFlame = ([x, z]) => {
     posts.push({ x, z, radius: LANTERN_POST_RADIUS });
@@ -153,7 +171,7 @@ function createBuildings(materials, posts) {
     mesh.matrixAutoUpdate = false;
     group.add(mesh);
   }
-  return { group, flames, chimneys, clumps, planters };
+  return { group, flames, chimneys, clumps, planters, autumnCrowns };
 }
 
 export function createVillage(scene, { narrowScreen = false } = {}) {
@@ -196,12 +214,47 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
     ];
   });
   for (const [x, z, size] of BUSHES) posts.push({ x, z, radius: 0.4 * size });
-  scene.add(createFoliage([...buildings.clumps, ...bushClumps], fx.uTime));
+  // Haies : chaque case de haie se couvre de deux grappes, le bloc devient touffu.
+  const hedgeClumps = [];
+  for (let z = 0; z < map.depth; z += 1) {
+    for (let x = 0; x < map.width; x += 1) {
+      if (map.cellAt(x, z)?.name !== 'haie') continue;
+      const tint = foliageTints.haie[(x + z) % foliageTints.haie.length];
+      hedgeClumps.push(
+        { x: x + 0.5, y: 0.62, z: z + 0.5, size: 1.3, tint },
+        { x: x + 0.5 + (((x * 7 + z) % 3) - 1) * 0.15, y: 0.85, z: z + 0.65, size: 1.0, tint },
+      );
+    }
+  }
+  // Le monde autour du village : plateau, plaine, rivière, routes, lisière.
+  const outskirts = createOutskirts(map, materials, { tints: foliageTints, light: narrowScreen });
+  scene.add(outskirts.group);
+  scene.add(createFoliage([...buildings.clumps, ...bushClumps, ...hedgeClumps, ...outskirts.clumps], fx.uTime));
+  scene.add(createWaterfall(WATERFALL, materials.water.map, fx));
+  // Lisières dentelées, fanions, flaques de lumière, feuilles et papillons.
+  scene.add(createFringes(map, materials.grass));
+  scene.add(createBunting(BUNTING, fx.uTime));
+  scene.add(createLightPools([
+    ...buildings.flames.lit.map((f) => ({ x: f.x, y: 0, z: f.z, radius: 2.0, strength: 0.45 })),
+    ...buildings.flames.decor.map((f) => ({ x: f.x, y: 0, z: f.z, radius: 1.7 })),
+    ...buildings.flames.hearth.map((f) => ({ x: f.x, y: 0, z: f.z, radius: 1.8, strength: 1.2 })),
+  ]));
+  scene.add(createFallingLeaves([...buildings.autumnCrowns, ...outskirts.autumnCrowns], fx));
+  scene.add(createButterflies(BUTTERFLIES, fx));
+  // La rivière coule vers le sud : sa texture défile.
+  const waterCompile = materials.water.onBeforeCompile;
+  materials.water.onBeforeCompile = (shader, renderer) => {
+    waterCompile(shader, renderer);
+    shader.uniforms.uTime = fx.uTime;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nuniform float uTime;')
+      .replace('#include <uv_vertex>', `#include <uv_vertex>\nvMapUv.y += uTime * ${WATER_FLOW.toFixed(3)};`);
+  };
 
   // Herbe en touffes : partout où il y a de l'herbe libre.
   const blocked = (x, z) => posts.some((post) => Math.hypot(x - post.x, z - post.z) < post.radius + 0.15);
   const planterFlowers = buildings.planters.map((point, i) => ({ ...point, variant: FIRST_FLOWER_VARIANT + (i % FLOWER_VARIANTS) }));
-  scene.add(createGrass([...scatterTufts(map, { meadows: MEADOWS, blocked }), ...planterFlowers], fx.uTime));
+  scene.add(createGrass([...scatterTufts(map, { meadows: MEADOWS, blocked, density: narrowScreen ? GRASS_DENSITY_LIGHT : 1 }), ...planterFlowers, ...outskirts.tufts], fx.uTime));
   const pigeons = createPigeons(PIGEONS);
   scene.add(pigeons.mesh);
   const sun = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);

@@ -31,6 +31,7 @@ export function createAreaBanner(element, regions, names) {
       if (id === current) return;
       current = id;
       if (id) show(id);
+      else element.classList.add('lieu-sortie'); // entre deux quartiers, le bandeau s'efface
     },
     get current() {
       return current;

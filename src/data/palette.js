@@ -44,10 +44,15 @@ export const foliageTints = {
   vert: ['#9fce62', '#8fc257', '#b2d36c', '#86b85a'],
   automne: ['#f2a553', '#e3803f', '#f4c75e', '#d9693a'],
   buisson: ['#7fb251', '#8bbd58', '#74a64b'],
+  haie: ['#6e9c45', '#77a64b', '#67933f'],
 };
 
 // Fleurs des prés : pétales blancs, jaunes, roses, bleus.
 export const flowerColors = { blanc: '#f3eedf', jaune: '#f5cf48', rose: '#ee8aa2', bleu: '#8fb3f2' };
+
+// Fanions de la place et papillons des prés.
+export const buntingColors = ['#c8443a', '#e9b949', '#4f7fc0', '#efe6d2', '#5f9a4e', '#b1508a'];
+export const butterflyColors = ['#f6f1e4', '#f3d25a', '#f0a6c0', '#a8c8f5'];
 
 // Effets : lucioles vert-jaune, poussière dorée, fumée gris chaud, rayons.
 export const effectColors = {
@@ -57,6 +62,7 @@ export const effectColors = {
   fumeeClaire: '#d9c3ad',
   rayon: '#ffd9a0',
   pigeon: '#9aa6bd',
+  ecume: '#eef6ff',
 };
 
 // Fer des lanternes et des ferrures.

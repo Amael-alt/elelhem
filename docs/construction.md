@@ -274,3 +274,27 @@ Mesures (navigateur intégré, poste de développement, panneau `?debug` qui tou
 | Console | aucune erreur | aucune erreur |
 
 Pas encore fait : les personnages plus détaillés (décidé avec Jordan : plus tard) ; la mesure sur téléphone, plus nécessaire que jamais avec l'herbe dense : si le téléphone peine, la densité des touffes est le premier réglage à baisser.
+
+## Musique et passe de QA « Octopath » (5 octobre 2026)
+
+**Musique.** Jordan a composé une musique de fond avec Suno, « The Village Bell ». Le fichier reçu faisait 5,4 Mo avec sa pochette et des métadonnées de compte : il est réencodé à 96 kb/s (2,6 Mo), sans métadonnées, et les silences de début et de fin sont retirés pour que la boucle n'ait pas de trou. La musique ne se télécharge qu'au lancement du jeu (le geste qui ferme l'écran titre, seul moment où un navigateur autorise le son), monte en fondu jusqu'à un volume bas, se fait plus discrète pendant les dialogues, s'arrête quand l'onglet est caché. Bouton en haut à droite et touche M pour la couper ; le choix est retenu. Le volume passe par un gain Web Audio : sur iPhone, le volume d'un élément audio est ignoré. Le crochet de pré-commit a dû apprendre à sauter les fichiers binaires, dont les octets passaient pour des tirets longs.
+
+**Passe de QA.** Tour du village en captures, avec pour grille ce qui fait la patte d'Octopath Traveler. Ce qui n'allait pas, et ce qui a été fait :
+
+| Écart relevé | Correction |
+|---|---|
+| Le socle flottait dans le vide : ciel rose au bord de la muraille, coupe du socle au sud | **Monde extérieur** (`world/outskirts.js`) : plateau au niveau des falaises au nord et à l'est, plaine à l'ouest et au sud, routes qui filent vers l'horizon, forêt de lisière, puis la brume |
+| La rivière sortait d'un mur de falaise | **Cascade** (`gfx/fx/waterfall.js`) : la rivière vient du plateau et tombe dans le village, filets d'écume, bouillons au pied, brume ; la rivière **coule** désormais (texture qui défile vers le sud) |
+| Chemins et place en carrés parfaits | **Lisières** (`gfx/fringes.js`) : des taches d'herbe à bord dentelé, à cheval sur chaque bord herbe et chemin, lues dans la texture de l'herbe aux coordonnées du monde (invisibles côté herbe, dentelées côté chemin), et quelques taches d'usure au milieu des chemins |
+| Haies en blocs | Haies abaissées et couvertes de grappes de feuillage |
+| Place un peu vide | **Fanions** de couleur tout autour de la place, qui flottent au vent (`gfx/bunting.js`) |
+| Lanternes d'ambiance sans lumière au sol | **Flaques de lumière** en anneaux tramés sous chaque lanterne et autour des feux (`gfx/lightpools.js`) |
+| Peu d'objets de vie | Terrasse de l'auberge (tables, bancs, chopes), pots de fleurs aux portes, poteaux indicateurs, tas de bois de la forge |
+| Décor immobile | **Feuilles** qui tombent des arbres roux, **papillons** dans les prés (`gfx/fx/leaves.js`) |
+| Bandeau de lieu resté affiché entre deux quartiers | Il s'efface quand on quitte un quartier |
+
+Le parcours scripté a trouvé une régression : une table de la terrasse barrait le passage entre l'auberge et la route du sud. Elle a été déplacée ; 33 points sur 33 de nouveau.
+
+**Mode allégé sur téléphone** (écran étroit) : forêt de lisière moins profonde, un tiers de touffes d'herbe en moins.
+
+Mesures (navigateur intégré) : 99 à 104 appels de dessin en bureau, 89 en mobile ; 49 500 triangles en bureau, 36 900 en mobile ; 0 % de pixels saturés ; aucune erreur. Le coût d'une image, GPU compris (`__lia.bench`), passe de 0,42 à 0,71 ms sur le poste de développement. Les images/s ne sont pas mesurables cette fois (panneau du navigateur intégré masqué) ; sur téléphone, c'est la mesure de Jordan qui tranchera.

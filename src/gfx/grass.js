@@ -121,7 +121,8 @@ export function createGrass(tufts, time, seed = 31) {
 // denses en lisière (au bord d'un chemin, d'un mur, d'une haie), fleuries dans
 // les prés désignés et un peu partout ailleurs. blocked(x, z) : vrai si un
 // obstacle occupe ce point.
-export function scatterTufts(map, { meadows = [], blocked = () => false, seed = 5 } = {}) {
+// density : part des touffes gardées (1 partout, moins sur téléphone).
+export function scatterTufts(map, { meadows = [], blocked = () => false, seed = 5, density = 1 } = {}) {
   const rng = createRng(seed);
   const tufts = [];
   const isGrass = (x, z) => {
@@ -139,7 +140,7 @@ export function scatterTufts(map, { meadows = [], blocked = () => false, seed = 
       for (let i = 0; i < count; i += 1) {
         const px = x + 0.1 + rng() * 0.8;
         const pz = z + 0.1 + rng() * 0.8;
-        if (blocked(px, pz)) continue;
+        if (blocked(px, pz) || rng() > density) continue;
         const flower = rng() < (meadow ? 0.45 : 0.08);
         const variant = flower
           ? GRASS_VARIANTS + Math.floor(rng() * FLOWER_VARIANTS)

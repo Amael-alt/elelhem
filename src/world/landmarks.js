@@ -326,3 +326,52 @@ export function buildCampfire({ x, z }, builders) {
   pushBox(bark, [-0.07, 0.02, -0.35], [0.07, 0.16, 0.35]);
   return { obstacle: { x, z, radius: 0.6 }, flame: { x, y: 0.42, z }, smoke: [x, 0.8, z] };
 }
+
+// Table de terrasse : plateau sur pied, deux bancs, des chopes.
+export function buildTable({ x, z }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  pushBox(wood, [-0.55, 0.7, -0.35], [0.55, 0.78, 0.35]);
+  pushBox(wood, [-0.08, 0, -0.08], [0.08, 0.7, 0.08]);
+  pushBox(wood, [-0.35, 0, -0.25], [0.35, 0.06, 0.25]);
+  for (const side of [-1, 1]) {
+    pushBox(wood, [-0.55, 0.4, side * 0.55 - 0.13], [0.55, 0.46, side * 0.55 + 0.13]);
+    for (const lx of [-0.42, 0.42]) pushBox(wood, [lx - 0.04, 0, side * 0.55 - 0.08], [lx + 0.04, 0.4, side * 0.55 + 0.08]);
+  }
+  for (const [mx, mz] of [[-0.25, -0.1], [0.2, 0.12], [0.32, -0.15]]) pushBox(iron, [mx - 0.05, 0.78, mz - 0.05], [mx + 0.05, 0.92, mz + 0.05]);
+  return { x, z, radius: 0.75 };
+}
+
+// Pot de fleurs en terre cuite : un petit massif de brique, les fleurs sont
+// posées dessus en touffes fleuries. Renvoie l'obstacle et le point des fleurs.
+export function buildFlowerPot({ x, z }, builders) {
+  const brick = createFrame(builders.brick, [x, 0, z]);
+  pushBox(brick, [-0.17, 0, -0.17], [0.17, 0.3, 0.17], { groundAo: 0.6 });
+  pushBox(brick, [-0.2, 0.26, -0.2], [0.2, 0.34, 0.2]);
+  return { obstacle: { x, z, radius: 0.22 }, flowers: { x, y: 0.34, z } };
+}
+
+// Poteau indicateur : un mât et deux planches en flèche.
+export function buildSignpost({ x, z }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  pushBox(wood, [-0.06, 0, -0.06], [0.06, 1.75, 0.06], { groundAo: 0.6 });
+  pushBox(wood, [0.06, 1.35, -0.04], [0.7, 1.55, 0.04]);
+  pushBox(wood, [-0.04, 1.05, 0.06], [0.04, 1.25, 0.62]);
+  pushBox(wood, [-0.1, 1.75, -0.1], [0.1, 1.82, 0.1]);
+  return { x, z, radius: 0.12 };
+}
+
+// Tas de bois : des bûches empilées le long de l'axe x, sous un petit auvent.
+export function buildWoodpile({ x, z }, builders) {
+  const bark = createFrame(builders.bark, [x, 0, z]);
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  for (let row = 0; row < 3; row += 1) {
+    for (let i = 0; i < 4 - row; i += 1) {
+      const cx = -0.6 + row * 0.15 + i * 0.32;
+      pushBox(bark, [cx - 0.14, row * 0.26, -0.3], [cx + 0.14, row * 0.26 + 0.26, 0.3], { groundAo: 0.6 });
+    }
+  }
+  for (const px of [-0.78, 0.62]) pushBox(wood, [px - 0.04, 0, -0.38], [px + 0.04, 1.05, -0.3]);
+  pushBox(wood, [-0.9, 1.05, -0.5], [0.75, 1.1, 0.42]);
+  return { x, z, radius: 0.75 };
+}

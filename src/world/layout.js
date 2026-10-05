@@ -96,6 +96,30 @@ export const ROCKS = [
 ];
 export const CAMPFIRE = { x: 36.0, z: 11.6 };
 
+// Terrasse de l'auberge, pots de fleurs aux portes, poteaux indicateurs aux
+// carrefours, tas de bois de la forge.
+export const TABLES = [{ x: 9.2, z: 25.5 }, { x: 14.8, z: 26.9 }];
+export const FLOWER_POTS = [
+  { x: 12.8, z: 9.4 }, { x: 14.2, z: 9.4 }, { x: 9.8, z: 23.4 }, { x: 11.2, z: 23.4 },
+  { x: 23.8, z: 9.4 }, { x: 25.2, z: 9.4 }, { x: 18.75, z: 5.4 }, { x: 20.25, z: 5.4 },
+];
+export const SIGNPOSTS = [{ x: 13.2, z: 13.3 }, { x: 21.2, z: 19.4 }, { x: 29.0, z: 13.1 }];
+export const WOODPILE = { x: 3.4, z: 8.6 };
+
+// Guirlandes de fanions : attachées au sommet des quatre lanternes de la
+// place, elles en font le tour.
+export const BUNTING = [
+  { from: [14.6, 2.45, 11.6], to: [24.4, 2.45, 11.6], sag: 0.4 },
+  { from: [14.6, 2.45, 17.4], to: [24.4, 2.45, 17.4], sag: 0.4 },
+  { from: [14.6, 2.45, 11.6], to: [14.6, 2.45, 17.4], sag: 0.3 },
+  { from: [24.4, 2.45, 11.6], to: [24.4, 2.45, 17.4], sag: 0.3 },
+];
+
+// Papillons : [x, z, rayon de vol] au-dessus des prés et des jardins.
+export const BUTTERFLIES = [
+  [35.5, 8, 2], [35.5, 22, 2], [8, 17, 2], [26, 27.5, 2], [10, 3.5, 1.8], [27.9, 7.5, 1], [15.2, 22.4, 1.2], [5, 27.5, 1.8],
+];
+
 // Quatre lanternes éclairantes (une vraie lumière, des ombres calculées une
 // seule fois) aux coins de la place, et des lanternes d'ambiance (flamme
 // seulement, le bloom fait le halo) : trop de lumières ralentiraient les
@@ -158,6 +182,10 @@ export const REGIONS = [
   { id: 'auberge', rect: [6, 19, 18, 26.5] },
   { id: 'prairie', rect: [33.5, 3, 38, 28.5] },
 ];
+
+// La cascade : la rivière du plateau tombe dans le village, face sud de la
+// falaise nord.
+export const WATERFALL = { x0: 30, x1: 33, z: 2, top: 1.55, bottom: -0.35 };
 
 // Départ du héros.
 export const SPAWN = { x: 18.0, z: 17.0 };

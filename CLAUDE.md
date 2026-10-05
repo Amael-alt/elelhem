@@ -1,0 +1,69 @@
+# CLAUDE.md
+
+Règles de ce dépôt pour Claude Code, valables dans chaque session ouverte ici.
+
+## Ce qu'est ce dépôt
+
+« Le Village de LIA » : un petit RPG HD-2D jouable dans le navigateur, dans la contrée d'Ellelhem. Chaque habitant transpose une notion d'IA en univers médiéval fantastique. C'est une ressource de formation et une démonstration de ce que Claude Code sait construire, partagée surtout sur téléphone.
+
+- Dépôt **public** : https://github.com/Amael-alt/village-de-lia
+- Jeu en ligne (GitHub Pages, branche `main`, racine) : https://amael-alt.github.io/village-de-lia/
+- Le plan de construction vit hors du dépôt, dans l'espace de travail privé de l'auteur, parce qu'il cite des chemins locaux. Le prompt de chaque session de construction donne son emplacement. Ne jamais le copier ici, ni en citer le chemin.
+- Journal public : `docs/construction.md`, une entrée par étape (ce qui a été fait, ce qui a résisté, les mesures).
+
+## Écriture
+
+- Tout en français : textes du jeu, commentaires, documentation, messages de commit.
+- **Aucun tiret long ni demi-cadratin** (caractères U+2014 et U+2013), nulle part, messages de commit compris. Virgules, deux-points ou points.
+- Le joueur n'a pas de genre connu : textes neutres, aucun adjectif accordé au joueur. On le tutoie.
+- Identifiants de code en anglais, comme l'API de three.js. Commentaires en français. Les clés du fichier de dialogues sont en français et leur format, une fois gelé (étape 1e), ne bouge plus.
+
+## Ce que la page a le droit de charger
+
+- **Aucune image chargée par le jeu.** Textures, personnages, ciel, effets et diplôme sont générés par le code. Deux exceptions, pas une de plus : la flamme du logo Maintenant Vous Savez sur l'écran titre (`assets/mvs-flame.png`), et la vignette de partage `assets/social-preview.png`, lue par les réseaux sociaux via `og:image` mais jamais par la page.
+- Une seule police OFL en `woff2` dans `assets/fonts/`, avec sa licence. Le favicon est un SVG en data URI, pas un fichier.
+- À chaque vérification, la liste des requêtes réseau ne doit montrer que du HTML, du CSS, du JavaScript, la police et la flamme.
+
+## Dépendance unique : three.js
+
+- three.js est la **seule** dépendance, vendue dans `vendor/three/` avec sa `LICENSE`, appelée par la carte d'import de `index.html` sous le nom `three`. Toujours `from 'three'`, jamais un chemin vers `vendor/`.
+- Pas de `package.json`, pas de `node_modules`, pas de bundler, pas d'étape de build : GitHub Pages sert les fichiers tels quels et un stagiaire lit le code en ligne.
+- Aucun addon de `examples/jsm` (ni `EffectComposer`, ni `OrbitControls`) : ce qu'il faut, on l'écrit ici.
+- Le paquet officiel de la r186 n'a plus de version minifiée. Les deux `.min.js` de `vendor/three/` sont minifiés ici avec esbuild, sans autre retouche que le chemin d'import de `three.core`. Version et commande de mise à jour : section « three.js » du README.
+- `npx` ne sert qu'aux outils du poste (serveur local, minification), jamais à une dépendance du jeu.
+
+## Inspirations : on regarde, on ne copie pas
+
+Deux démos publiques servent de référence : `Legerdo/hd2d-diorama` pour le rendu, `unclebill-spec/hd2d-suite` pour les contrôles tactiles. **Elles n'ont pas de licence**, leur code n'est donc pas réutilisable. On s'en inspire pour les techniques et les ordres de grandeur, déjà relevés dans le plan. Pendant la construction, on compare des captures, pas du code : ne pas ouvrir leurs sources, et ne reprendre aucune ligne, aucune structure de shader, aucun nom de fonction. Tout le code de ce dépôt est écrit ici.
+
+## Vie privée : le dépôt est public
+
+- Rien de personnel : aucun chemin local, aucun nom d'utilisateur du poste, aucune adresse e-mail personnelle, aucun nom de client, d'organisme ou de stagiaire. Seuls restent la signature « Jordan Goussery, formateur et consultant IA à Bayonne », le lien https://maintenant-vous-savez.com, et la flamme MVS de l'écran titre avec ses crédits.
+- Les motifs à bloquer sont listés dans `.motifs-interdits`, un fichier **local** ignoré par git : les écrire ici les publierait. Le compléter dès qu'un nouveau motif apparaît.
+- Les crochets `.githooks/pre-commit` et `.githooks/commit-msg` refusent un commit qui ferait entrer un tiret long, un chemin de disque ou un de ces motifs, ou qui serait signé par une autre adresse que l'adresse anonyme. Ils s'activent une fois par clonage avec `git config core.hooksPath .githooks`.
+- Les captures de vérification restent hors du dépôt (scratchpad ou dossiers ignorés).
+
+## Git
+
+- Identité **locale** au dépôt : `Amael-alt`, adresse `310769219+Amael-alt@users.noreply.github.com`. L'identité globale du poste ne signe jamais un commit d'ici. Vérifier `git config user.email` avant de committer ; `git log --format=%ae | sort -u` ne montre que l'adresse anonyme.
+- Commits courts, en français, découpés par sujet, qui disent le pourquoi. Jamais `--no-verify`, jamais `--force`.
+- On pousse à la fin de chaque sous-étape : la carte d'import, les chemins relatifs sous `/village-de-lia/` et les types MIME se vérifient en production, et les tests sur téléphone se font sur l'URL publique.
+
+## Modules
+
+- Modules ES natifs. Un fichier, une responsabilité, rangé selon l'arborescence du README : `core/` (rendu, caméra, entrées), `gfx/` (pixels, textures, matériaux, sprites, post-traitement, effets), `world/` (carte, terrain, bâtiments, collisions), `game/` (joueur, habitants, dialogues, quête, interface, débogage), `data/` (palette, personnages, dialogues).
+- Exports nommés uniquement, pas d'`export default`. Imports relatifs avec l'extension `.js`.
+- Aucun effet de bord à l'import : un module exporte des fonctions (`createXxx(...)`) ou des données. Seul `src/main.js` démarre quelque chose.
+- Aucune variable globale, sauf `window.__lia`, créé par `game/debug.js` pour les tests.
+- Les textes du jeu vivent uniquement dans `src/data/dialogues.js`, les habitants dans `src/data/characters.js`, les couleurs dans `src/data/palette.js`. Le moteur n'écrit aucune phrase et ne choisit aucune couleur en dur.
+- Les shaders sont des chaînes GLSL dans le module qui les utilise, commentées en français.
+- Le code est lu par des stagiaires : un en-tête de deux ou trois lignes par fichier qui dit ce qu'il fait, des commentaires qui expliquent le pourquoi, et les valeurs réglables en constantes nommées en tête de module.
+
+## Vérification, à chaque sous-étape et avant de pousser
+
+1. Navigateur intégré : `preview_start` sur la configuration `village` (`.claude/launch.json`, `npx -y http-server . -p 8080 -c-1`). Recharger, lire la console et les requêtes réseau : zéro erreur, aucune image hors de la flamme.
+2. Captures au même endroit (grâce à `window.__lia`, dès qu'il existe) : bureau, préréglage mobile 375×812, paysage 812×375. Remettre le préréglage bureau à la fin.
+3. Mesures avec `?debug` : images/s, appels de dessin, triangles, ratio de pixels. Dès l'étape 1c, vues `?nofx` et `?view=raw|coc|bloom`. Si le panneau du navigateur intégré est masqué, les images ne tournent pas et les images/s ne veulent rien dire : le noter plutôt que de les recopier.
+4. Grille de comparaison et chiffres notés dans `docs/construction.md`.
+5. Hygiène : `git grep -nP "[\x{2013}\x{2014}]" -- . ":!vendor"` vide, crochets passés, `git log --format=%ae | sort -u` anonyme.
+6. Après le push, l'URL publique répond et le jeu s'y lance sans erreur (Pages met une à deux minutes à se mettre à jour).

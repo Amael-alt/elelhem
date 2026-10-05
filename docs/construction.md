@@ -326,3 +326,57 @@ Mesures (navigateur intégré) : 99 à 104 appels de dessin en bureau, 89 en mob
 La caméra ne tourne jamais : la droite de l'écran est toujours l'est, le panoramique vient directement de l'écart en x. Musique et ambiance passent sous un même volume général : le bouton (rebaptisé « Couper le son ») et la touche M coupent tout, et le contexte audio se met en pause quand l'onglet est caché ou le son coupé.
 
 Mesures : parcours scripté 33 sur 33, 97 appels de dessin, 0 % de pixels saturés, aucune erreur. Les volumes des sources ont été vérifiés par position (près de la cascade : rivière 0,16 et cascade 0,16 ; à la forge : feu 0,10 ; sur la place : tout à 0). Le rendu sonore, lui, reste à écouter : je ne peux pas entendre.
+
+## Étape 3 : dialogues et quête (5 octobre 2026)
+
+**But** : que chaque habitant enseigne sa notion, pose sa question et remette son parchemin, jusqu'au diplôme.
+
+**Les textes d'abord.** Les huit artisans ont été écrits avant d'être branchés, d'après le brief pédagogique du plan : une présentation de deux pages, une leçon de quatre ou cinq, une question à trois choix avec une réponse pour chaque choix (drôle et exacte quand elle est fausse), la remise du parchemin et une variante courte pour les visites suivantes. Les biais et le coût en tokens sont chez Dame Marjolaine, avec la fenêtre de contexte. Un script en tire un export lisible pour la relecture de Jordan, avec chaque variante (avec ou sans prénom, avant ou après le parchemin, selon le nombre de parchemins pour Lia et Clodomir). Une passe d'écriture a retiré les énumérations par trois en série et les phrases qui commençaient toutes par « Et », et rendu deux faits exacts : le plan du village a été écrit avec l'aide d'une autre IA, et « aucune image » ne veut pas dire « aucun fichier » (la musique en est un).
+
+**La mécanique** (`game/quest.js`), le seul endroit qui enchaîne les morceaux de `data/dialogues.js` :
+
+| Situation | Ce qui se joue |
+|---|---|
+| Première visite | présentation, leçon, question |
+| Mauvaise réponse | sa réponse, puis la question de nouveau, le choix essayé grisé et barré |
+| Bonne réponse | sa réponse, le parchemin (sauvegardé aussitôt, compteur animé), la remise |
+| Retour sans le parchemin (conversation fermée avec Échap) | variante « on reprend », puis leçon et question |
+| Retour avec le parchemin | variante courte |
+| Clodomir, tant qu'il manque des parchemins | sa présentation seule, avec le nombre manquant |
+| Clodomir, les huit réunis | sa leçon (comment ce village a été construit), sa question, puis le diplôme ; à chaque visite suivante, le diplôme se rouvre |
+
+L'ordre est libre. Lia compte les parchemins restants et nomme le prochain artisan dans l'ordre des notions (prompt, contexte, hallucinations, mémoire, connecteurs, agents, sécurité), avec le quartier où le trouver.
+
+**La question dans la boîte de dialogue** (`game/dialogue.js`) : le texte se tape, puis trois boutons empilés de 46 pixels au moins. On répond d'un toucher, d'un clic, au chiffre, ou en montant et descendant (flèches, Z et S) puis avec la touche d'action. Aucun choix n'est présélectionné : enchaîner les pages à la touche E ne répond jamais par mégarde, il faut une pression de plus pour éclairer le premier choix. La bonne réponse change de place d'une question à l'autre (trois fois chaque position) et `__lia.checkDialogues()` vérifie qu'elle ne se devine pas à sa longueur (à 15 % de la moyenne des deux autres).
+
+**Le compteur** (`game/scrolls.js`) : huit parchemins roulés dessinés en CSS, dans une pilule en haut à gauche, vides puis dorés avec un ruban rouge. À l'obtention, l'emplacement grossit et brille, et une annonce donne la notion gagnée. Sur écran étroit, le bandeau de lieu passe dessous.
+
+**Le diplôme** (`game/diploma.js`), dessiné sur un canvas de 1 600 × 1 130 : un parchemin tiré au hasard (avec une graine, il est le même à chaque fois), un double filet d'or, le titre, le prénom (ou une ligne pointillée à remplir), les huit notions sur deux colonnes, la date, un sceau de cire aux trois lettres en creux et ses rubans, les signatures de Clodomir et de Lia, la signature de l'auteur, le site et l'adresse du jeu. Un champ permet de taper son prénom au dernier moment : le diplôme se redessine et le prénom est sauvegardé. Boutons « Télécharger » et « Copier le lien du jeu ».
+
+**Formats.** Deux précisions, sans rien casser : une entrée de `dialogues.js` peut porter `diplome: true` (l'habitant remet le diplôme au lieu d'un parchemin), et `choix` garde, pour chaque question réussie, l'indice de la bonne réponse, ce qui dit aussi si le diplôme a été remis. Les notions et l'ordre des emplacements du compteur sont dans `textesInterface.parchemins`.
+
+Ce qui a résisté :
+
+- **Le poids du diplôme.** Le plan prévoyait un PNG : 2,8 Mo, parce que le grain du parchemin ne se compresse pas. Il est enregistré en JPEG (qualité 0,92), autour de 300 Ko, ce qui compte pour un partage depuis un téléphone.
+- **La copie du lien** est refusée dans le navigateur intégré (permission d'écriture du presse-papiers). Si un navigateur la refuse, le bouton affiche l'adresse du jeu pour qu'on la recopie.
+- **Les tests au clavier simulé** : la porte de chargement avale toutes les touches tant que six images n'ont pas été dessinées, et la boucle ne tourne pas quand le panneau est masqué. Un test commence donc par `__lia.step(10)`.
+
+Outils de test ajoutés à `window.__lia` : `answer(i)` répond à la question affichée, `act()` fait l'action comme la touche E (parle à l'habitant à portée), `converse(id, mode)` joue toute une conversation (mode `erreurs` : les mauvaises réponses d'abord), `give(ids)` donne des parchemins, `diploma(on)` ouvre le diplôme.
+
+### Mesures
+
+Navigateur intégré, bureau, préréglage mobile 375×812 et paysage 812×375, zéro erreur en console.
+
+| Critère | Résultat |
+|---|---|
+| Parcours depuis une partie neuve | Clodomir d'abord (il renvoie chercher les parchemins), puis les huit dans le désordre, chaque fois les deux mauvaises réponses avant la bonne : 8 parchemins, 9 choix enregistrés, le diplôme s'ouvre |
+| Parcours depuis une sauvegarde partielle | deux parchemins, une conversation fermée avec Échap pendant une leçon, page rechargée : l'écran titre propose de reprendre, le compteur affiche 2 sur 8, Lia envoie chez Dame Marjolaine, qui reprend sa leçon |
+| Interaction réelle | téléporté près de chacun des neuf habitants : la bulle s'affiche, l'action ouvre sa conversation |
+| Clavier | flèches et Z/S sautent le choix grisé, E choisit, Échap ferme |
+| Textes | `checkDialogues()` vide : pages de 158 caractères au plus, aucun tiret long, trois choix dont un bon, bonnes réponses de longueur équilibrée |
+| Mobile 375×812 | question et trois choix lisibles sans zoom, compteur, bouton du son et bandeau de lieu sans chevauchement, diplôme et ses boutons tiennent dans l'écran, aucun défilement |
+| Appels de dessin | 94 à 102 selon le cadrage, exactement autant pendant une conversation ou avec le diplôme ouvert (102, 102, 102 au même endroit) |
+| Pixels saturés | 0 % |
+| Réseau | HTML, CSS, JavaScript, les deux polices et la flamme : aucune autre image |
+
+Reste pour l'étape 4 : en paysage sur téléphone (812×375), la question et ses trois choix couvrent les trois quarts de l'écran, à compacter avec le reste de l'interface des écrans courts.

@@ -54,6 +54,10 @@ export const hazeColor = '#e8c9a0';
 // Cuir des bottes et des ceintures, commun à tous les personnages.
 export const leatherRamp = ['#2a1b16', '#46302a', '#634435', '#815b43'];
 
+// Lumière propre aux personnages (joyau et orbe de Lia) : or pâle, du plus
+// sombre au presque blanc. Ces pixels brillent même dans l'ombre.
+export const glowRamp = ['#ffc56e', '#ffd88f', '#ffeab5', '#fff6dc'];
+
 // Contour des personnages : sombre et bleuté, jamais noir pur.
 export const outlineColor = '#1b1a2e';
 

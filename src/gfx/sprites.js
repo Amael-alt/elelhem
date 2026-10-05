@@ -9,8 +9,12 @@
 // Planche : 6 colonnes (2 images de repos, 4 de marche) × 4 lignes
 // (bas, gauche, droite, haut), cadres de 32 × 32 pixels. La droite est le
 // miroir de la gauche.
+//
+// Canal émissif : la lettre « l » d'une grille d'accessoire est de la lumière
+// (le joyau et l'orbe de Lia). Ces pixels sont copiés dans une seconde planche,
+// de même taille, lue comme carte d'émission : ils brillent même à l'ombre.
 
-import { leatherRamp, outlineColor } from '../data/palette.js';
+import { glowRamp, leatherRamp, outlineColor } from '../data/palette.js';
 import { createPixelBuffer, createRamp, hexToRgb, setPixel, toDataTexture } from './pixels.js';
 
 export const FRAME = 32;
@@ -20,11 +24,12 @@ export const DIRECTIONS = ['down', 'left', 'right', 'up'];
 export const IDLE_FRAMES = [0, 1];
 export const WALK_FRAMES = [2, 3, 4, 5];
 export const COLUMNS = IDLE_FRAMES.length + WALK_FRAMES.length;
+export const IDLE_FPS = 1.6; // respiration au repos, la même pour tous
 
 const EMPTY = 0;
-const RAMPS = { peau: 1, vetement: 2, accent: 3, cheveux: 4, cuir: 5 };
+const RAMPS = { peau: 1, vetement: 2, accent: 3, cheveux: 4, cuir: 5, lumiere: 7 };
 const OUTLINE = 6;
-const LETTERS = { p: RAMPS.peau, v: RAMPS.vetement, a: RAMPS.accent, c: RAMPS.cheveux, b: RAMPS.cuir };
+const LETTERS = { p: RAMPS.peau, v: RAMPS.vetement, a: RAMPS.accent, c: RAMPS.cheveux, b: RAMPS.cuir, l: RAMPS.lumiere };
 
 // Lumière des sprites, dans le repère de l'image (y vers le bas) : haut gauche.
 const LIGHT = (() => {
@@ -234,9 +239,13 @@ export function createCharacterSheet(character) {
     createRamp(character.palette.accent),
     createRamp(character.palette.cheveux),
     createRamp(leatherRamp),
+    null, // 6 : le contour, sa couleur est fixe
+    createRamp(character.palette.lumiere ?? glowRamp),
   ];
   const outlineRgb = hexToRgb(outlineColor);
   const buffer = createPixelBuffer(FRAME * COLUMNS, FRAME * DIRECTIONS.length);
+  const glow = createPixelBuffer(buffer.width, buffer.height);
+  let hasGlow = false;
   const accessory = character.accessoire;
 
   DIRECTIONS.forEach((direction, row) => {
@@ -254,7 +263,12 @@ export function createCharacterSheet(character) {
           const ramp = frame.ramp[i];
           if (ramp === EMPTY) continue;
           const rgb = ramp === OUTLINE ? outlineRgb : colors[ramp][frame.tone[i]];
-          setPixel(buffer, column * FRAME + (mirror ? FRAME - 1 - x : x), row * FRAME + y, rgb);
+          const px = column * FRAME + (mirror ? FRAME - 1 - x : x);
+          setPixel(buffer, px, row * FRAME + y, rgb);
+          if (ramp === RAMPS.lumiere) {
+            setPixel(glow, px, row * FRAME + y, rgb);
+            hasGlow = true;
+          }
         }
       }
     });
@@ -263,6 +277,8 @@ export function createCharacterSheet(character) {
   return {
     buffer,
     texture: toDataTexture(buffer, { repeat: false, mipmaps: false }),
+    // Carte d'émission, absente quand le personnage n'a aucune lumière.
+    emissive: hasGlow ? toDataTexture(glow, { repeat: false, mipmaps: false }) : null,
     columns: COLUMNS,
     rows: DIRECTIONS.length,
   };

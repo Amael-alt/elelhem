@@ -17,6 +17,8 @@
 // - L'ombre reçue est lue en un seul point, au milieu du corps et avancé vers
 //   le soleil : le sprite ne reçoit jamais sa propre ombre, mais s'assombrit
 //   dans celle d'un mur.
+// - Émission : une planche d'émission optionnelle (voir sprites.js) fait briller
+//   les pixels de lumière du personnage, ombre ou pas.
 // - alphaTest et depthWrite, jamais transparent : aucun problème de tri.
 // - Avec le post-traitement, le sprite est dessiné après la composition, pour
 //   rester net : il compare lui-même sa profondeur à celle de la scène et
@@ -33,6 +35,7 @@ const LIGHT_WRAP = 0.45;
 const SHADOW_SAMPLE_HEIGHT = 0.45;
 const SHADOW_SAMPLE_PUSH = 0.45;
 const RIM_STRENGTH = 0.12;
+const GLOW_INTENSITY = 1.5; // émission des pixels de lumière, avant étalonnage
 
 // Quad de la taille d'un cadre, pivot sous les bottes.
 function createSpriteGeometry() {
@@ -91,8 +94,13 @@ const DRAWN_AFTER_COMPOSITE = /* glsl */`
 if ( gl_FragCoord.z > texture2D( uSceneDepth, gl_FragCoord.xy * uInvResolution ).r + 1e-6 ) discard;
 `;
 
-function createVisibleMaterial(texture, texSize, sunDirection, post) {
+function createVisibleMaterial(texture, glowTexture, texSize, sunDirection, post) {
   const material = new THREE.MeshLambertMaterial({ map: texture, alphaTest: 0.5 });
+  if (glowTexture) {
+    material.emissiveMap = glowTexture;
+    material.emissive.set(0xffffff);
+    material.emissiveIntensity = GLOW_INTENSITY;
+  }
   material.shadowSide = THREE.DoubleSide;
   material.customProgramCacheKey = () => (post ? 'sprite-apres-composition' : 'sprite-direct');
   material.onBeforeCompile = (shader) => {
@@ -142,9 +150,11 @@ function createDepthMaterial(texture) {
 export function createSprite(sheet, sunDirection, post = null) {
   const texture = sheet.texture.clone();
   texture.repeat.set(1 / sheet.columns, 1 / sheet.rows);
+  const glowTexture = sheet.emissive?.clone() ?? null;
+  glowTexture?.repeat.copy(texture.repeat);
   const texSize = new THREE.Vector2(sheet.columns * FRAME, sheet.rows * FRAME);
 
-  const mesh = new THREE.Mesh(createSpriteGeometry(), createVisibleMaterial(texture, texSize, sunDirection, post));
+  const mesh = new THREE.Mesh(createSpriteGeometry(), createVisibleMaterial(texture, glowTexture, texSize, sunDirection, post));
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.frustumCulled = false; // le quad tourne dans le shader, sa boîte englobante ne le suit pas
@@ -157,6 +167,11 @@ export function createSprite(sheet, sunDirection, post = null) {
     // row : ligne de la planche (direction) ; column : image.
     setFrame(row, column) {
       texture.offset.set(column / sheet.columns, 1 - (row + 1) / sheet.rows);
+      glowTexture?.offset.copy(texture.offset);
+    },
+    // Force de l'émission, 1 = normale ; sans effet si le personnage n'émet pas.
+    setGlow(strength) {
+      if (glowTexture) mesh.material.emissiveIntensity = GLOW_INTENSITY * strength;
     },
   };
 }

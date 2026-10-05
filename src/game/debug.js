@@ -13,7 +13,8 @@ export function isDebugEnabled() {
   return new URLSearchParams(window.location.search).has('debug');
 }
 
-export function createDebugPanel(renderer) {
+// scale : fonction qui donne l'échelle de rendu en cours.
+export function createDebugPanel(renderer, scale = () => 1) {
   const panel = document.getElementById('debug');
   panel.hidden = false;
 
@@ -35,7 +36,7 @@ export function createDebugPanel(renderer) {
         `images/s  ${fps.toFixed(0)}  (${(1000 / fps).toFixed(1)} ms)`,
         `appels    ${calls}`,
         `triangles ${triangles}`,
-        `ratio px  ${renderer.getPixelRatio().toFixed(2)}`,
+        `ratio px  ${renderer.getPixelRatio().toFixed(2)}  (échelle ${scale()})`,
         `canvas    ${canvas.width}×${canvas.height}`,
       ].join('\n');
 

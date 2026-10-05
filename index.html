@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Le Village de LIA</title>
+  <meta name="description" content="Un petit RPG HD-2D dans le navigateur : chaque habitant d'Ellelhem transpose une notion d'IA. Aucune image chargée, tout est généré par le code.">
+  <meta name="theme-color" content="#231b2b">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Carte d'import : le nom « three » désigne la copie vendue dans le dépôt.
+       Aucun bundler, GitHub Pages sert ces fichiers tels quels. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.min.js"
+      }
+    }
+  </script>
+
+  <!-- Navigateur trop ancien pour les cartes d'import (iOS 15 et avant) :
+       un message propre plutôt qu'une page noire. -->
+  <script>
+    if (!(window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports('importmap'))) {
+      document.addEventListener('DOMContentLoaded', function () {
+        var box = document.getElementById('message');
+        box.textContent = 'Ce navigateur est trop ancien pour ouvrir le village. Essaie avec une version récente de Chrome, Firefox, Safari ou Edge.';
+        box.hidden = false;
+      });
+    }
+  </script>
+  <script type="module" src="src/main.js"></script>
+</head>
+<body>
+  <canvas id="scene" aria-label="Le village d'Ellelhem"></canvas>
+  <div id="debug" hidden></div>
+  <div id="message" role="alert" hidden></div>
+  <noscript><div class="noscript">Le village a besoin de JavaScript pour s'afficher.</div></noscript>
+</body>
+</html>

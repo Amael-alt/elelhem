@@ -1,0 +1,81 @@
+/* Le Village de LIA : interface par-dessus le canvas.
+   Garde-fous de base : la page ne défile pas, ne rebondit pas et ne laisse
+   pas le navigateur interpréter les gestes. Le jeu reçoit tout. */
+
+:root {
+  color-scheme: dark;
+  --fond: #231b2b;
+  --texte: #f3e6d4;
+  --panneau: rgb(10 8 14 / 0.62);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--fond);
+}
+
+body {
+  position: fixed;
+  inset: 0;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--texte);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  outline: none;
+}
+
+/* Panneau ?debug : chiffres de mesure, jamais cliquable. */
+#debug {
+  position: fixed;
+  top: calc(8px + env(safe-area-inset-top));
+  left: calc(8px + env(safe-area-inset-left));
+  z-index: 10;
+  padding: 6px 9px;
+  border-radius: 4px;
+  background: var(--panneau);
+  color: #e9f2da;
+  font: 12px/1.45 ui-monospace, Consolas, "Courier New", monospace;
+  white-space: pre;
+  pointer-events: none;
+}
+
+/* Message plein écran quand le village ne peut pas s'afficher. */
+#message,
+.noscript {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px calc(24px + env(safe-area-inset-right)) 24px calc(24px + env(safe-area-inset-left));
+  background: var(--fond);
+  font-size: 1.15rem;
+  line-height: 1.55;
+  text-align: center;
+  text-wrap: balance;
+}
+
+#message[hidden] {
+  display: none;
+}

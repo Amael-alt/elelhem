@@ -100,6 +100,13 @@ export const textesInterface = {
     texte: "Je t'explique d'abord, ou tu tentes directement ma question ?",
     choix: ["Explique-moi d'abord.", 'Directement la question !'],
   },
+  // La minimap et la carte en grand.
+  carte: {
+    titre: 'Carte du village',
+    ouvrir: 'Ouvrir la carte',
+    fermer: 'Fermer',
+    legende: { heros: 'Toi', quete: "Une leçon t'attend", fait: "Rien de plus pour l'instant" },
+  },
   // Le livre des parchemins gagnés : la notion, l'habitant, la maxime et la leçon.
   grimoire: {
     titre: "Le grimoire d'Ellelhem",

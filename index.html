@@ -98,6 +98,17 @@
     </div>
   </div>
 
+  <!-- Minimap en haut à droite, et la carte en grand (src/game/minimap.js). -->
+  <button id="minimap" type="button" tabindex="-1" hidden><canvas></canvas></button>
+  <div id="carte" role="dialog" aria-modal="true" aria-labelledby="carte-titre" hidden>
+    <div class="carte-cadre">
+      <p class="carte-titre" id="carte-titre"></p>
+      <canvas class="carte-toile" role="img"></canvas>
+      <ul class="carte-legende"></ul>
+      <button class="carte-fermer" type="button"></button>
+    </div>
+  </div>
+
   <!-- Le grimoire : les parchemins gagnés, à relire (src/game/grimoire.js). -->
   <div id="grimoire" role="dialog" aria-modal="true" aria-labelledby="grimoire-titre" hidden>
     <div class="grimoire-livre">

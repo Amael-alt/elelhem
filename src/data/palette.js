@@ -102,3 +102,21 @@ export const diplomaColors = {
   nom: '#5a2320',
   cire: ['#4f1310', '#7e201b', '#a83228', '#d0574b'],
 };
+
+// La minimap et la carte : le village vu d'en haut, en aplats, et les repères
+// (le héros, les habitants dont le parchemin reste à gagner, les autres).
+export const mapColors = {
+  // Une couleur par lettre de la grille (voir world/map.js).
+  cases: {
+    '.': '#4f6e34', t: '#8a6c47', p: '#a39581', '~': '#3e7090', '#': '#7b6d60',
+    b: '#b3a28a', c: '#3a4a2a', W: '#6a5f55', h: '#2f4a26', r: '#3e7090',
+  },
+  toit: '#7a3a28',
+  toitBord: '#4a2018',
+  arbre: '#2b4425',
+  fond: '#1a1830',
+  heros: '#fff6dc',
+  contour: '#1b1a2e',
+  quete: '#ffd08a',
+  fait: '#9a9488',
+};

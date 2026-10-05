@@ -1283,3 +1283,157 @@ body {
     animation: none !important;
   }
 }
+
+/* --- Étape 3c : minimap et carte ----------------------------------------- */
+
+/* La minimap : en haut à droite, sous le bouton du son ; sur écran étroit,
+   à gauche du bouton, plus petite. Le village fait 40 cases sur 30 : 4/3. */
+#minimap {
+  position: fixed;
+  top: calc(64px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  z-index: 14;
+  width: 168px;
+  padding: 4px;
+  border: 1px solid var(--or-fonce);
+  border-radius: 6px;
+  background: var(--nuit);
+  box-shadow: inset 0 0 0 2px rgb(14 13 28 / 0.9), inset 0 0 0 3px rgb(243 208 140 / 0.4), 0 4px 14px rgb(0 0 0 / 0.45);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#minimap[hidden] {
+  display: none;
+}
+
+#minimap canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 3px;
+}
+
+#minimap:hover,
+#minimap:focus-visible {
+  border-color: var(--or-vif);
+  outline: none;
+}
+
+@media (max-width: 640px) {
+  #minimap {
+    top: calc(12px + env(safe-area-inset-top));
+    right: calc(64px + env(safe-area-inset-right));
+    width: 88px;
+    padding: 3px;
+  }
+
+  #lieu {
+    top: calc(84px + env(safe-area-inset-top));
+  }
+}
+
+/* La carte en grand, par-dessus le jeu. */
+#carte {
+  position: fixed;
+  inset: 0;
+  z-index: 17;
+  display: grid;
+  place-items: center;
+  padding: calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+  background: rgb(10 8 18 / 0.7);
+  animation: diplome-entre 0.3s ease-out both;
+}
+
+#carte[hidden] {
+  display: none;
+}
+
+.carte-cadre {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: min(760px, 100%);
+  padding: 16px;
+  border: 1px solid var(--or-fonce);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgb(26 24 50 / 0.97), rgb(14 13 28 / 0.97));
+  box-shadow: inset 0 0 0 3px rgb(14 13 28 / 0.95), inset 0 0 0 4px rgb(243 208 140 / 0.5), 0 18px 50px rgb(0 0 0 / 0.6);
+}
+
+.carte-titre {
+  margin: 0;
+  color: var(--or-vif);
+  font: 600 clamp(1rem, 0.8rem + 1vw, 1.2rem) / 1.2 var(--police);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.carte-toile {
+  display: block;
+  width: min(100%, calc((var(--hauteur, 100vh) - 200px) * 4 / 3));
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--or-fonce);
+  border-radius: 3px;
+  image-rendering: pixelated;
+}
+
+.carte-legende {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  color: var(--texte);
+  font: 500 0.95rem/1.2 var(--police);
+  list-style: none;
+}
+
+.carte-legende li::before {
+  content: "";
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 7px;
+  border: 2px solid #1b1a2e;
+  border-radius: 50%;
+  vertical-align: -1px;
+}
+
+.carte-legende [data-repere="heros"]::before {
+  border-radius: 2px;
+  background: #fff6dc;
+  rotate: 45deg;
+}
+
+.carte-legende [data-repere="quete"]::before {
+  background: #ffd08a;
+}
+
+.carte-legende [data-repere="fait"]::before {
+  background: #9a9488;
+}
+
+.carte-fermer {
+  min-height: 44px;
+  padding: 0 22px;
+  border: 1px solid var(--or-fonce);
+  border-radius: 4px;
+  background: var(--nuit);
+  color: var(--or-vif);
+  font: 600 1rem/1 var(--police);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.carte-fermer:focus-visible {
+  outline: 2px solid var(--or-vif);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #carte {
+    animation: none !important;
+  }
+}

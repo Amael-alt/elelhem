@@ -82,6 +82,8 @@ export function createMap(rows = ROWS) {
     width,
     depth,
     cellAt,
+    // La lettre de la case dans la grille (la minimap la colorie d'après elle).
+    charAt: (x, z) => (x < 0 || z < 0 || x >= width || z >= depth ? null : rows[z][x]),
     isBuilt,
     isSolid(x, z) {
       const cell = cellAt(x, z);

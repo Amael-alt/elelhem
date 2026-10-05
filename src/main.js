@@ -25,10 +25,11 @@ import { createScrollCounter } from './game/scrolls.js';
 import { createDiploma } from './game/diploma.js';
 import { createGrimoire } from './game/grimoire.js';
 import { createChatter } from './game/chatter.js';
+import { createMinimap } from './game/minimap.js';
 import { createGameState, resetGameState, saveGameState } from './game/state.js';
 import { createTitleScreen } from './game/title.js';
 import { createAreaBanner } from './game/banner.js';
-import { ANVIL, CAMPFIRE, HEARTH, PIGEONS, REGIONS, TOWERS, WATERFALL } from './world/layout.js';
+import { ANVIL, CAMPFIRE, HEARTH, PIGEONS, REGIONS, TOWERS, TREES, WATERFALL } from './world/layout.js';
 import { createDebugPanel, installDebugApi, isDebugEnabled } from './game/debug.js';
 import { backgroundColor } from './data/palette.js';
 import { figurants, hero, villagers } from './data/characters.js';
@@ -147,16 +148,29 @@ function start() {
   const dialogue = createDialogueBox(document.getElementById('dialogue'));
   let playing = params.has('autostart');
   let quest = null;
-  const canOpenGrimoire = () => playing && !quest.isBusy;
+  const canOpenOverlay = () => playing && !quest.isBusy;
   const counter = createScrollCounter(document.getElementById('parchemins'), {
-    notions, texts: textesInterface.parchemins, state: gameState, onOpen: () => canOpenGrimoire() && grimoire.open(),
+    notions, texts: textesInterface.parchemins, state: gameState, onOpen: () => canOpenOverlay() && grimoire.open(),
   });
   const grimoire = createGrimoire(document.getElementById('grimoire'), {
-    ids: counter.ids, notions, texts: dialogues, labels: textesInterface.grimoire, state: gameState, canOpen: canOpenGrimoire,
+    ids: counter.ids, notions, texts: dialogues, labels: textesInterface.grimoire, state: gameState, canOpen: canOpenOverlay,
   });
   const diploma = createDiploma(document.getElementById('diplome'), { texts: textesInterface.diplome, notions, state: gameState });
+  // La minimap : un point doré pour l'habitant qui a encore une leçon à donner.
+  const markerKind = (npc) => {
+    const key = npc.character.dialogue;
+    const entry = dialogues[key];
+    if (npc.isExtra || !entry) return null;
+    if (entry.diplome) return !gameState.choix.has(key) && counter.ids.every((id) => gameState.parchemins.has(id)) ? 'quete' : 'fait';
+    return gameState.parchemins.has(key) ? 'fait' : 'quete';
+  };
+  const minimap = createMinimap(document.getElementById('minimap'), document.getElementById('carte'), {
+    map: village.map, trees: TREES, regions: REGIONS, names: textesInterface.lieux, npcs, player, markerKind,
+    labels: textesInterface.carte, canOpen: canOpenOverlay,
+  });
   quest = createQuest({
-    dialogue, state: gameState, texts: dialogues, offer: textesInterface.offreLecon, scrolls: counter.ids, counter, overlays: [diploma, grimoire], diploma,
+    dialogue, state: gameState, texts: dialogues, offer: textesInterface.offreLecon, scrolls: counter.ids, counter,
+    overlays: [diploma, grimoire, minimap], diploma,
   });
   let interaction = null;
   const hint = createInteractionHint(document.getElementById('indice'), () => interaction.request());
@@ -200,6 +214,7 @@ function start() {
   if (playing) {
     music.showButton();
     counter.show();
+    minimap.setVisible(true);
   }
   if (!playing) {
     createTitleScreen(document.getElementById('titre'), {
@@ -215,6 +230,7 @@ function start() {
         music.start();
         music.showButton();
         counter.show();
+        minimap.setVisible(true);
       },
     });
   }
@@ -238,6 +254,7 @@ function start() {
       interaction.update(dt, keyboard.takeAction());
       banner.update(player.position);
       chatter.update(dt, quest.isBusy);
+      minimap.update(dt);
       music.setDucked(interaction.isTalking);
       ambience.update(player.position, dt);
     } else {
@@ -253,7 +270,7 @@ function start() {
 
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
-    counter, diploma, quest, grimoire, chatter,
+    counter, diploma, quest, grimoire, chatter, minimap,
   });
 
   let last = performance.now();

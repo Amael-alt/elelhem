@@ -126,7 +126,7 @@ function checkDialogues(texts, characters) {
 // game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
 // dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap } = game;
   let viewer = null;
 
   const info = () => ({
@@ -322,6 +322,12 @@ export function installDebugApi(game) {
       if (on) grimoire.open(page);
       else grimoire.close();
       return { ouvert: grimoire.isOpen, page: grimoire.page };
+    },
+    // La carte en grand.
+    carte(on = true) {
+      if (on) minimap.open();
+      else minimap.close();
+      return minimap.isOpen;
     },
     // La réplique de figurant affichée, s'il y en a une.
     chatter: () => chatter.snapshot(),

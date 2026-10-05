@@ -789,6 +789,11 @@ body {
 
 .parchemins-rangee {
   display: flex;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
   align-items: center;
   gap: 7px;
   width: max-content;
@@ -990,10 +995,16 @@ body {
   touch-action: manipulation;
 }
 
-.diplome-boutons .diplome-telecharger {
+/* Le bouton principal : Partager quand le téléphone sait le faire, sinon
+   Télécharger. */
+.diplome-boutons .principal {
   border-color: var(--or-vif);
   background: linear-gradient(180deg, #f3d08c, #c9a45c);
   color: #17152e;
+}
+
+.diplome-boutons button[hidden] {
+  display: none;
 }
 
 .diplome-prenom input:focus,
@@ -1022,6 +1033,253 @@ body {
   .parchemins-annonce,
   #diplome,
   .diplome-toile {
+    animation: none !important;
+  }
+}
+
+/* --- Étape 3b : grimoire, répliques, accroche ------------------------------- */
+
+.parchemins-rangee:hover,
+.parchemins-rangee:focus-visible {
+  border-color: var(--or-vif);
+  outline: none;
+}
+
+/* La troisième ligne de l'annonce : où relire le parchemin. */
+.parchemins-annonce small {
+  display: block;
+  margin-top: 3px;
+  color: #e9dcc2;
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+/* L'accroche, sous la contrée : ce qu'on vient faire ici, en une ligne. */
+.titre-accroche {
+  margin: 0;
+  color: #f3e6d4;
+  font: 500 clamp(0.95rem, 0.8rem + 0.7vw, 1.15rem) / 1.3 var(--police);
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-shadow: 0 2px 8px rgb(0 0 0 / 0.8);
+}
+
+/* Réplique d'un figurant : une bulle de parchemin, pointe vers le bas, posée
+   par le jeu au-dessus de sa tête. */
+#replique {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 12;
+  width: max-content;
+  max-width: min(260px, 70vw);
+  margin: -58px 0 0;
+  padding: 7px 12px 8px;
+  border: 2px solid var(--encre);
+  border-radius: 10px;
+  background: var(--parchemin);
+  color: var(--encre);
+  font: 500 0.95rem/1.3 var(--police);
+  text-wrap: pretty;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.4);
+  pointer-events: none;
+  translate: -50% -100%;
+  animation: replique-apparait 0.25s ease-out;
+}
+
+#replique::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-right: 2px solid var(--encre);
+  border-bottom: 2px solid var(--encre);
+  background: var(--parchemin);
+  rotate: 45deg;
+}
+
+#replique[hidden] {
+  display: none;
+}
+
+@keyframes replique-apparait {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
+/* Le grimoire : un livre bleu nuit à filets d'or, une page de parchemin au
+   centre. La page défile si la leçon est longue ; le reste de l'écran, non. */
+#grimoire {
+  position: fixed;
+  inset: 0;
+  z-index: 17;
+  display: grid;
+  place-items: center;
+  padding: calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+  background: rgb(10 8 18 / 0.7);
+  animation: diplome-entre 0.35s ease-out both;
+}
+
+#grimoire[hidden] {
+  display: none;
+}
+
+.grimoire-livre {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 12px;
+  width: min(600px, 100%);
+  max-height: calc(var(--hauteur, 100vh) - 24px);
+  padding: 18px 18px 16px;
+  border: 1px solid var(--or-fonce);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgb(26 24 50 / 0.97), rgb(14 13 28 / 0.97));
+  box-shadow: inset 0 0 0 3px rgb(14 13 28 / 0.95), inset 0 0 0 4px rgb(243 208 140 / 0.5), 0 18px 50px rgb(0 0 0 / 0.6);
+}
+
+.grimoire-titre {
+  margin: 0;
+  color: var(--or-vif);
+  font: 600 clamp(1rem, 0.8rem + 1vw, 1.2rem) / 1.2 var(--police);
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Les onglets : un petit parchemin par page, doré s'il est gagné. */
+.grimoire-onglets {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.grimoire-onglet {
+  width: 28px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgb(168 128 62 / 0.6);
+  border-radius: 3px;
+  background: rgb(243 208 140 / 0.05);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.grimoire-onglet.obtenu {
+  background:
+    linear-gradient(transparent 42%, #a83228 42% 58%, transparent 58%),
+    linear-gradient(90deg, #d4b780, #f6e8c4 50%, #d4b780);
+}
+
+.grimoire-onglet[aria-current="page"] {
+  border-color: var(--or-vif);
+  box-shadow: 0 0 0 2px var(--or-vif), 0 0 10px rgb(243 208 140 / 0.5);
+}
+
+.grimoire-page {
+  overflow-y: auto;
+  padding: 18px 20px 20px;
+  border-radius: 3px;
+  background: radial-gradient(ellipse at 50% 40%, #f6ead0, #e6d3aa 75%, #d6be8c);
+  color: var(--encre);
+  box-shadow: inset 0 0 24px rgb(110 82 54 / 0.35);
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.grimoire-numero {
+  margin: 0;
+  color: #6e5236;
+  font: 600 0.78rem/1.2 var(--police);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.grimoire-notion {
+  margin: 4px 0 2px;
+  font: 600 clamp(1.4rem, 1rem + 2vw, 1.9rem) / 1.15 var(--police);
+}
+
+.grimoire-maitre {
+  margin: 0;
+  color: #6e5236;
+  font: italic 500 1rem/1.3 var(--police);
+}
+
+.grimoire-maitre:empty,
+.grimoire-maxime:empty {
+  display: none;
+}
+
+.grimoire-maxime {
+  margin: 14px 0 12px;
+  padding: 10px 0;
+  border-top: 1px solid rgb(168 128 62 / 0.6);
+  border-bottom: 1px solid rgb(168 128 62 / 0.6);
+  color: #5a2320;
+  font: 600 clamp(1.05rem, 0.9rem + 0.8vw, 1.25rem) / 1.35 var(--police);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.grimoire-lecon p {
+  margin: 0 0 10px;
+  font: 500 clamp(1rem, 0.85rem + 0.6vw, 1.12rem) / 1.5 var(--police);
+  text-wrap: pretty;
+}
+
+.grimoire-lecon .grimoire-vierge {
+  margin-top: 16px;
+  color: #6e5236;
+  font-style: italic;
+}
+
+.grimoire-boutons {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+}
+
+.grimoire-boutons button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--or-fonce);
+  border-radius: 4px;
+  background: var(--nuit);
+  color: var(--or-vif);
+  font: 600 1rem/1 var(--police);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.grimoire-boutons button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.grimoire-precedente::before {
+  content: "\2039\00a0";
+}
+
+.grimoire-suivante::after {
+  content: "\00a0\203a";
+}
+
+.grimoire-onglet:focus-visible,
+.grimoire-boutons button:focus-visible {
+  outline: 2px solid var(--or-vif);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #replique,
+  #grimoire {
     animation: none !important;
   }
 }

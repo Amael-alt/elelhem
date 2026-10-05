@@ -23,14 +23,16 @@ import { createInteraction } from './game/interaction.js';
 import { createQuest } from './game/quest.js';
 import { createScrollCounter } from './game/scrolls.js';
 import { createDiploma } from './game/diploma.js';
+import { createGrimoire } from './game/grimoire.js';
+import { createChatter } from './game/chatter.js';
 import { createGameState, resetGameState, saveGameState } from './game/state.js';
 import { createTitleScreen } from './game/title.js';
 import { createAreaBanner } from './game/banner.js';
-import { ANVIL, CAMPFIRE, HEARTH, REGIONS, TOWERS, WATERFALL } from './world/layout.js';
+import { ANVIL, CAMPFIRE, HEARTH, PIGEONS, REGIONS, TOWERS, WATERFALL } from './world/layout.js';
 import { createDebugPanel, installDebugApi, isDebugEnabled } from './game/debug.js';
 import { backgroundColor } from './data/palette.js';
 import { figurants, hero, villagers } from './data/characters.js';
-import { dialogues, textesInterface } from './data/dialogues.js';
+import { dialogues, repliques, textesInterface } from './data/dialogues.js';
 
 // Installée avant tout le reste, pour que rien ne passe avant elle.
 const gate = createLoadGate(6);
@@ -38,6 +40,7 @@ const gate = createLoadGate(6);
 const MAX_FRAME_SECONDS = 0.1; // au retour d'un onglet en veille, pas de saut
 const NARROW_SCREEN = 600; // en dessous (en pixels CSS), ombres moins définies
 const STANDING = { x: 0, z: 0 }; // direction du héros pendant une conversation
+const PIGEON_HEAR_RADIUS = 3.2; // les pigeons parlent quand on passe sous leur vol
 
 const canvas = document.getElementById('scene');
 trackViewportHeight();
@@ -138,12 +141,23 @@ function start() {
   const debug = isDebugEnabled() ? createDebugPanel(renderer, () => quality.scale) : null;
 
   // Conversations : boîte de dialogue et bulle en DOM, qui parle à qui dans
-  // interaction.js, ce qui se dit et ce qu'on gagne dans quest.js.
+  // interaction.js, ce qui se dit et ce qu'on gagne dans quest.js. Le
+  // compteur ouvre le grimoire ; diplôme et grimoire suspendent le jeu.
   const notions = textesInterface.parchemins.notions;
   const dialogue = createDialogueBox(document.getElementById('dialogue'));
-  const counter = createScrollCounter(document.getElementById('parchemins'), { notions, texts: textesInterface.parchemins, state: gameState });
+  let playing = params.has('autostart');
+  let quest = null;
+  const canOpenGrimoire = () => playing && !quest.isBusy;
+  const counter = createScrollCounter(document.getElementById('parchemins'), {
+    notions, texts: textesInterface.parchemins, state: gameState, onOpen: () => canOpenGrimoire() && grimoire.open(),
+  });
+  const grimoire = createGrimoire(document.getElementById('grimoire'), {
+    ids: counter.ids, notions, texts: dialogues, labels: textesInterface.grimoire, state: gameState, canOpen: canOpenGrimoire,
+  });
   const diploma = createDiploma(document.getElementById('diplome'), { texts: textesInterface.diplome, notions, state: gameState });
-  const quest = createQuest({ dialogue, state: gameState, texts: dialogues, scrolls: counter.ids, counter, diploma });
+  quest = createQuest({
+    dialogue, state: gameState, texts: dialogues, offer: textesInterface.offreLecon, scrolls: counter.ids, counter, overlays: [diploma, grimoire], diploma,
+  });
   let interaction = null;
   const hint = createInteractionHint(document.getElementById('indice'), () => interaction.request());
   const label = createNameLabel(document.getElementById('nom'));
@@ -154,18 +168,35 @@ function start() {
   // Musique de fond et sons d'ambiance : lancés par le geste qui ferme l'écran titre.
   const music = createAudio('assets/audio/village-bell.mp3', document.getElementById('son'), textesInterface.musique);
   const dovecote = TOWERS.colombier;
+
+  // Les figurants qui ont une réplique, et les pigeons, qui parlent du milieu de leur vol.
+  const dovecoteCenter = { x: dovecote.x + dovecote.size / 2, z: dovecote.z + dovecote.size / 2 };
+  const chatter = createChatter(document.getElementById('replique'), {
+    speakers: [
+      ...npcs.filter((npc) => npc.isExtra && repliques[npc.id]).map((npc) => ({
+        id: npc.id, lines: repliques[npc.id], position: npc.position, headPoint: (target) => npc.headPoint(target),
+      })),
+      {
+        id: 'pigeons',
+        lines: repliques.pigeons,
+        position: { x: PIGEONS.center[0], z: PIGEONS.center[2] },
+        radius: PIGEON_HEAR_RADIUS,
+        headPoint: (target) => target.set(...PIGEONS.center),
+      },
+    ],
+    player, camera: follow.camera, canvas,
+  });
   const ambience = createAmbience(music, {
     // La rivière : du plateau au nord jusqu'à la plaine au sud.
     river: [[31.5, -30], [31.5, 16.5], [32.5, 17.5], [32.5, 60]],
     waterfall: [(WATERFALL.x0 + WATERFALL.x1) / 2, WATERFALL.z + 0.3],
     fires: [[HEARTH.x, HEARTH.z], [CAMPFIRE.x, CAMPFIRE.z]],
     anvil: [ANVIL.x, ANVIL.z],
-    dovecote: [dovecote.x + dovecote.size / 2, dovecote.z + dovecote.size / 2],
+    dovecote: [dovecoteCenter.x, dovecoteCenter.z],
   }, (x, z) => village.map.cellAt(Math.floor(x), Math.floor(z))?.matter ?? 'grass');
 
   // Écran titre (sauf ?autostart, pour les tests) et bandeau de lieu.
   const banner = createAreaBanner(document.getElementById('lieu'), REGIONS, textesInterface.lieux);
-  let playing = params.has('autostart');
   if (playing) {
     music.showButton();
     counter.show();
@@ -206,6 +237,7 @@ function start() {
       if (keyboard.takeCancel()) dialogue.close();
       interaction.update(dt, keyboard.takeAction());
       banner.update(player.position);
+      chatter.update(dt, quest.isBusy);
       music.setDucked(interaction.isTalking);
       ambience.update(player.position, dt);
     } else {
@@ -221,7 +253,7 @@ function start() {
 
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
-    counter, diploma, quest,
+    counter, diploma, quest, grimoire, chatter,
   });
 
   let last = performance.now();

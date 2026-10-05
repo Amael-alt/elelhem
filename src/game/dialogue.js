@@ -30,7 +30,7 @@ const DIGIT = /^(?:Digit|Numpad)([1-9])$/;
 // ponctuation. Faite ici, à l'affichage : les textes restent de l'écriture
 // ordinaire, sans caractère invisible.
 const NBSP = String.fromCharCode(0xa0);
-const nonBreaking = (text) => text.replace(/ (?=[:;!?»])/g, NBSP).replace(/(?<=«) /g, NBSP);
+export const nonBreaking = (text) => text.replace(/ (?=[:;!?»])/g, NBSP).replace(/(?<=«) /g, NBSP);
 
 export function createDialogueBox(root, { onClose = () => {} } = {}) {
   const nameElement = root.querySelector('.dialogue-nom');
@@ -54,6 +54,7 @@ export function createDialogueBox(root, { onClose = () => {} } = {}) {
   let buttons = [];
   let selected = -1;
   let onChoose = null;
+  let kind = ''; // ce que la question demande, pour les tests : 'offre' ou 'question'
 
   const typing = () => typed < characters.length;
 
@@ -180,9 +181,10 @@ export function createDialogueBox(root, { onClose = () => {} } = {}) {
       showPage(0);
     },
     // Pose une question. options : [{ texte, ecarte }] ; then(index) reçoit le
-    // choix fait.
-    ask(name, text, options, then) {
+    // choix fait ; questionKind dit de quoi il s'agit (lu par les tests).
+    ask(name, text, options, then, questionKind = 'question') {
       mode = 'question';
+      kind = questionKind;
       choices = options;
       onChoose = then;
       onDone = null;
@@ -224,6 +226,7 @@ export function createDialogueBox(root, { onClose = () => {} } = {}) {
         tape: Math.min(Math.floor(typed), characters.length),
         enFrappe: open && typing(),
         choix: mode === 'question' ? choices.map((c) => ({ texte: c.texte, ecarte: Boolean(c.ecarte) })) : [],
+        sorte: mode === 'question' ? kind : '',
         selection: selected,
       };
     },

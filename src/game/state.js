@@ -2,11 +2,14 @@
 // et ce qui survit à un rechargement de la page.
 //
 // Forme (gelée, c'est celle que reçoivent les fonctions de data/dialogues.js) :
-//   { prenom, parchemins: Set, visites: Map, choix: Map }
+//   { prenom, parchemins: Set, visites: Map, choix: Map, erreurs: Map }
 //   - prenom      : chaîne vide tant que le joueur n'a pas donné le sien
 //   - parchemins  : identifiants des parchemins obtenus
 //   - visites     : identifiant d'habitant -> nombre de conversations
 //   - choix       : identifiant d'habitant -> indice du choix retenu à sa question
+//   - erreurs     : identifiant d'habitant -> mauvaises réponses données avant
+//                   la bonne (ajouté à l'étape 3b pour la mention du diplôme ;
+//                   absent des sauvegardes plus anciennes, il vaut alors zéro)
 //
 // Sauvegarde dans localStorage, entourée de try/catch : en navigation privée
 // ou avec les données de site bloquées, il peut être absent ou lancer. Le jeu
@@ -15,7 +18,7 @@
 const STORAGE_KEY = 'village-lia-v1';
 
 function emptyState() {
-  return { prenom: '', parchemins: new Set(), visites: new Map(), choix: new Map() };
+  return { prenom: '', parchemins: new Set(), visites: new Map(), choix: new Map(), erreurs: new Map() };
 }
 
 function read() {
@@ -34,6 +37,7 @@ function write(state) {
       parchemins: [...state.parchemins],
       visites: [...state.visites],
       choix: [...state.choix],
+      erreurs: [...state.erreurs],
     }));
   } catch {
     // Pas de sauvegarde possible : on joue quand même.
@@ -50,6 +54,7 @@ export function createGameState({ restore = true } = {}) {
     if (Array.isArray(saved.parchemins)) state.parchemins = new Set(saved.parchemins.filter((id) => typeof id === 'string'));
     if (Array.isArray(saved.visites)) state.visites = new Map(saved.visites.filter(([id, n]) => typeof id === 'string' && Number.isInteger(n)));
     if (Array.isArray(saved.choix)) state.choix = new Map(saved.choix.filter(([id, n]) => typeof id === 'string' && Number.isInteger(n)));
+    if (Array.isArray(saved.erreurs)) state.erreurs = new Map(saved.erreurs.filter(([id, n]) => typeof id === 'string' && Number.isInteger(n)));
   }
   if (!restore) {
     try {
@@ -71,6 +76,13 @@ export function resetGameState(state) {
   state.parchemins.clear();
   state.visites.clear();
   state.choix.clear();
+  state.erreurs.clear();
+  write(state);
+}
+
+// Note une mauvaise réponse à la question d'un habitant et sauvegarde aussitôt.
+export function recordMistake(state, id) {
+  state.erreurs.set(id, (state.erreurs.get(id) ?? 0) + 1);
   write(state);
 }
 

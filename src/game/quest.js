@@ -2,10 +2,12 @@
 // ce qu'on y gagne. Le moteur ne choisit aucune phrase : il enchaîne les
 // morceaux de data/dialogues.js selon l'état de la partie.
 //
-//   première visite         intro, lecon, question
-//   visite suivante         retour, puis lecon et question tant que le
+//   première visite         intro, puis l'offre : la leçon d'abord, ou
+//                           directement la question
+//   visite suivante         retour, puis l'offre et la question tant que le
 //                           parchemin n'est pas gagné ; retour seul ensuite
-//   mauvaise réponse        son retour, puis la question de nouveau, le choix
+//   mauvaise réponse        son retour (l'erreur est comptée pour la mention
+//                           du diplôme), puis la question de nouveau, le choix
 //                           essayé grisé
 //   bonne réponse           son retour, le parchemin (sauvegardé aussitôt,
 //                           compteur animé), puis la recompense
@@ -13,12 +15,17 @@
 //                           sont réunis ; la recompense ouvre le diplôme, et
 //                           chaque visite suivante le rouvre
 
-import { recordVisit, saveGameState } from './state.js';
+import { recordMistake, recordVisit, saveGameState } from './state.js';
+
+// Les deux réponses de l'offre, dans l'ordre de textesInterface.offreLecon.
+const TAKE_LESSON = 0;
 
 // dialogue : la boîte (dialogue.js) ; state : l'état de partie ; texts :
-// data/dialogues.js ; scrolls : identifiants des parchemins à gagner ; counter :
-// le compteur (hud.js) ; diploma : l'écran du diplôme (diploma.js).
-export function createQuest({ dialogue, state, texts, scrolls, counter, diploma }) {
+// data/dialogues.js ; offer : textesInterface.offreLecon ; scrolls :
+// identifiants des parchemins à gagner ; counter : le compteur (scrolls.js) ;
+// overlays : les écrans qui suspendent le jeu quand ils sont ouverts (le
+// diplôme, le grimoire), chacun avec isOpen ; diploma : l'écran du diplôme.
+export function createQuest({ dialogue, state, texts, offer, scrolls, counter, overlays, diploma }) {
   const missing = () => scrolls.filter((id) => !state.parchemins.has(id)).length;
 
   function showDiploma() {
@@ -52,8 +59,22 @@ export function createQuest({ dialogue, state, texts, scrolls, counter, diploma 
         dialogue.open(entry.nom, [choice.retour], () => reward(entry, key, index));
       } else {
         tried.add(index);
+        recordMistake(state, key);
         dialogue.open(entry.nom, [choice.retour], () => ask(entry, key, tried));
       }
+    }, 'question');
+  }
+
+  // Les pages d'accueil, puis l'offre : la leçon avant la question, ou la
+  // question tout de suite. La leçon reste à relire dans le grimoire.
+  function lessonOrQuestion(entry, key, opening) {
+    const question = () => ask(entry, key, new Set());
+    dialogue.open(entry.nom, opening, () => {
+      const options = offer.choix.map((texte) => ({ texte }));
+      dialogue.ask(entry.nom, offer.texte, options, (index) => {
+        if (index === TAKE_LESSON) dialogue.open(entry.nom, entry.lecon, question);
+        else question();
+      }, 'offre');
     });
   }
 
@@ -65,22 +86,21 @@ export function createQuest({ dialogue, state, texts, scrolls, counter, diploma 
       const first = (state.visites.get(npc.id) ?? 0) === 0;
       const opening = first ? entry.intro(state) : entry.retour(state);
       recordVisit(state, npc.id);
-      const lesson = () => dialogue.open(entry.nom, [...opening, ...entry.lecon], () => ask(entry, key, new Set()));
 
       if (entry.diplome) {
         if (state.choix.has(key)) dialogue.open(entry.nom, opening, showDiploma);
         else if (missing() > 0) dialogue.open(entry.nom, opening);
-        else lesson();
+        else lessonOrQuestion(entry, key, opening);
       } else if (state.parchemins.has(key)) {
         dialogue.open(entry.nom, opening);
       } else {
-        lesson();
+        lessonOrQuestion(entry, key, opening);
       }
     },
-    // Vrai tant qu'une conversation ou le diplôme occupe l'écran : le héros
-    // ne bouge pas, la bulle ne s'affiche pas.
+    // Vrai tant qu'une conversation, le diplôme ou le grimoire occupe
+    // l'écran : le héros ne bouge pas, la bulle ne s'affiche pas.
     get isBusy() {
-      return dialogue.isOpen || diploma.isOpen;
+      return dialogue.isOpen || overlays.some((overlay) => overlay.isOpen);
     },
   };
 }

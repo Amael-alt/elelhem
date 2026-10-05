@@ -1,6 +1,6 @@
 // L'écran titre, par-dessus le village vivant : la flamme Maintenant Vous
-// Savez, le titre, la contrée, la signature, un prénom facultatif et
-// l'invitation à commencer. S'il existe une sauvegarde, l'action principale
+// Savez, le titre, la contrée, l'accroche, la signature, un prénom facultatif
+// et l'invitation à commencer. S'il existe une sauvegarde, l'action principale
 // reprend la partie et un lien discret en commence une nouvelle.
 //
 // Aucune phrase ici : les textes viennent de data/dialogues.js
@@ -16,6 +16,7 @@ export function createTitleScreen(root, { texts, state, onStart }) {
   const hasSave = state.visites.size > 0 || state.parchemins.size > 0 || state.prenom !== '';
   root.querySelector('.titre-nom').textContent = texts.titre;
   root.querySelector('.titre-contree').textContent = texts.contree;
+  root.querySelector('.titre-accroche').textContent = texts.accroche;
   root.querySelector('.titre-signature').textContent = texts.signature;
   const site = root.querySelector('.titre-site');
   site.textContent = texts.site.replace('https://', '');

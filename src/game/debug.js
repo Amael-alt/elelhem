@@ -6,6 +6,7 @@
 //   ouvrir une conversation, contrôler les textes).
 
 import * as THREE from 'three';
+import { repliques } from '../data/dialogues.js';
 
 const REFRESH_SECONDS = 0.5;
 
@@ -84,10 +85,10 @@ function checkDialogues(texts, characters) {
     else list.forEach((text, i) => page(`${where}[${i}]`, text));
   };
   const states = [
-    { prenom: '', parchemins: new Set(), visites: new Map(), choix: new Map() },
-    { prenom: 'Ada', parchemins: new Set(['a', 'b', 'c']), visites: new Map([['x', 2]]), choix: new Map() },
-    { prenom: 'Ada', parchemins: new Set(Object.keys(texts)), visites: new Map(), choix: new Map() },
-    { prenom: 'Ada', parchemins: new Set(Object.keys(texts)), visites: new Map(), choix: new Map(Object.keys(texts).map((key) => [key, 0])) },
+    { prenom: '', parchemins: new Set(), visites: new Map(), choix: new Map(), erreurs: new Map() },
+    { prenom: 'Ada', parchemins: new Set(['a', 'b', 'c']), visites: new Map([['x', 2]]), choix: new Map(), erreurs: new Map() },
+    { prenom: 'Ada', parchemins: new Set(Object.keys(texts)), visites: new Map(), choix: new Map(), erreurs: new Map() },
+    { prenom: 'Ada', parchemins: new Set(Object.keys(texts)), visites: new Map(), choix: new Map(Object.keys(texts).map((key) => [key, 0])), erreurs: new Map() },
   ];
   for (const character of characters) {
     if (character.dialogue && !texts[character.dialogue]) problems.push(`${character.id} : dialogue « ${character.dialogue} » introuvable`);
@@ -100,6 +101,8 @@ function checkDialogues(texts, characters) {
     });
     pages(`${key}.lecon`, entry.lecon);
     pages(`${key}.recompense`, entry.recompense);
+    // La maxime du grimoire doit être celle que l'habitant prononce.
+    if (entry.maxime && !entry.recompense.some((text) => text.includes(entry.maxime))) problems.push(`${key}.maxime : absente de recompense`);
     const { question } = entry;
     page(`${key}.question.texte`, question?.texte);
     const choix = question?.choix ?? [];
@@ -116,13 +119,14 @@ function checkDialogues(texts, characters) {
       page(`${key}.question.choix[${i}].retour`, c.retour);
     });
   }
+  for (const [id, lines] of Object.entries(repliques)) pages(`repliques.${id}`, lines);
   return problems;
 }
 
 // game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
 // dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter } = game;
   let viewer = null;
 
   const info = () => ({
@@ -283,7 +287,9 @@ export function installDebugApi(game) {
     // Joue toute une conversation avec un habitant, sans condition de
     // distance. mode 'erreurs' essaie d'abord les mauvaises réponses (pour
     // tester les nouveaux essais), 'direct' donne tout de suite la bonne.
-    converse(id, mode = 'erreurs') {
+    // lecon : prendre la leçon quand l'habitant la propose (sinon, la question
+    // tout de suite).
+    converse(id, mode = 'erreurs', lecon = true) {
       const npc = npcs.find((candidate) => candidate.id === id);
       const { question } = texts[npc.character.dialogue];
       const right = question.choix.findIndex((c) => c.bon);
@@ -293,6 +299,7 @@ export function installDebugApi(game) {
       for (let guard = 0; dialogue.isOpen && guard < 400; guard += 1) {
         const snap = dialogue.snapshot();
         if (snap.enFrappe) dialogue.advance();
+        else if (snap.sorte === 'offre') dialogue.choose(lecon ? 0 : 1);
         else if (snap.mode === 'question') {
           const pick = picks.shift() ?? right;
           log.essais.push(pick);
@@ -310,6 +317,14 @@ export function installDebugApi(game) {
       counter.refresh();
       return [...gameState.parchemins];
     },
+    // Le grimoire, ouvert à une page donnée (la dernière gagnée par défaut).
+    grimoire(on = true, page) {
+      if (on) grimoire.open(page);
+      else grimoire.close();
+      return { ouvert: grimoire.isOpen, page: grimoire.page };
+    },
+    // La réplique de figurant affichée, s'il y en a une.
+    chatter: () => chatter.snapshot(),
     diploma(on = true) {
       if (on) diploma.open();
       else diploma.close();
@@ -368,6 +383,7 @@ export function installDebugApi(game) {
       parchemins: [...gameState.parchemins],
       visites: Object.fromEntries(gameState.visites),
       choix: Object.fromEntries(gameState.choix),
+      erreurs: Object.fromEntries(gameState.erreurs),
     }),
     checkDialogues: () => checkDialogues(texts, npcs.map((npc) => npc.character)),
   };

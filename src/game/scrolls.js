@@ -1,14 +1,14 @@
 // Le compteur de parchemins, en haut à gauche : un emplacement par parchemin,
 // vide tant qu'on ne l'a pas, rempli d'or ensuite. À l'obtention,
-// l'emplacement s'illumine et une annonce donne la notion gagnée. Du DOM, dessiné
-// en CSS : aucune image.
+// l'emplacement s'illumine et une annonce donne la notion gagnée. Le compteur
+// est un bouton : il ouvre le grimoire. Du DOM, dessiné en CSS : aucune image.
 
-const ANNOUNCE_MS = 3200;
+const ANNOUNCE_MS = 4500;
 
 // root : #parchemins ; notions : identifiant -> notion (data/dialogues.js),
 // dans l'ordre des emplacements ; texts : textesInterface.parchemins ;
-// state : l'état de partie.
-export function createScrollCounter(root, { notions, texts, state }) {
+// state : l'état de partie ; onOpen : appelé quand on touche le compteur.
+export function createScrollCounter(root, { notions, texts, state, onOpen = () => {} }) {
   const row = root.querySelector('.parchemins-rangee');
   const announce = root.querySelector('.parchemins-annonce');
   const ids = Object.keys(notions);
@@ -32,10 +32,14 @@ export function createScrollCounter(root, { notions, texts, state }) {
       slot.classList.toggle('obtenu', owned);
       slot.title = owned ? notions[id] : `${notions[id]} : ${texts.manquant}`;
     }
-    row.setAttribute('aria-label', texts.compte(count, ids.length));
+    row.setAttribute('aria-label', texts.ouvrir(count, ids.length));
   }
 
   refresh();
+  row.addEventListener('click', () => {
+    row.blur(); // les touches Espace et Entrée reviennent au jeu
+    onOpen();
+  });
 
   return {
     ids,
@@ -53,7 +57,9 @@ export function createScrollCounter(root, { notions, texts, state }) {
       slot.classList.remove('gagne');
       void slot.offsetWidth; // relance l'animation si elle vient de jouer
       slot.classList.add('gagne');
-      announce.replaceChildren(texts.obtenu, document.createElement('br'), notions[id]);
+      const hint = document.createElement('small');
+      hint.textContent = texts.relire;
+      announce.replaceChildren(texts.obtenu, document.createElement('br'), notions[id], hint);
       announce.hidden = false;
       announce.classList.remove('parchemins-sortie');
       clearTimeout(timer);

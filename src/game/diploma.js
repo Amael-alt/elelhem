@@ -1,7 +1,8 @@
 // Le diplôme d'Ellelhem : dessiné sur un canvas 2D, au prénom du joueur et à
 // la date du jour, avec les huit notions apprises, un sceau de cire et les
-// signatures de l'architecte et de la guide. On le télécharge en image, et on
-// copie le lien du jeu pour le partager.
+// signatures de l'architecte et de la guide, et une mention selon les erreurs.
+// On le partage d'un geste depuis un téléphone, on le télécharge en image, et
+// on copie le lien du jeu.
 //
 // Aucune image chargée : le parchemin est un bruit tiré au hasard (avec une
 // graine, il est le même à chaque fois), les filets et le sceau sont tracés.
@@ -16,6 +17,7 @@ const HEIGHT = 1130;
 const SEED = 1789;
 const NAME_MAX = 24;
 const COPIED_MS = 2200;
+const FILE_DELAY_MS = 250; // attente après une frappe du prénom avant de refaire l'image
 // JPEG plutôt que PNG : le grain du parchemin ne se compresse pas en PNG
 // (2,8 Mo), il pèse 300 Ko en JPEG, ce qui compte pour un partage depuis
 // un téléphone.
@@ -169,8 +171,9 @@ function paintSeal(context, cx, cy, radius, label, rng) {
   diamond(context, cx, cy + radius * 0.47, 5, COLORS.cire[0]);
 }
 
-// Dessine tout le diplôme. data : { prenom, jour (Date), texts, notions }.
-export function drawDiploma(context, { prenom, jour, texts, notions }) {
+// Dessine tout le diplôme. data : { prenom, jour (Date), texts, notions,
+// mention (texte, vide s'il n'y en a pas) }.
+export function drawDiploma(context, { prenom, jour, texts, notions, mention = '' }) {
   const rng = createRng(SEED);
   const cx = WIDTH / 2;
   context.save();
@@ -183,21 +186,25 @@ export function drawDiploma(context, { prenom, jour, texts, notions }) {
   ornament(context, cx, 306, 300);
   write(context, texts.decerne, cx, 376, { size: 36, italic: true, color: COLORS.sepia });
 
-  // Le prénom, ou une ligne pointillée à remplir.
+  // Le prénom (ou une ligne pointillée à remplir), puis la mention : avec une
+  // mention, le bloc remonte un peu pour lui faire de la place.
+  const nameY = mention ? 462 : 478;
+  const motifY = mention ? 580 : 560;
   if (prenom) {
-    write(context, prenom, cx, 478, { size: 92, weight: 600, color: COLORS.nom, maxWidth: 1000 });
+    write(context, prenom, cx, nameY, { size: 92, weight: 600, color: COLORS.nom, maxWidth: 1000 });
   } else {
     context.strokeStyle = COLORS.sepia;
     context.lineWidth = 3;
     context.setLineDash([3, 8]);
     context.beginPath();
-    context.moveTo(cx - 360, 470);
-    context.lineTo(cx + 360, 470);
+    context.moveTo(cx - 360, nameY - 8);
+    context.lineTo(cx + 360, nameY - 8);
     context.stroke();
     context.setLineDash([]);
   }
 
-  write(context, texts.motif, cx, 556, { size: 32, color: COLORS.encre });
+  if (mention) write(context, mention, cx, 526, { size: 36, italic: true, weight: 600, color: COLORS.nom });
+  write(context, texts.motif, cx, motifY, { size: 32, color: COLORS.encre });
 
   // Les notions, sur deux colonnes, précédées d'un losange.
   const list = Object.values(notions);
@@ -205,7 +212,7 @@ export function drawDiploma(context, { prenom, jour, texts, notions }) {
   list.forEach((notion, i) => {
     const column = Math.floor(i / rows);
     const x = column === 0 ? 410 : 890;
-    const y = 630 + (i % rows) * 52;
+    const y = motifY + 70 + (i % rows) * 50;
     diamond(context, x - 22, y - 10, 6, COLORS.or);
     write(context, notion, x, y, { size: 31, color: COLORS.encre, align: 'left', maxWidth: 440 });
   });
@@ -224,6 +231,17 @@ export function drawDiploma(context, { prenom, jour, texts, notions }) {
   write(context, `${texts.pied}  ·  ${texts.site}`, cx, 1008, { size: 23, color: COLORS.sepia });
   write(context, texts.jeu.replace('https://', '').replace(/\/$/, ''), cx, 1042, { size: 23, weight: 600, color: COLORS.or });
   context.restore();
+}
+
+// Le navigateur sait-il partager un fichier image (Web Share) ? Vrai sur la
+// plupart des téléphones, faux sur beaucoup d'ordinateurs.
+function canShareFiles() {
+  try {
+    const probe = new File([new Uint8Array(1)], 'essai.jpg', { type: IMAGE_TYPE });
+    return Boolean(navigator.canShare?.({ files: [probe] }));
+  } catch {
+    return false;
+  }
 }
 
 // Copie du texte dans le presse-papiers, avec un repli pour les navigateurs
@@ -260,23 +278,51 @@ export function createDiploma(root, { texts, notions, state }) {
   root.querySelector('.diplome-prenom span').textContent = texts.champ;
   const input = root.querySelector('.diplome-prenom input');
   input.maxLength = NAME_MAX;
+  const share = root.querySelector('.diplome-partager');
   const download = root.querySelector('.diplome-telecharger');
   const copy = root.querySelector('.diplome-copier');
   const close = root.querySelector('.diplome-fermer');
+  share.textContent = texts.partager;
   download.textContent = texts.telecharger;
   copy.textContent = texts.copier;
   close.textContent = texts.fermer;
 
+  // Partager en un geste : la feuille de partage du téléphone, avec l'image.
+  // Seulement si le navigateur sait partager un fichier ; sinon on garde
+  // Télécharger et Copier le lien.
+  const canShare = canShareFiles();
+  share.hidden = !canShare;
+  (canShare ? share : download).classList.add('principal');
+
   let open = false;
   let jour = new Date();
   let copiedTimer = 0;
+  let file = null; // l'image prête à partager, refaite après chaque dessin
+  let fileTimer = 0;
   const fontsReady = Promise.all(FONTS.map((font) => document.fonts?.load(font).catch(() => {})));
 
   const name = () => input.value.trim().slice(0, NAME_MAX);
 
+  // Mauvaises réponses de toute la partie : elles décident de la mention.
+  const mistakes = () => [...state.erreurs.values()].reduce((sum, n) => sum + n, 0);
+
+  // L'image du diplôme en fichier, prête avant le toucher : Safari n'ouvre la
+  // feuille de partage que dans le geste lui-même, sans attente.
+  function makeFile() {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob ? new File([blob], texts.fichier, { type: IMAGE_TYPE }) : null), IMAGE_TYPE, IMAGE_QUALITY);
+    });
+  }
+
   function draw() {
-    drawDiploma(context, { prenom: name(), jour, texts, notions });
+    drawDiploma(context, { prenom: name(), jour, texts, notions, mention: texts.mention(mistakes()) });
     canvas.setAttribute('aria-label', texts.alt(name()));
+    file = null;
+    if (!canShare) return;
+    clearTimeout(fileTimer);
+    fileTimer = setTimeout(async () => {
+      file = await makeFile();
+    }, FILE_DELAY_MS);
   }
 
   function hide() {
@@ -291,6 +337,16 @@ export function createDiploma(root, { texts, notions, state }) {
     state.prenom = name();
     saveGameState(state);
     draw();
+  });
+
+  share.addEventListener('click', async () => {
+    const shared = file ?? (await makeFile());
+    if (!shared) return;
+    try {
+      await navigator.share({ files: [shared], title: texts.partage.titre, text: texts.partage.texte });
+    } catch {
+      // Partage annulé, ou refusé : rien à faire, les autres boutons restent là.
+    }
   });
 
   download.addEventListener('click', () => {
@@ -344,7 +400,7 @@ export function createDiploma(root, { texts, notions, state }) {
       if (open) draw(); // la police est là : on redessine avec elle
       // Le focus sur un bouton, pas sur le champ : sur téléphone, le clavier
       // ne s'ouvre pas tout seul.
-      if (open && window.matchMedia?.('(hover: hover)').matches) download.focus({ preventScroll: true });
+      if (open && window.matchMedia?.('(hover: hover)').matches) (canShare ? share : download).focus({ preventScroll: true });
     },
     close: hide,
     // Pour les tests : l'image téléchargée, en data URL.

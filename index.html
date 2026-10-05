@@ -67,6 +67,7 @@
       <h1 class="titre-nom"></h1>
       <div class="titre-orne" aria-hidden="true"><span></span><i></i><span></span></div>
       <p class="titre-contree"></p>
+      <p class="titre-accroche"></p>
       <label class="titre-prenom"><span></span><input type="text" autocomplete="given-name" spellcheck="false"></label>
       <p class="titre-commencer"></p>
       <button class="titre-nouvelle" type="button"></button>
@@ -74,9 +75,10 @@
     </div>
   </div>
 
-  <!-- Compteur de parchemins, en haut à gauche : rempli par src/game/scrolls.js. -->
+  <!-- Compteur de parchemins, en haut à gauche : rempli par src/game/scrolls.js.
+       On le touche pour ouvrir le grimoire. -->
   <div id="parchemins" hidden>
-    <div class="parchemins-rangee" role="img"></div>
+    <button class="parchemins-rangee" type="button" tabindex="-1"></button>
     <p class="parchemins-annonce" role="status" hidden></p>
   </div>
 
@@ -87,6 +89,7 @@
       <div class="diplome-actions">
         <label class="diplome-prenom"><span></span><input type="text" autocomplete="given-name" spellcheck="false"></label>
         <div class="diplome-boutons">
+          <button class="diplome-partager" type="button" hidden></button>
           <button class="diplome-telecharger" type="button"></button>
           <button class="diplome-copier" type="button"></button>
           <button class="diplome-fermer" type="button"></button>
@@ -94,6 +97,29 @@
       </div>
     </div>
   </div>
+
+  <!-- Le grimoire : les parchemins gagnés, à relire (src/game/grimoire.js). -->
+  <div id="grimoire" role="dialog" aria-modal="true" aria-labelledby="grimoire-titre" hidden>
+    <div class="grimoire-livre">
+      <p class="grimoire-titre" id="grimoire-titre"></p>
+      <nav class="grimoire-onglets"></nav>
+      <article class="grimoire-page">
+        <p class="grimoire-numero"></p>
+        <h2 class="grimoire-notion"></h2>
+        <p class="grimoire-maitre"></p>
+        <p class="grimoire-maxime"></p>
+        <div class="grimoire-lecon"></div>
+      </article>
+      <div class="grimoire-boutons">
+        <button class="grimoire-precedente" type="button"></button>
+        <button class="grimoire-fermer" type="button"></button>
+        <button class="grimoire-suivante" type="button"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Réplique d'un figurant, en bulle au-dessus de sa tête (src/game/chatter.js). -->
+  <p id="replique" aria-live="polite" hidden></p>
 
   <!-- Nom de l'habitant qui approche, au-dessus de sa tête. -->
   <div id="nom" hidden></div>

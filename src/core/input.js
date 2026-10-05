@@ -1,4 +1,4 @@
-// Entrées du joueur : porte de chargement, clavier, molette.
+// Entrées du joueur : porte de chargement, clavier (déplacement, action), molette.
 //
 // Porte de chargement. Pendant les premières images, le navigateur compile les
 // shaders et envoie les textures : la page peut se figer une fraction de
@@ -51,12 +51,27 @@ const MOVE_KEYS = {
   KeyD: [1, 0], ArrowRight: [1, 0],
 };
 
+// Action (parler, passer une page) : E, Entrée ou Espace. Annuler : Échap.
+const ACTION_KEYS = new Set(['KeyE', 'Enter', 'NumpadEnter', 'Space']);
+const CANCEL_KEYS = new Set(['Escape']);
+
 export function createKeyboard() {
   const pressed = new Set();
   let zoomSteps = 0;
+  let action = false;
+  let cancel = false;
 
   window.addEventListener('keydown', (event) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (ACTION_KEYS.has(event.code) || CANCEL_KEYS.has(event.code)) {
+      // Une touche maintenue répète keydown : une seule action par appui.
+      if (!event.repeat) {
+        if (ACTION_KEYS.has(event.code)) action = true;
+        else cancel = true;
+      }
+      event.preventDefault();
+      return;
+    }
     if (!MOVE_KEYS[event.code]) return;
     pressed.add(event.code);
     event.preventDefault();
@@ -84,6 +99,17 @@ export function createKeyboard() {
       }
       const length = Math.hypot(x, z);
       return length > 0 ? { x: x / length, z: z / length } : { x: 0, z: 0 };
+    },
+    // Vrai une fois par appui sur une touche d'action, puis faux jusqu'au suivant.
+    takeAction() {
+      const pressedNow = action;
+      action = false;
+      return pressedNow;
+    },
+    takeCancel() {
+      const pressedNow = cancel;
+      cancel = false;
+      return pressedNow;
     },
     // Crans de molette depuis la dernière lecture (positif : on s'éloigne).
     takeZoomSteps() {

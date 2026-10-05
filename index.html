@@ -34,6 +34,23 @@
 <body>
   <canvas id="scene" aria-label="Le village d'Ellelhem"></canvas>
   <div id="debug" hidden></div>
+
+  <!-- Bulle « parler » au-dessus de l'habitant à portée (dessin maison, en SVG). -->
+  <button id="indice" type="button" tabindex="-1" hidden>
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-7l-4.5 3.5V16.5H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5z"/>
+      <path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01"/>
+    </svg>
+    <span class="touche" aria-hidden="true">E</span>
+  </button>
+
+  <!-- Boîte de dialogue : remplie par src/game/dialogue.js. -->
+  <div id="dialogue" role="dialog" aria-labelledby="dialogue-nom" hidden>
+    <p class="dialogue-nom" id="dialogue-nom"></p>
+    <p class="dialogue-texte"><span class="vu"></span><span class="reste"></span></p>
+    <span class="dialogue-suite" aria-hidden="true"></span>
+  </div>
+
   <div id="message" role="alert" hidden></div>
   <noscript><div class="noscript">Le village a besoin de JavaScript pour s'afficher.</div></noscript>
 </body>

@@ -1,10 +1,11 @@
 // Outils de mesure et de test.
-
-import * as THREE from 'three';
 // - Le panneau ?debug : images par seconde, coût d'une image, appels de
 //   dessin, triangles et définition réelle du canvas.
 // - window.__lia : commandes pour des captures reproductibles et des tests
-//   scriptés (téléporter, figer le temps, avancer image par image, mesurer).
+//   scriptés (téléporter, figer le temps, avancer image par image, mesurer,
+//   ouvrir une conversation, contrôler les textes).
+
+import * as THREE from 'three';
 
 const REFRESH_SECONDS = 0.5;
 
@@ -62,9 +63,57 @@ function createSheetViewer(buffer, scale = 4) {
   return canvas;
 }
 
-// game : { renderer, player, follow, tick, state, sheet }.
+// Contrôle des textes : toutes les clés présentes, trois choix dont un seul
+// bon, pages courtes, aucun tiret long. Renvoie la liste des problèmes (vide
+// si tout va bien). Sert de test scripté à l'étape 3, quand tous les
+// habitants parleront.
+const MAX_PAGE_LENGTH = 170;
+const LONG_DASH = new RegExp(`[${String.fromCharCode(0x2013)}${String.fromCharCode(0x2014)}]`);
+
+function checkDialogues(texts, characters) {
+  const problems = [];
+  const page = (where, text) => {
+    if (typeof text !== 'string' || text.length === 0) problems.push(`${where} : page vide ou absente`);
+    else if (text.length > MAX_PAGE_LENGTH) problems.push(`${where} : ${text.length} caractères (maximum ${MAX_PAGE_LENGTH})`);
+    else if (LONG_DASH.test(text)) problems.push(`${where} : tiret long`);
+  };
+  const pages = (where, list) => {
+    if (!Array.isArray(list) || list.length === 0) problems.push(`${where} : liste de pages absente`);
+    else list.forEach((text, i) => page(`${where}[${i}]`, text));
+  };
+  const states = [
+    { prenom: '', parchemins: new Set(), visites: new Map(), choix: new Map() },
+    { prenom: 'Ada', parchemins: new Set(['a', 'b', 'c']), visites: new Map([['x', 2]]), choix: new Map() },
+    { prenom: 'Ada', parchemins: new Set('abcdefgh'), visites: new Map(), choix: new Map() },
+  ];
+  for (const character of characters) {
+    if (character.dialogue && !texts[character.dialogue]) problems.push(`${character.id} : dialogue « ${character.dialogue} » introuvable`);
+  }
+  for (const [key, entry] of Object.entries(texts)) {
+    if (typeof entry.nom !== 'string') problems.push(`${key} : nom absent`);
+    states.forEach((state, n) => {
+      pages(`${key}.intro(état ${n})`, entry.intro(state));
+      pages(`${key}.retour(état ${n})`, entry.retour(state));
+    });
+    pages(`${key}.lecon`, entry.lecon);
+    pages(`${key}.recompense`, entry.recompense);
+    const { question } = entry;
+    page(`${key}.question.texte`, question?.texte);
+    const choix = question?.choix ?? [];
+    if (choix.length !== 3) problems.push(`${key}.question : ${choix.length} choix au lieu de 3`);
+    if (choix.filter((c) => c.bon).length !== 1) problems.push(`${key}.question : il faut exactement un bon choix`);
+    choix.forEach((c, i) => {
+      page(`${key}.question.choix[${i}].texte`, c.texte);
+      page(`${key}.question.choix[${i}].retour`, c.retour);
+    });
+  }
+  return problems;
+}
+
+// game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
+// dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheet } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts } = game;
   let viewer = null;
 
   const info = () => ({
@@ -160,15 +209,47 @@ export function installDebugApi(game) {
       const ms = (performance.now() - start) / frames;
       return { msPerFrame: Number(ms.toFixed(2)), fpsCeiling: Math.round(1000 / ms), ...info() };
     },
-    showSheet(on = true) {
-      if (on && !viewer) {
-        viewer = createSheetViewer(sheet.buffer);
+    // Planche d'un personnage ('heros', 'lia'...) agrandie dans un coin.
+    showSheet(on = true, id = 'heros') {
+      viewer?.remove();
+      viewer = null;
+      if (on) {
+        viewer = createSheetViewer(sheets[id].buffer);
         document.body.append(viewer);
-      } else if (!on && viewer) {
-        viewer.remove();
-        viewer = null;
       }
       return Boolean(viewer);
     },
+    // Conversations. talk ouvre celle d'un habitant sans condition de distance ;
+    // advance fait l'action (termine la page, passe à la suivante, ferme).
+    talk(id = 'lia') {
+      interaction.start(npcs.find((npc) => npc.id === id));
+      return dialogue.snapshot();
+    },
+    advance() {
+      dialogue.advance();
+      return dialogue.snapshot();
+    },
+    dialogue: () => dialogue.snapshot(),
+    // Habitant à portée du héros (ou null) et distance à chacun.
+    nearby: () => ({
+      cible: interaction.target?.id ?? null,
+      distances: Object.fromEntries(npcs.map((npc) => [npc.id, Number(npc.distanceTo(player.position).toFixed(2))])),
+    }),
+    // Cache ou montre les habitants : mesure leur coût en appels de dessin.
+    showNpcs(on = true) {
+      for (const npc of npcs) for (const object of npc.objects) object.visible = on;
+      return on;
+    },
+    setName(name) {
+      gameState.prenom = String(name).slice(0, 24);
+      return gameState.prenom;
+    },
+    gameState: () => ({
+      prenom: gameState.prenom,
+      parchemins: [...gameState.parchemins],
+      visites: Object.fromEntries(gameState.visites),
+      choix: Object.fromEntries(gameState.choix),
+    }),
+    checkDialogues: () => checkDialogues(texts, npcs.map((npc) => npc.character)),
   };
 }

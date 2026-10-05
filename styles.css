@@ -2,11 +2,33 @@
    Garde-fous de base : la page ne défile pas, ne rebondit pas et ne laisse
    pas le navigateur interpréter les gestes. Le jeu reçoit tout. */
 
+/* Une seule police, Newsreader (licence OFL, voir assets/fonts/OFL.txt), en
+   deux graisses, avec Georgia en repli le temps du chargement. */
+@font-face {
+  font-family: Newsreader;
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("assets/fonts/newsreader-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Newsreader;
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url("assets/fonts/newsreader-latin-600-normal.woff2") format("woff2");
+}
+
 :root {
   color-scheme: dark;
   --fond: #231b2b;
   --texte: #f3e6d4;
   --panneau: rgb(10 8 14 / 0.62);
+  --police: Newsreader, Georgia, "Times New Roman", serif;
+  --parchemin: #f3dfb8;
+  --encre: #2a1d2e;
+  --or: #ffd08a;
 }
 
 *,
@@ -34,7 +56,7 @@ body {
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   color: var(--texte);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--police);
 }
 
 #scene {
@@ -78,4 +100,166 @@ body {
 
 #message[hidden] {
   display: none;
+}
+
+/* Bulle d'interaction : posée par le jeu (translate) au-dessus de la tête de
+   l'habitant. Le bouton fait 48 px, au-dessus des 44 px d'une cible tactile.
+   Le translate du bouton place son coin haut gauche, la marge le recentre
+   au-dessus du point d'ancrage. */
+#indice {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: -52px 0 0 -24px;
+  padding: 0;
+  border: 2px solid var(--encre);
+  border-radius: 50%;
+  background: var(--parchemin);
+  color: var(--encre);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.45);
+  cursor: pointer;
+  touch-action: manipulation;
+  animation: bulle-apparait 0.18s ease-out;
+}
+
+#indice[hidden] {
+  display: none;
+}
+
+#indice svg {
+  animation: bulle-flotte 1.6s ease-in-out infinite;
+}
+
+/* Rappel de la touche, seulement là où il y a un clavier. */
+#indice .touche {
+  display: none;
+  position: absolute;
+  right: -8px;
+  bottom: -6px;
+  min-width: 20px;
+  padding: 1px 5px;
+  border: 1.5px solid var(--encre);
+  border-radius: 4px;
+  background: var(--or);
+  font: 600 0.8rem/1.2 var(--police);
+  text-align: center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #indice .touche {
+    display: block;
+  }
+}
+
+@keyframes bulle-apparait {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+@keyframes bulle-flotte {
+  50% {
+    translate: 0 -3px;
+  }
+}
+
+/* Boîte de dialogue : en bas, large sur téléphone, plafonnée sur bureau. Le
+   texte fait au moins 17 px et jusqu'à 22 px : lisible sans zoom. */
+#dialogue {
+  position: fixed;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: 15;
+  width: min(700px, calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+  padding: 14px 20px 18px;
+  border: 1px solid rgb(255 208 138 / 0.4);
+  border-radius: 12px;
+  background: rgb(24 17 31 / 0.9);
+  box-shadow: 0 12px 34px rgb(0 0 0 / 0.5);
+  color: var(--texte);
+  cursor: pointer;
+  touch-action: manipulation;
+  transform: translateX(-50%);
+  animation: dialogue-apparait 0.2s ease-out;
+}
+
+#dialogue[hidden] {
+  display: none;
+}
+
+.dialogue-nom {
+  margin: 0 0 6px;
+  color: var(--or);
+  font: 600 clamp(0.95rem, 0.6rem + 1.6vw, 1.1rem) / 1.2 var(--police);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dialogue-texte {
+  margin: 0;
+  /* Trois lignes réservées : la boîte ne saute pas d'une page à l'autre. */
+  min-height: 4.26em;
+  padding-right: 22px;
+  font: 500 clamp(1.06rem, 0.7rem + 1.5vw, 1.375rem) / 1.42 var(--police);
+  text-wrap: pretty;
+}
+
+/* Ce qui n'est pas encore tapé occupe sa place mais reste invisible. */
+.dialogue-texte .reste {
+  color: transparent;
+}
+
+/* Marque de suite en bas à droite : un triangle qui bat, un losange à la
+   dernière page. Visible seulement quand la page est entièrement tapée. */
+.dialogue-suite {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  width: 0;
+  height: 0;
+  border: 7px solid transparent;
+  border-top: 10px solid var(--or);
+  border-bottom: 0;
+  opacity: 0;
+}
+
+#dialogue[data-frappe="non"] .dialogue-suite {
+  opacity: 1;
+  animation: suite-bat 0.9s ease-in-out infinite;
+}
+
+#dialogue[data-fin="oui"] .dialogue-suite {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  background: var(--or);
+  rotate: 45deg;
+}
+
+@keyframes dialogue-apparait {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+@keyframes suite-bat {
+  50% {
+    translate: 0 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #indice,
+  #indice svg,
+  #dialogue,
+  #dialogue .dialogue-suite {
+    animation: none !important;
+  }
 }

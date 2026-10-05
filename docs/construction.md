@@ -27,6 +27,7 @@ Mesures :
 | Console | aucune erreur, aucun avertissement |
 | Requêtes | une page, une feuille de style, trois modules, les deux fichiers de three.js ; aucune image |
 | Rendu | 1 appel de dessin, 12 triangles |
-| Poids de la page | 775 Ko, 201 Ko compressés (gzip) |
+| Poids de la page | 775 Ko, dont 204 Ko réellement transférés depuis GitHub Pages (gzip) |
+| URL publique | répond, carte d'import et chemins relatifs corrects, modules servis en `application/javascript`, aucune erreur |
 | Mobile 375×812 | aucun défilement, ratio de pixels plafonné à 1,5 |
 | Images/s | non mesurées : le panneau du navigateur intégré était masqué pendant la vérification, les images ne tournaient pas. À relever sur l'URL publique. |

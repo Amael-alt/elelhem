@@ -1,21 +1,19 @@
 // Parler à un habitant : trouve celui qui est à portée, montre l'indicateur
-// au-dessus de sa tête, ouvre sa conversation à l'action (touche, clic ou
-// toucher sur la bulle) et compte la visite. Le choix du texte est le seul
-// endroit où le moteur lit data/dialogues.js, et il ne lit que l'état.
+// au-dessus de sa tête, et ouvre la conversation à l'action (touche, clic ou
+// toucher sur la bulle). Ce qui se dit, et dans quel ordre, est l'affaire de
+// quest.js.
 
 import * as THREE from 'three';
 import { directionToward, INTERACTION_RADIUS, NAME_RADIUS } from './npc.js';
-import { recordVisit } from './state.js';
 import { projectToScreen } from './ui.js';
 
 const LABEL_LIFT = 52; // pixels : l'étiquette passe au-dessus de la bulle
 
-// player : { position, facing, face } ; npcs : liste ; hint, dialogue : voir
-// ui.js et dialogue.js ; state : voir state.js ; texts : data/dialogues.js ;
-// camera et canvas servent à ancrer l'indicateur à l'écran ; label : l'étiquette
-// de nom (ui.js).
-// talkLabel(nom) : le texte de la bulle pour un lecteur d'écran.
-export function createInteraction({ player, npcs, hint, label, dialogue, state, texts, talkLabel, camera, canvas }) {
+// player : { position, facing, face } ; npcs : liste ; hint, label, dialogue :
+// voir ui.js et dialogue.js ; quest : voir quest.js (talk, isBusy) ; camera et
+// canvas servent à ancrer l'indicateur à l'écran ; talkLabel(nom) : le texte
+// de la bulle pour un lecteur d'écran.
+export function createInteraction({ player, npcs, hint, label, dialogue, quest, talkLabel, camera, canvas }) {
   const head = new THREE.Vector3();
   const screen = { x: 0, y: 0 };
   let requested = false;
@@ -36,23 +34,19 @@ export function createInteraction({ player, npcs, hint, label, dialogue, state, 
     return best;
   }
 
-  // Ouvre la conversation de npc : présentation la première fois, retour
-  // ensuite. Le héros et l'habitant se font face.
+  // Ouvre la conversation de npc. Le héros et l'habitant se font face.
   function start(npc) {
-    const entry = texts[npc.character.dialogue];
-    const first = (state.visites.get(npc.id) ?? 0) === 0;
-    const pages = first ? entry.intro(state) : entry.retour(state);
-    recordVisit(state, npc.id);
     npc.faceToward(player.position);
     player.face(directionToward(npc.position.x - player.position.x, npc.position.z - player.position.z, player.facing));
     hint.hide();
     label.hide();
-    dialogue.open(entry.nom, pages);
+    quest.talk(npc);
   }
 
   return {
+    // Conversation ou diplôme à l'écran : le héros reste immobile.
     get isTalking() {
-      return dialogue.isOpen;
+      return quest.isBusy;
     },
     get target() {
       return target;
@@ -72,13 +66,13 @@ export function createInteraction({ player, npcs, hint, label, dialogue, state, 
         target = null;
         return;
       }
-      target = nearest(INTERACTION_RADIUS, true);
+      target = quest.isBusy ? null : nearest(INTERACTION_RADIUS, true);
       if (wanted && target) {
         start(target);
         return;
       }
       // Le nom s'affiche dès qu'on approche, la bulle seulement à portée de parole.
-      const named = target ?? nearest(NAME_RADIUS, false);
+      const named = quest.isBusy ? null : target ?? nearest(NAME_RADIUS, false);
       const anchor = named ? projectToScreen(named.headPoint(head), camera, canvas, screen) : null;
       if (!anchor) {
         hint.hide();

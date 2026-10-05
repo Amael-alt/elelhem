@@ -74,6 +74,27 @@
     </div>
   </div>
 
+  <!-- Compteur de parchemins, en haut à gauche : rempli par src/game/scrolls.js. -->
+  <div id="parchemins" hidden>
+    <div class="parchemins-rangee" role="img"></div>
+    <p class="parchemins-annonce" role="status" hidden></p>
+  </div>
+
+  <!-- Le diplôme, dessiné sur un canvas par src/game/diploma.js. -->
+  <div id="diplome" role="dialog" aria-modal="true" hidden>
+    <div class="diplome-cadre">
+      <canvas class="diplome-toile" role="img"></canvas>
+      <div class="diplome-actions">
+        <label class="diplome-prenom"><span></span><input type="text" autocomplete="given-name" spellcheck="false"></label>
+        <div class="diplome-boutons">
+          <button class="diplome-telecharger" type="button"></button>
+          <button class="diplome-copier" type="button"></button>
+          <button class="diplome-fermer" type="button"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Nom de l'habitant qui approche, au-dessus de sa tête. -->
   <div id="nom" hidden></div>
 

@@ -20,6 +20,9 @@ import { createNpc } from './game/npc.js';
 import { createDialogueBox } from './game/dialogue.js';
 import { createInteractionHint, createNameLabel } from './game/ui.js';
 import { createInteraction } from './game/interaction.js';
+import { createQuest } from './game/quest.js';
+import { createScrollCounter } from './game/scrolls.js';
+import { createDiploma } from './game/diploma.js';
 import { createGameState, resetGameState, saveGameState } from './game/state.js';
 import { createTitleScreen } from './game/title.js';
 import { createAreaBanner } from './game/banner.js';
@@ -134,14 +137,18 @@ function start() {
   const state = { frozen: false, time: 0, autoDirection: null };
   const debug = isDebugEnabled() ? createDebugPanel(renderer, () => quality.scale) : null;
 
-  // Conversations : boîte de dialogue et bulle en DOM, logique dans interaction.js.
+  // Conversations : boîte de dialogue et bulle en DOM, qui parle à qui dans
+  // interaction.js, ce qui se dit et ce qu'on gagne dans quest.js.
+  const notions = textesInterface.parchemins.notions;
   const dialogue = createDialogueBox(document.getElementById('dialogue'));
+  const counter = createScrollCounter(document.getElementById('parchemins'), { notions, texts: textesInterface.parchemins, state: gameState });
+  const diploma = createDiploma(document.getElementById('diplome'), { texts: textesInterface.diplome, notions, state: gameState });
+  const quest = createQuest({ dialogue, state: gameState, texts: dialogues, scrolls: counter.ids, counter, diploma });
   let interaction = null;
   const hint = createInteractionHint(document.getElementById('indice'), () => interaction.request());
   const label = createNameLabel(document.getElementById('nom'));
   interaction = createInteraction({
-    player, npcs, hint, label, dialogue, state: gameState, texts: dialogues, talkLabel: textesInterface.parlerA,
-    camera: follow.camera, canvas,
+    player, npcs, hint, label, dialogue, quest, talkLabel: textesInterface.parlerA, camera: follow.camera, canvas,
   });
 
   // Musique de fond et sons d'ambiance : lancés par le geste qui ferme l'écran titre.
@@ -159,7 +166,10 @@ function start() {
   // Écran titre (sauf ?autostart, pour les tests) et bandeau de lieu.
   const banner = createAreaBanner(document.getElementById('lieu'), REGIONS, textesInterface.lieux);
   let playing = params.has('autostart');
-  if (playing) music.showButton();
+  if (playing) {
+    music.showButton();
+    counter.show();
+  }
   if (!playing) {
     createTitleScreen(document.getElementById('titre'), {
       texts: textesInterface,
@@ -173,6 +183,7 @@ function start() {
         playing = true;
         music.start();
         music.showButton();
+        counter.show();
       },
     });
   }
@@ -210,6 +221,7 @@ function start() {
 
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
+    counter, diploma, quest,
   });
 
   let last = performance.now();

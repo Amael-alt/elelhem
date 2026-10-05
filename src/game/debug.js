@@ -65,10 +65,11 @@ function createSheetViewer(buffer, scale = 4) {
 }
 
 // Contrôle des textes : toutes les clés présentes, trois choix dont un seul
-// bon, pages courtes, aucun tiret long. Renvoie la liste des problèmes (vide
-// si tout va bien). Sert de test scripté à l'étape 3, quand tous les
-// habitants parleront.
+// bon, pages courtes, aucun tiret long, et une bonne réponse qu'on ne devine
+// pas à sa longueur (à CHOICE_BALANCE près de la moyenne des deux autres).
+// Renvoie la liste des problèmes (vide si tout va bien).
 const MAX_PAGE_LENGTH = 170;
+const CHOICE_BALANCE = 0.15;
 const LONG_DASH = new RegExp(`[${String.fromCharCode(0x2013)}${String.fromCharCode(0x2014)}]`);
 
 function checkDialogues(texts, characters) {
@@ -85,7 +86,8 @@ function checkDialogues(texts, characters) {
   const states = [
     { prenom: '', parchemins: new Set(), visites: new Map(), choix: new Map() },
     { prenom: 'Ada', parchemins: new Set(['a', 'b', 'c']), visites: new Map([['x', 2]]), choix: new Map() },
-    { prenom: 'Ada', parchemins: new Set('abcdefgh'), visites: new Map(), choix: new Map() },
+    { prenom: 'Ada', parchemins: new Set(Object.keys(texts)), visites: new Map(), choix: new Map() },
+    { prenom: 'Ada', parchemins: new Set(Object.keys(texts)), visites: new Map(), choix: new Map(Object.keys(texts).map((key) => [key, 0])) },
   ];
   for (const character of characters) {
     if (character.dialogue && !texts[character.dialogue]) problems.push(`${character.id} : dialogue « ${character.dialogue} » introuvable`);
@@ -103,6 +105,12 @@ function checkDialogues(texts, characters) {
     const choix = question?.choix ?? [];
     if (choix.length !== 3) problems.push(`${key}.question : ${choix.length} choix au lieu de 3`);
     if (choix.filter((c) => c.bon).length !== 1) problems.push(`${key}.question : il faut exactement un bon choix`);
+    const right = choix.find((c) => c.bon);
+    const others = choix.filter((c) => !c.bon);
+    const mean = others.reduce((sum, c) => sum + c.texte.length, 0) / (others.length || 1);
+    if (right && Math.abs(right.texte.length - mean) > mean * CHOICE_BALANCE) {
+      problems.push(`${key}.question : la bonne réponse fait ${right.texte.length} caractères, les autres ${Math.round(mean)} en moyenne`);
+    }
     choix.forEach((c, i) => {
       page(`${key}.question.choix[${i}].texte`, c.texte);
       page(`${key}.question.choix[${i}].retour`, c.retour);
@@ -114,7 +122,7 @@ function checkDialogues(texts, characters) {
 // game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
 // dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma } = game;
   let viewer = null;
 
   const info = () => ({
@@ -260,6 +268,52 @@ export function installDebugApi(game) {
     advance() {
       dialogue.advance();
       return dialogue.snapshot();
+    },
+    // Répond à la question affichée (indice du choix, à partir de 0).
+    answer(index) {
+      dialogue.choose(index);
+      return dialogue.snapshot();
+    },
+    // L'action, comme la touche E : parle à l'habitant à portée, s'il y en a un.
+    act() {
+      interaction.request();
+      tick(0, true);
+      return dialogue.snapshot();
+    },
+    // Joue toute une conversation avec un habitant, sans condition de
+    // distance. mode 'erreurs' essaie d'abord les mauvaises réponses (pour
+    // tester les nouveaux essais), 'direct' donne tout de suite la bonne.
+    converse(id, mode = 'erreurs') {
+      const npc = npcs.find((candidate) => candidate.id === id);
+      const { question } = texts[npc.character.dialogue];
+      const right = question.choix.findIndex((c) => c.bon);
+      const picks = mode === 'direct' ? [right] : [...question.choix.keys()].filter((i) => i !== right).concat(right);
+      const log = { pages: [], essais: [] };
+      interaction.start(npc);
+      for (let guard = 0; dialogue.isOpen && guard < 400; guard += 1) {
+        const snap = dialogue.snapshot();
+        if (snap.enFrappe) dialogue.advance();
+        else if (snap.mode === 'question') {
+          const pick = picks.shift() ?? right;
+          log.essais.push(pick);
+          dialogue.choose(pick);
+        } else {
+          log.pages.push(snap.texte);
+          dialogue.advance();
+        }
+      }
+      return { pages: log.pages.length, essais: log.essais, diplome: diploma.isOpen, parchemins: [...gameState.parchemins], texte: log.pages };
+    },
+    // Donne des parchemins sans conversation (tests d'une partie avancée).
+    give(ids = counter.ids) {
+      for (const id of [].concat(ids)) gameState.parchemins.add(id);
+      counter.refresh();
+      return [...gameState.parchemins];
+    },
+    diploma(on = true) {
+      if (on) diploma.open();
+      else diploma.close();
+      return diploma.isOpen;
     },
     dialogue: () => dialogue.snapshot(),
     music: () => music.state,

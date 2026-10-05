@@ -90,3 +90,15 @@ export const outlineColor = '#1b1a2e';
 // Ciel provisoire, en attendant la sphère de ciel de l'étape 1d : la couleur
 // de la brume, pour que le lointain s'y fonde.
 export const backgroundColor = hazeColor;
+
+// Le diplôme : parchemin (du bord taché au cœur clair), encres, filets d'or et
+// cire du sceau (du plus sombre au plus clair).
+export const diplomaColors = {
+  parchemin: ['#c9b083', '#e3cfa4', '#f3e6c6'],
+  encre: '#2a1d2e',
+  sepia: '#6e5236',
+  or: '#a8803e',
+  orClair: '#c9a45c',
+  nom: '#5a2320',
+  cire: ['#4f1310', '#7e201b', '#a83228', '#d0574b'],
+};

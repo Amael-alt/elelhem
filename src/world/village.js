@@ -154,7 +154,14 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
   sun.shadow.camera.updateProjectionMatrix();
   sun.shadow.bias = SHADOW_BIAS;
   sun.shadow.normalBias = SHADOW_NORMAL_BIAS;
-  scene.add(sun, sun.target, new THREE.HemisphereLight(SKY_COLOR, GROUND_COLOR, HEMI_INTENSITY));
+  // Les sprites vivent sur un calque à part (dessinés après le post-traitement) :
+  // le soleil doit les voir pour leur ombre, et toutes les lumières doivent
+  // éclairer tous les calques.
+  sun.shadow.camera.layers.enableAll();
+  const sky = new THREE.HemisphereLight(SKY_COLOR, GROUND_COLOR, HEMI_INTENSITY);
+  sun.layers.enableAll();
+  sky.layers.enableAll();
+  scene.add(sun, sun.target, sky);
 
   // Repère de la caméra d'ombre, pour caler son centre sur la grille de ses
   // texels : sans cela, les bords d'ombre ondulent quand la caméra glisse.
@@ -174,6 +181,7 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
     light.shadow.bias = -0.004;
     light.shadow.autoUpdate = false;
     light.shadow.needsUpdate = true;
+    light.layers.enableAll();
     scene.add(light);
     return { light, seed: i * 2.39 };
   });

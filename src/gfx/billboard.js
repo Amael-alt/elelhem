@@ -18,6 +18,9 @@
 //   le soleil : le sprite ne reçoit jamais sa propre ombre, mais s'assombrit
 //   dans celle d'un mur.
 // - alphaTest et depthWrite, jamais transparent : aucun problème de tri.
+// - Avec le post-traitement, le sprite est dessiné après la composition, pour
+//   rester net : il compare lui-même sa profondeur à celle de la scène et
+//   s'étalonne avec la même fonction que l'image (voir gfx/post/).
 
 import * as THREE from 'three';
 import { FRAME, FEET_ROW, PIXELS_PER_UNIT } from './sprites.js';
@@ -81,9 +84,17 @@ void RE_Direct_Lambert`)
     + spriteEdge( vec2( 0.0, 1.0 ) ) * max( toLight.y, 0.0 );
   reflectedLight.directDiffuse += min( rim, 1.0 ) * directLight.color * ${RIM_STRENGTH.toFixed(2)};`);
 
-function createVisibleMaterial(texture, texSize, sunDirection) {
+// post : crochets du post-traitement (gfx/post/pipeline.js), ou null en rendu
+// direct.
+const DRAWN_AFTER_COMPOSITE = /* glsl */`
+#include <clipping_planes_fragment>
+if ( gl_FragCoord.z > texture2D( uSceneDepth, gl_FragCoord.xy * uInvResolution ).r + 1e-6 ) discard;
+`;
+
+function createVisibleMaterial(texture, texSize, sunDirection, post) {
   const material = new THREE.MeshLambertMaterial({ map: texture, alphaTest: 0.5 });
   material.shadowSide = THREE.DoubleSide;
+  material.customProgramCacheKey = () => (post ? 'sprite-apres-composition' : 'sprite-direct');
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uSunDirection = { value: sunDirection };
     shader.vertexShader = shader.vertexShader
@@ -93,6 +104,21 @@ function createVisibleMaterial(texture, texSize, sunDirection) {
       .replace('#include <worldpos_vertex>', VISIBLE_WORLDPOS);
     injectSharpSampling(shader, texSize);
     shader.fragmentShader = shader.fragmentShader.replace('#include <lights_lambert_pars_fragment>', SPRITE_LIGHTING);
+    if (!post) return;
+    Object.assign(shader.uniforms, post.uniforms);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+uniform sampler2D uSceneDepth;
+uniform vec2 uInvResolution;
+${post.grading}`)
+      .replace('#include <clipping_planes_fragment>', DRAWN_AFTER_COMPOSITE)
+      // La brume avant l'étalonnage, comme dans la scène en HDR.
+      .replace('#include <fog_fragment>', '')
+      .replace('#include <colorspace_fragment>', '')
+      .replace('#include <tonemapping_fragment>', [
+        '#include <fog_fragment>',
+        'gl_FragColor.rgb = gradeToDisplay( gl_FragColor.rgb, gl_FragCoord.xy * uInvResolution );',
+      ].join('\n'));
   };
   return material;
 }
@@ -112,12 +138,13 @@ function createDepthMaterial(texture) {
 
 // Un sprite animé : sa propre copie de la texture (même image sur le GPU),
 // dont le décalage choisit le cadre. Les matériaux d'ombre lisent la même.
-export function createSprite(sheet, sunDirection) {
+// post : crochets du post-traitement, ou null en rendu direct.
+export function createSprite(sheet, sunDirection, post = null) {
   const texture = sheet.texture.clone();
   texture.repeat.set(1 / sheet.columns, 1 / sheet.rows);
   const texSize = new THREE.Vector2(sheet.columns * FRAME, sheet.rows * FRAME);
 
-  const mesh = new THREE.Mesh(createSpriteGeometry(), createVisibleMaterial(texture, texSize, sunDirection));
+  const mesh = new THREE.Mesh(createSpriteGeometry(), createVisibleMaterial(texture, texSize, sunDirection, post));
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.frustumCulled = false; // le quad tourne dans le shader, sa boîte englobante ne le suit pas

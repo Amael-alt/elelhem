@@ -48,7 +48,8 @@ function rectangleOn(side, t0, t1, y0, y1, off) {
 const FULL_UV = [[0, 0], [1, 0], [1, 1], [0, 1]];
 
 // builders : un constructeur de géométrie par matière (plaster, wood, roof,
-// stone, brick, door, window).
+// stone, brick, door, window). Renvoie le haut de la cheminée, d'où monte la
+// fumée (null s'il n'y en a pas).
 export function buildHouse(house, builders) {
   const swap = house.ridge === 'z';
   const L = swap ? house.sizeZ : house.sizeX;
@@ -131,10 +132,11 @@ export function buildHouse(house, builders) {
   frames.wood.polygon([[u0, ridgeY - T, mid], [u0, eaveY - T, front], [u0, eaveY, front], [u0, ridgeY, mid]], plain(4));
   pushBox(frames.wood, [u0, ridgeY - 0.04, mid - 0.09], [u1, ridgeY + 0.08, mid + 0.09]);
 
-  if (house.chimney) {
-    const [cu, cw] = [house.chimney[0] * L, house.chimney[1] * S];
-    pushBox(frames.brick, [cu - CHIMNEY / 2, wall, cw - CHIMNEY / 2], [cu + CHIMNEY / 2, ridgeY + 0.6, cw + CHIMNEY / 2]);
-  }
+  if (!house.chimney) return null;
+  const [cu, cw] = [house.chimney[0] * L, house.chimney[1] * S];
+  const top = ridgeY + 0.6;
+  pushBox(frames.brick, [cu - CHIMNEY / 2, wall, cw - CHIMNEY / 2], [cu + CHIMNEY / 2, top, cw + CHIMNEY / 2]);
+  return swap ? [house.x + cw, top, house.z + cu] : [house.x + cu, top, house.z + cw];
 }
 
 // Lanterne sur poteau : poteau de bois, cage de fer ouverte, chapeau. Renvoie
@@ -153,4 +155,32 @@ export function buildLantern(x, z, builders) {
   pushBox(iron, [-0.21, 2.38, -0.21], [0.21, 2.44, 0.21]);
   pushBox(iron, [-0.1, 2.44, -0.1], [0.1, 2.52, 0.1]);
   return { x, y: LANTERN_FLAME.y, z };
+}
+
+// Arbre en volumes : un tronc, une couronne d'un gros bloc et de deux ou trois
+// plus petits qui cassent la silhouette. size règle la taille (1 : moyen),
+// seed décale les blocs d'un arbre à l'autre.
+export const TREE_TRUNK_RADIUS = 0.2;
+
+export function buildTree(x, z, { size = 1, seed = 0 }, builders) {
+  const bark = createFrame(builders.bark, [x, 0, z]);
+  const leaves = createFrame(builders.leaves, [x, 0, z]);
+  const trunk = 0.17 * size;
+  const crownBase = 1.35 * size;
+  pushBox(bark, [-trunk, 0, -trunk], [trunk, crownBase + 0.3, trunk], { groundAo: 0.6 });
+  const r = 0.95 * size;
+  pushBox(leaves, [-r, crownBase, -r], [r, crownBase + 1.7 * size, r]);
+  const random = (i) => {
+    const v = Math.sin((seed + 1) * 12.9898 + i * 78.233) * 43758.5453;
+    return v - Math.floor(v);
+  };
+  const lobes = 2 + Math.floor(random(0) * 2);
+  for (let i = 0; i < lobes; i += 1) {
+    const angle = random(i + 1) * Math.PI * 2;
+    const half = (0.45 + random(i + 5) * 0.2) * size;
+    const cx = Math.cos(angle) * r * 0.85;
+    const cz = Math.sin(angle) * r * 0.85;
+    const cy = crownBase + (0.4 + random(i + 9) * 0.9) * size;
+    pushBox(leaves, [cx - half, cy - half, cz - half], [cx + half, cy + half, cz + half]);
+  }
 }

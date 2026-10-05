@@ -5,7 +5,8 @@
 //
 // Occlusion ambiante cuite : chaque coin de cellule s'assombrit selon le
 // nombre de voisines plus hautes (muret, bâtiment) qui le bordent, et le pied
-// de chaque flanc est plus sombre que son sommet.
+// de chaque flanc est plus sombre que son sommet. Au bord du socle, le flanc
+// montre une couche de terre puis la roche.
 
 import * as THREE from 'three';
 import { BASE_HEIGHT } from './map.js';
@@ -25,6 +26,7 @@ const CORNER_AO = [1, 0.7, 0.58, 0.5];
 const BANK_FOOT_AO = 0.7;
 const BASE_FOOT_AO = 0.45;
 const TALLER = 0.25;
+const SOIL_DEPTH = 0.55; // épaisseur de terre au bord du socle, la roche dessous
 
 export function createTerrain(map, materials) {
   const builders = {};
@@ -61,16 +63,23 @@ export function createTerrain(map, materials) {
         const neighbor = map.cellAt(x + edge.dx, z + edge.dz);
         const low = neighbor ? neighbor.height : BASE_HEIGHT;
         if (low >= h) continue;
-        const foot = neighbor ? BANK_FOOT_AO : BASE_FOOT_AO;
         const [[ax, az], [bx, bz]] = edge.corners(x, z);
         const ua = u(edge.along === 'x' ? ax : az);
         const ub = u(edge.along === 'x' ? bx : bz);
-        pushPolygon(
-          builderFor(cell.side),
-          [[ax, low, az], [bx, low, bz], [bx, h, bz], [ax, h, az]],
-          [[ua, u(low)], [ub, u(low)], [ub, u(h)], [ua, u(h)]],
-          [foot, foot, 1, 1],
+        const band = (matter, y0, y1, ao0, ao1) => pushPolygon(
+          builderFor(matter),
+          [[ax, y0, az], [bx, y0, bz], [bx, y1, bz], [ax, y1, az]],
+          [[ua, u(y0)], [ub, u(y0)], [ub, u(y1)], [ua, u(y1)]],
+          [ao0, ao0, ao1, ao1],
         );
+        if (neighbor) {
+          band(cell.side, low, h, BANK_FOOT_AO, 1);
+        } else {
+          // Bord du socle : une couche de terre, puis la roche jusqu'en bas.
+          const soil = h - SOIL_DEPTH;
+          band(cell.side, soil, h, 0.85, 1);
+          band('rock', low, soil, BASE_FOOT_AO, 0.85);
+        }
       }
     }
   }

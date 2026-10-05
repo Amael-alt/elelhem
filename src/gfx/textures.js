@@ -3,7 +3,7 @@
 // côte à côte, aucune couture ne se voit. Chaque générateur rend une texture
 // de couleur et, quand le relief compte, une texture de normales.
 
-import { buildingRamps, ironColor, terrainRamps } from '../data/palette.js';
+import { buildingRamps, ironColor, natureRamps, terrainRamps } from '../data/palette.js';
 import {
   createPixelBuffer, createRamp, createRng, fbm, hash2, hexToRgb, rampIndex, setPixel, sobelNormals, toDataTexture, voronoi,
 } from './pixels.js';
@@ -143,8 +143,9 @@ export function createPlasterTextures(seed) {
   return finish(buildingRamps.enduit, tones, heights, 0.5);
 }
 
-// Bois des colombages : des fibres verticales, chaque colonne de pixels son ton.
-export function createWoodTextures(seed) {
+// Bois : des fibres verticales, chaque colonne de pixels son ton. Sert aux
+// colombages (rouge) et, avec une autre rampe, à l'écorce des arbres.
+export function createWoodTextures(seed, ramp = buildingRamps.bois) {
   const grain = fbm(seed + 1, SIZE, 8, 3);
   const tones = new Float32Array(SIZE * SIZE);
   const heights = new Float32Array(SIZE * SIZE);
@@ -155,7 +156,7 @@ export function createWoodTextures(seed) {
       heights[y * SIZE + x] = fiber;
     }
   }
-  return finish(buildingRamps.bois, tones, heights, 0.8);
+  return finish(ramp, tones, heights, 0.8);
 }
 
 // Tuiles canal : colonnes de 4 pixels qui descendent la pente, alternance de
@@ -270,4 +271,48 @@ export function createWindowTextures() {
     map: toDataTexture(map, { repeat: false, mipmaps: false }),
     emissiveMap: toDataTexture(glow, { repeat: false, mipmaps: false }),
   };
+}
+
+// --- Nature et socle --------------------------------------------------------
+
+// Feuillage : des touffes (Voronoï de 8 × 8 par tuile), bombées et éclairées
+// par le haut, séparées par des creux sombres.
+export function createLeafTextures(seed) {
+  const clumps = voronoi(seed, SIZE, 8, 0.9);
+  const grain = fbm(seed + 4, SIZE, 16, 2);
+  const tones = new Float32Array(SIZE * SIZE);
+  const heights = new Float32Array(SIZE * SIZE);
+  for (let y = 0; y < SIZE; y += 1) {
+    for (let x = 0; x < SIZE; x += 1) {
+      const i = y * SIZE + x;
+      const { f1, f2, id } = clumps(x, y);
+      const edge = f2 - f1;
+      const dome = Math.max(0, 1 - f1 / 0.75);
+      tones[i] = edge < 0.06
+        ? 0.05 + grain(x, y) * 0.1
+        : 0.18 + dome * 0.42 + hash2(id, 9, seed) * 0.2 + (grain(x, y) - 0.5) * 0.18;
+      heights[i] = edge < 0.06 ? 0 : Math.sqrt(dome);
+    }
+  }
+  return finish(natureRamps.feuillage, tones, heights, 1.3);
+}
+
+// Roche du socle : des strates horizontales irrégulières et quelques fissures.
+export function createRockTextures(seed) {
+  const grain = fbm(seed, SIZE, 8, 3);
+  const cracks = voronoi(seed + 2, SIZE, 4, 0.9);
+  const tones = new Float32Array(SIZE * SIZE);
+  const heights = new Float32Array(SIZE * SIZE);
+  for (let y = 0; y < SIZE; y += 1) {
+    for (let x = 0; x < SIZE; x += 1) {
+      const i = y * SIZE + x;
+      const g = grain(x, y);
+      const strata = Math.sin(((y + g * 6) / SIZE) * Math.PI * 2 * 4);
+      const { f1, f2 } = cracks(x, y);
+      const crack = f2 - f1 < 0.05 ? 1 : 0;
+      tones[i] = 0.3 + strata * 0.15 + (g - 0.5) * 0.35 - crack * 0.25;
+      heights[i] = 0.5 + strata * 0.3 + g * 0.3 - crack * 0.5;
+    }
+  }
+  return finish(natureRamps.roche, tones, heights, 1.1);
 }

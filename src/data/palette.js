@@ -21,6 +21,27 @@ export const buildingRamps = {
   vitre: ['#6e3410', '#a8561a', '#dc862b', '#f7b852', '#ffdc93'],
 };
 
+// Nature et socle : feuillage plus sombre et plus bleu que l'herbe, écorce,
+// roche en strates sous la terre des flancs.
+export const natureRamps = {
+  feuillage: ['#15251a', '#1e3420', '#294525', '#36582b', '#456c32', '#57803b', '#6c9546'],
+  ecorce: ['#231913', '#32251c', '#433226', '#563f30', '#6a4f3c'],
+  roche: ['#29252a', '#383236', '#4a4244', '#5d5453', '#716662', '#877b74'],
+};
+
+// Ciel du soir : pêche vers le bas de l'image, bleu vers le haut, lueur chaude
+// du côté du soleil.
+export const skyColors = { bas: '#f6c9a0', haut: '#6f8fd1', soleil: '#ffd8a0' };
+
+// Effets : lucioles vert-jaune, poussière dorée, fumée gris chaud, rayons.
+export const effectColors = {
+  luciole: '#d9ff7a',
+  poussiere: '#ffd590',
+  fumeeSombre: '#58524f',
+  fumeeClaire: '#d9c3ad',
+  rayon: '#ffd9a0',
+};
+
 // Fer des lanternes et des ferrures.
 export const ironColor = '#2b2725';
 

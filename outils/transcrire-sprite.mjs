@@ -55,7 +55,7 @@ import { decodePng, encodePng } from './png.mjs';
 const args = process.argv.slice(2);
 const options = {
   nom: '', hauteur: 56, cadre: '48x72', pieds: 69, vues: 'face,profil,dos', decoupe: '', seuil: 0.5, noyau: 0.6, couleurs: 16, sortie: '', apercu: '',
-  reference: '', export: '', repere: '', ancre: 'boite', 'fiche-reference': '', echelles: '',
+  reference: '', export: '', repere: '', ancre: 'boite', 'fiche-reference': '', echelles: '', hauteurs: '', 'repere-part': '0.6', decalages: '',
 };
 let input = '';
 for (let i = 0; i < args.length; i += 1) {
@@ -85,18 +85,28 @@ const ANCHOR = options.ancre;
 // --echelles face=10.5,profil=10.5 : une échelle imposée pour ces vues (pixels
 // de la fiche par pixel du sprite), quand le repère y trompe (des bras levés
 // devant le chapeau, un chapeau vu de biais dans une fente).
-const FORCED_SCALES = Object.fromEntries(options.echelles.split(',').filter(Boolean).map((pair) => {
+const perView = (text) => Object.fromEntries(text.split(',').filter(Boolean).map((pair) => {
   const [view, value] = pair.split('=');
   return [view.trim(), Number(value)];
 }));
+const FORCED_SCALES = perView(options.echelles);
+// --hauteurs face=47,profil=46,dos=46 : la hauteur voulue de chaque vue, en
+// pixels du sprite, quand on la connaît d'une autre transcription (la même
+// pose du héros, pour une tenue) : l'échelle en découle, sans repère.
+const FORCED_HEIGHTS = perView(options.hauteurs);
+// --decalages face=2,profil=-1 : un décalage horizontal de plus, en pixels
+// du sprite, par vue.
+const SHIFTS = perView(options.decalages);
 if (!['boite', 'repere'].includes(ANCHOR)) fail('--ancre vaut « boite » ou « repere ».');
 if (ANCHOR === 'repere' && !options.repere) fail('--ancre repere demande --repere.');
 if (options.repere && !options.reference) fail('--repere demande --reference.');
 // Les tons de la fiche assez proches d'une couleur de la référence (écart
 // Oklab) lui sont attribués ; au-delà, c'est une matière nouvelle.
 const NEW_COLOR_GAP = 0.07;
-// Le repère se cherche dans le haut de la silhouette (le chapeau, pas l'écharpe).
-const LANDMARK_SHARE = 0.6;
+// Le repère se cherche dans le haut de la silhouette (le chapeau, pas
+// l'écharpe) : cette part de sa hauteur, réglable (--repere-part) quand la
+// même matière habille aussi le corps (une cape rouge sous un chapeau rouge).
+const LANDMARK_SHARE = Number(options['repere-part']);
 
 function fail(message) {
   console.error(message);
@@ -113,7 +123,30 @@ async function loadReference() {
   const name = options.export || Object.keys(module)[0];
   const data = module[name];
   if (!data) fail(`Export « ${name} » introuvable dans ${options.reference}.`);
-  const marks = new Set(options.repere.split(''));
+  const palette = data.couleurs.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
+  // Le repère : des index de la palette (« 479b »), ou des couleurs en hexa
+  // séparées par des virgules (« 661112,cf2726 »), chacune ramenée à l'index
+  // le plus proche de la palette de référence.
+  const tokens = options.repere.includes(',') || /^[0-9a-f]{6}$/i.test(options.repere) ? options.repere.split(',').filter(Boolean) : options.repere.split('');
+  const marks = new Set();
+  const markColors = [];
+  for (const token of tokens) {
+    if (/^[0-9a-f]{6}$/i.test(token)) {
+      const rgb = [0, 2, 4].map((i) => parseInt(token.slice(i, i + 2), 16));
+      markColors.push(rgb);
+      const lab = oklab(...rgb);
+      let best = 0;
+      let bestDistance = Infinity;
+      palette.forEach((c, i) => {
+        const d = distance2(oklab(...c), lab);
+        if (d < bestDistance) { bestDistance = d; best = i; }
+      });
+      marks.add(DIGITS[best]);
+    } else {
+      marks.add(token);
+      if (palette[DIGITS.indexOf(token)]) markColors.push(palette[DIGITS.indexOf(token)]);
+    }
+  }
   const landmarks = {};
   for (const view of VIEWS) {
     const rows = data[view];
@@ -133,7 +166,7 @@ async function loadReference() {
     });
     landmarks[view] = best;
   }
-  return { name, palette: data.couleurs.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))), frameWidth: data.cadre[0], landmarks, marks };
+  return { name, palette, frameWidth: data.cadre[0], landmarks, marks, markColors };
 }
 
 // --- Couleurs ---------------------------------------------------------------
@@ -320,7 +353,8 @@ const LANDMARK_HUE = 14; // degrés de teinte autour des couleurs du repère
 // La matière repère dans une silhouette de la fiche : largeur et centre (en
 // pixels de la fiche) de sa plus longue ligne, dans le haut de la boîte.
 function findLandmark(image, box, reference) {
-  const marks = [...reference.marks].map((ch) => reference.palette[DIGITS.indexOf(ch)]).filter(Boolean).map((rgb) => hsv(...rgb));
+  const marks = reference.markColors.map((rgb) => hsv(...rgb));
+  if (!marks.length) return { width: 0, center: 0 };
   const satMin = Math.min(...marks.map((m) => m.s)) * 0.6;
   const valMin = Math.min(...marks.map((m) => m.v)) * 0.6;
   const limit = box.y0 + (box.y1 - box.y0) * LANDMARK_SHARE;
@@ -525,15 +559,23 @@ VIEWS.forEach((view, i) => {
   if (reference && options.repere) {
     const mark = findLandmark(image, box, reference);
     const ref = reference.landmarks[view];
-    if (!mark.width || !ref?.width) fail(`  ${view} : repère introuvable (fiche ${mark.width} px, référence ${ref?.width ?? 0} px).`);
     const sheet = referenceSheet[view];
-    scale = FORCED_SCALES[view] ?? (sheet ? sheet.scale * (mark.width / sheet.mark) : mark.width / ref.width);
-    if (ANCHOR === 'repere') {
-      anchor = { anchorX: (mark.center - box.x0) / scale, targetX: ref.center + (FRAME_WIDTH - reference.frameWidth) / 2 };
+    const found = mark.width > 0 && ref?.width > 0;
+    if (FORCED_SCALES[view]) scale = FORCED_SCALES[view];
+    else if (FORCED_HEIGHTS[view]) scale = (box.y1 - box.y0 + 1) / FORCED_HEIGHTS[view];
+    else if (found) scale = sheet ? sheet.scale * (mark.width / sheet.mark) : mark.width / ref.width;
+    else fail(`  ${view} : repère introuvable (fiche ${mark.width} px, référence ${ref?.width ?? 0} px) ; donner --hauteurs ou --echelles pour cette vue.`);
+    // L'ancre : le centre du repère, à sa colonne de référence ; sans repère
+    // trouvé, la silhouette est centrée, avec un avertissement.
+    if (ANCHOR === 'repere' && found) {
+      anchor = { anchorX: (mark.center - box.x0) / scale, targetX: ref.center + (FRAME_WIDTH - reference.frameWidth) / 2 + (SHIFTS[view] ?? 0) };
+    } else if (ANCHOR === 'repere') {
+      console.warn(`  ${view} : repère introuvable, silhouette centrée (ajuster avec --decalages).`);
     }
-    console.log(`  ${view} : repère ${mark.width} px dans la fiche, ${sheet ? `${sheet.mark} px dans la fiche de référence` : `${ref.width} px dans la grille`}, échelle ${scale.toFixed(2)}.`);
+    console.log(`  ${view} : repère ${mark.width} px dans la fiche, ${sheet ? `${sheet.mark} px dans la fiche de référence` : `${ref?.width ?? 0} px dans la grille`}, échelle ${scale.toFixed(2)}${FORCED_HEIGHTS[view] ? ` (hauteur imposée ${FORCED_HEIGHTS[view]})` : ''}.`);
   }
   const reduced = shrink(image, box, scale);
+  if (!anchor && SHIFTS[view]) anchor = { anchorX: reduced.width / 2, targetX: FRAME_WIDTH / 2 + SHIFTS[view] };
   frames[view] = toFrame(reduced, anchor);
   console.log(`  ${view} : ${reduced.width} × ${reduced.height} réduit.`);
 });

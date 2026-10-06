@@ -115,7 +115,12 @@ function createMaterials() {
     flagstone: tile(createFlagstoneTextures(127), { normalStrength: 0.9, roughness: 0.95 }),
     paneling: tile(createPanelTextures(131), { normalStrength: 0.6, roughness: 0.8 }),
     plasterIn: tile(createPlasterTextures(137, interiorRamps.enduit), { normalStrength: 0.4, roughness: 0.95 }),
-    painting: createPixelMaterial({ map: createPaintingTexture(139), texSize: [20, 14], roughness: 0.9 }),
+    // La toile d'un tableau s'éclaire un peu d'elle-même : le mur nord ne reçoit
+    // pas le jour (il entre par ses fenêtres), un tableau y resterait terne.
+    painting: (() => {
+      const map = createPaintingTexture(139);
+      return createPixelMaterial({ map, emissiveMap: map, emissiveIntensity: 0.45, texSize: [20, 14], roughness: 0.9 });
+    })(),
     rug,
   };
 }

@@ -489,7 +489,7 @@ export function buildCoal({ x, z }, builders) {
 // Petit tableau accroché au mur (side : north, west ou east), à hauteur y de
 // son centre : un cadre de bois en saillie et une toile peinte par le code
 // (gfx/textures.js). Les murs est et ouest ont leur face intérieure en x.
-export function buildPainting({ x, z, y = 1.4, width = 0.6, height = 0.42, side = 'north' }, builders) {
+export function buildPainting({ x, z, y = 1.4, width = 0.84, height = 0.6, side = 'north' }, builders) {
   const wood = createFrame(builders.wood, [x, y, z]);
   const canvas = createFrame(builders.painting, [x, y, z]);
   const f = 0.04; // largeur du cadre

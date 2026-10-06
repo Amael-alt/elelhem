@@ -521,6 +521,6 @@ Ce qui a résisté :
 | Générique | joué à la fermeture du diplôme remis, 33 s en portrait, remerciement centré (390 px sur 812) ; fermé au toucher, à Échap, à Espace ; pas rejoué en revenant voir Clodomir |
 | Écran titre avec une sauvegarde | 1920 × 950 : de 229 à 721 px, flamme de 470 ; 1366 × 657 : de 94 à 563, flamme de 421 ; 1024 × 768 : de 144 à 624 ; 812 × 375 : de 63 à 312 ; 667 × 375 : de 31 à 344 ; 375 × 812 : de 31 à 781 ; 375 × 667 : de 29 à 638 |
 | Image de partage | 1200 × 630, PNG de 966 Ko, sans métadonnées, jamais demandée par la page |
-| Poids de la page | 77 fichiers, 1,4 Mo, environ 500 Ko une fois compressés ; la musique (2,6 Mo) au lancement seulement |
+| Poids de la page | 77 fichiers, 1,4 Mo, 528 Ko transférés en ligne (mesurés sur l'adresse publique) ; la musique (2,6 Mo) au lancement seulement |
 | Partie complète | les huit parchemins avec erreurs, diplôme, générique ; `checkDialogues()` vide ; adresse de partage à jour |
 | Console et réseau | aucune erreur ; HTML, CSS, JavaScript, police et flamme seulement |

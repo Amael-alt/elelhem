@@ -71,7 +71,7 @@ Tout le code de ce dépôt a été écrit par Claude Code, les 5 et 6 octobre 20
 - **Le héros la tête en bas** après son premier achat de tenue.
 - **Un second doigt ne fait pas de « click »** sur téléphone : avec le pouce sur le joystick, les boutons ne répondaient plus. Ils écoutent maintenant chaque doigt.
 
-**Poids** : la page charge 77 fichiers, 1,4 Mo, environ 500 Ko une fois compressés par le serveur. La musique (2,6 Mo) n'est demandée qu'au lancement de la partie.
+**Poids** : la page charge 77 fichiers, 1,4 Mo, dont 530 Ko réellement transférés une fois compressés par GitHub Pages (mesure du 6 octobre 2026). La musique (2,6 Mo) n'est demandée qu'au lancement de la partie.
 
 ## Refaire l'image de partage
 

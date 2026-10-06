@@ -4,15 +4,15 @@ Un petit RPG en HD-2D, jouable dans le navigateur. À Elelhem, tout le monde par
 
 **Jouer : https://amael-alt.github.io/elelhem/**, sur téléphone ou sur ordinateur, en une dizaine de minutes.
 
-**Le décor et les personnages sont générés par le code** au chargement de la page : textures, silhouettes en pixel art, ciel, intérieurs et effets de lumière. Les seules images chargées sont la flamme du logo sur l'écran titre et, une fois le jeu lancé, les portraits de dialogue des habitants, illustrés avec Higgsfield d'après leur description, puis cadrés par un script du dépôt. Les silhouettes elles-mêmes ont été dessinées sur fiche puis transcrites pixel par pixel en grilles de code (voir ).
+**Le décor et les personnages sont générés par le code** au chargement de la page : textures, silhouettes en pixel art, ciel, intérieurs et effets de lumière. Les seules images chargées sont l'illustration de l'écran titre, les ornements de l'interface (cadres, plaques, icônes) et, une fois le jeu lancé, les portraits de dialogue des habitants, tous illustrés avec Higgsfield d'après une description, puis détourés, découpés ou cadrés par les scripts du dépôt. Les silhouettes elles-mêmes ont été dessinées sur fiche puis transcrites pixel par pixel en grilles de code (voir [`docs/construction.md`](docs/construction.md), versions 1.4 et 2.1).
 
-Version 1.3, du 6 octobre 2026.
+Version 2.1, du 6 octobre 2026.
 
 ## Le jeu
 
 La partie commence dans la maison du héros, où Claudette, sa sœur, lui confie la quête. Le village se parcourt à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. On entre dans la maison, l'auberge et la forge. Huit maîtres enseignent chacun une notion, posent une question à trois choix et remettent un parchemin ; chaque leçon est facultative et se relit dans le grimoire. Les huit parchemins réunis, Clodomir, l'architecte, remet un diplôme d'apprenti mage, avec une mention selon les erreurs, à partager ou à télécharger, puis vient le générique. Une minimap montre qui attend encore, et les Tokens gagnés en chemin s'échangent contre des tenues chez Berthe ou une épée chez Ferrand. Hors les murs, la lande grouille d'Hallucinations : on les dissipe à l'épée, en temps réel, trois coups qui s'enchaînent, cinq clartés en jeu. La fiche d'apprenti (touche F) fait le point.
 
-- **Au clavier** : ZQSD, WASD ou flèches pour marcher, Maj pour courir, molette pour le zoom, E, Entrée ou Espace pour parler, flèches ou chiffres 1, 2, 3 pour répondre, G pour le grimoire, C pour la carte, F pour la feuille de personnage, J ou X (ou un clic) pour frapper de l'épée sur la lande, M pour couper la musique.
+- **Au clavier** : ZQSD, WASD ou flèches pour marcher, Maj pour courir, molette pour le zoom, E, Entrée ou Espace pour parler, flèches ou chiffres 1, 2, 3 pour répondre, G pour le grimoire, C pour la carte, F pour la feuille de personnage, J ou X (ou un clic) pour frapper de l'épée sur la lande, M pour couper la musique. Une légende des touches reste affichée en bas à gauche sur ordinateur.
 - **Au doigt** : un joystick apparaît sous le pouce dans le bas de l'écran (poussé à fond, on court), un bouton d'action parle à l'habitant à portée, un bouton épée frappe sur la lande, deux doigts pincent pour zoomer. L'écran titre permet de passer le joystick à droite pour jouer de la main gauche.
 
 ## Les coulisses
@@ -51,9 +51,9 @@ src/world/        carte, implantation (layout), terrain, maisons, tours, chantie
 src/game/         joueur, habitants, dialogues, quête, interface, débogage, combat, Hallucinations, forge, feuille de personnage
 src/data/         palette, habitants, Hallucinations et épées (enemies.js), textes des dialogues, planches de sprites transcrites (sprites/)
 assets/portraits/ portraits de dialogue, un PNG à palette par habitant qui parle
-assets/ui/        ornements de l'interface : coins, filet, cadre rond, icônes, parchemin
+assets/ui/        ornements de l'interface : coins, filet, cadres étirables, plaques, cadre rond, icônes, gemmes, parchemin, illustration du titre
 docs/             journal de construction
-outils/           outils du poste, hors du jeu : vignette.mjs (image de partage), transcrire-sprite.mjs (fiche pixel art vers grilles), portrait.mjs (buste d'un dessin), decouper.mjs (planche d'icônes vers fichiers), png.mjs
+outils/           outils du poste, hors du jeu : vignette.mjs (image de partage), transcrire-sprite.mjs (fiche pixel art vers grilles, poses d'un personnage déjà transcrit), portrait.mjs (buste d'un dessin, PNG à palette), decouper.mjs (planche d'icônes vers fichiers), detourer.mjs (fond uni ou dégradé rendu transparent), png.mjs
 ```
 
 ## Comment ce village a été construit
@@ -77,10 +77,11 @@ Tout le code de ce dépôt a été écrit par Claude Code, les 5 et 6 octobre 20
 | 1.4 | les personnages redessinés d'après des fiches pixel art illustrées puis transcrites en grilles de code, quatre tenues comprises ; des portraits illustrés dans les dialogues ; les maisons à étage, tours, arbres et muraille aux proportions des références |
 | 1.5 | l'interface plus grande d'un cinquième et ornée de dessins générés puis découpés : coins de filigrane, filets, icônes, parchemin du grimoire |
 | 2.0 | la lande hors les murs et ses Hallucinations, le combat en temps réel à l'épée (trois coups qui s'enchaînent, cinq clartés), la forge de Ferrand (trois épées en Tokens), la fiche d'apprenti (touche F) |
+| 2.1 | le héros animé au combat : sept fiches dessinées (l'épée à la main, puis l'élan et la frappe de chaque coup) transcrites en grilles ; l'interface illustrée (cadres étirables, plaques d'ivoire, gemmes de clarté) et plus grande ; la légende des touches sur ordinateur ; l'écran titre en page de parchemin avec l'illustration du voyageur et un menu |
 
-**Ce que le code fabrique** : les textures (des pixels posés dans des palettes de quelques tons, avec un tramage), les personnages (des planches transcrites en grilles de code d'après des fiches dessinées, que le code anime : respiration, marche à six images, quatre directions), le village (une grille de caractères), le ciel, la lumière et les effets (des shaders), les sons d'ambiance (Web Audio : rivière, cascade, oiseaux, feu, marteau, pas), le diplôme et la minimap (un canvas 2D), le favicon (un SVG écrit dans la page) et l'image de partage (`outils/vignette.mjs`).
+**Ce que le code fabrique** : les textures (des pixels posés dans des palettes de quelques tons, avec un tramage), les personnages (des planches transcrites en grilles de code d'après des fiches dessinées, que le code anime : respiration, marche à six images, quatre directions, et pour le héros les mêmes l'épée à la main, puis six poses de coup figées), le village (une grille de caractères), le ciel, la lumière et les effets (des shaders), les sons d'ambiance (Web Audio : rivière, cascade, oiseaux, feu, marteau, pas), le diplôme et la minimap (un canvas 2D), le favicon (un SVG écrit dans la page) et l'image de partage (`outils/vignette.mjs`).
 
-**Ce qui ne l'est pas** : la flamme du logo Maintenant Vous Savez, la musique, la police Newsreader, three.js, et depuis la version 1.4 les portraits de dialogue et les fiches pixel art des personnages, illustrés avec Higgsfield d'après leur description (les fiches sont ensuite transcrites en code, les portraits cadrés par un script).
+**Ce qui ne l'est pas** : la musique, la police Newsreader, three.js, et depuis la version 1.4 les portraits de dialogue et les fiches pixel art des personnages, puis (1.5 et 2.1) les ornements de l'interface et l'illustration de l'écran titre, tous illustrés avec Higgsfield d'après une description (les fiches sont ensuite transcrites en code, les portraits cadrés, les ornements détourés et découpés par les scripts du dépôt). La flamme de cette illustration est celle du logo Maintenant Vous Savez, redessinée en lumière.
 
 **Ce qui a résisté** :
 
@@ -131,4 +132,4 @@ Police Newsreader : © The Newsreader Project Authors, licence SIL Open Font 1.1
 
 ## Licence
 
-Code et textes sous licence MIT, voir [`LICENSE`](LICENSE). Le logo Maintenant Vous Savez, la flamme de l'écran titre, en est exclu : tous droits réservés.
+Code et textes sous licence MIT, voir [`LICENSE`](LICENSE). Le logo Maintenant Vous Savez, redessiné en flamme de lumière dans l'illustration de l'écran titre, en est exclu : tous droits réservés. Les illustrations générées (portraits, ornements, illustration du titre) et la musique en sont exclues aussi.

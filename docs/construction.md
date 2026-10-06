@@ -743,3 +743,39 @@ Ce qui a résisté :
 | Forge et feuille | menu ouvert par l'offre de Ferrand et devant l'enclume, achat de l'épée de bois (bourse de 44 à 29 Tokens... puis l'épée de fer), fiche à jour ; Rocard refuse la lande sans épée |
 | Mobile 375 × 812 | bouton épée au-dessus du bouton d'action, HUD sur deux lignes, bandeau dessous |
 | Console | aucune erreur, village, maison, forge, lande |
+
+## Version 2.1 : le héros animé au combat, l'interface illustrée, l'écran titre (6 octobre 2026)
+
+Jordan, après avoir joué la version 2.0 : « l'épée est juste posée, elle apparaît, elle fait des mouvements, je veux vraiment voir mon personnage bouger ». Et trois demandes de plus : une interface encore un peu plus grande et moins « vibe codée », avec des éléments redessinés en illustration (menus et dialogues compris) ; les touches visibles sur ordinateur ; un écran titre « comme un jeu NES ou un Final Fantasy », sur fond clair, avec le logo restylisé et le héros qui essaie de l'attraper, le titre, Nouvelle partie et les crédits dessous.
+
+**Les fiches de combat.** Sept fiches dessinées par le même générateur, avec la planche du héros de la version 1.4 comme référence : le héros l'épée à la main (trois vues), puis pour chaque coup l'élan et la frappe (trois vues chacune) : coup de taille de droite à gauche, revers, coup de haut en bas avec la fente. Les silhouettes ne sont pas à la même échelle d'une fiche à l'autre, et une épée tendue sort du cadre de 48 pixels : l'outil de transcription a reçu trois options. `--reference` reprend la palette d'un sprite déjà transcrit, aux mêmes index, et n'ajoute que les tons nouveaux (l'acier et l'or de la lame) ; `--repere 479b` donne les index d'une matière repère, le rouge du chapeau, dont l'envergure dans la fiche fixe l'échelle de chaque vue ; `--fiche-reference` mesure ce repère de la même façon dans la fiche d'origine du héros, pour que la tête garde sa taille ; `--ancre repere` pose le centre du chapeau à la colonne qu'il occupe dans la grille de référence, pour que la tête garde sa place d'une pose à l'autre. Quand le chapeau trompe (bras levés devant, chapeau vu de biais dans une fente), `--echelles` impose l'échelle d'une vue. Le cadre passe à 80 × 88 pixels, pieds en 85 : une épée tendue ou levée y tient, et les grilles de 48 × 72 des habitants sont centrées et alignées par le bas, sans y toucher.
+
+**La planche du héros** a maintenant vingt-quatre colonnes : repos et marche (0 à 8), les mêmes l'épée à la main (9 à 17, fabriqués par le même animateur sur les vues armées : l'épée au repos, loin du corps, ne bouge pas avec les jambes, comme le bâton de l'Oracle), puis l'élan et la frappe de chaque coup (18 à 23, des poses figées). Chaque jeu de vues apporte sa palette. Un personnage sans fiche de combat garde l'ancienne pose penchée et l'épée dessinée à part. Sur la lande avec une épée, le héros la porte à la main au repos et en marchant ; pendant un coup, la planche montre l'élan jusqu'à ce que la lame porte, puis la frappe (coups de 0,32 s, 0,32 s et 0,5 s). Les quatre tenues de la boutique n'ont pas encore leurs fiches de combat : elles retombent sur l'épée à part.
+
+**L'interface illustrée.** Quatre dessins de plus : un cadre carré de nuit et un cadre carré de parchemin (coins de filigrane, filets droits qu'on peut étirer), une plaque d'ivoire aux bouts ouvragés, et deux gemmes de clarté, allumée et éteinte. Les deux cadres sont arrivés sur un fond doré que le générateur a refusé de rendre transparent ; redemandés sur fond blanc, ils sont détourés par un nouvel outil, `outils/detourer.mjs` (remplissage depuis les bords, qui s'arrête aux contours sombres du dessin), puis allégés en PNG à palette de 640 pixels. Ils sont posés en bordure étirable (`border-image`) : la boîte de dialogue garde son cadre de nuit avec le nom sur une plaque d'ivoire ; les menus (forge, fiche, boutique, carte, grimoire) passent sur parchemin, texte en encre et titres en sépia, boutons sur plaques ; le HUD (parchemins, Tokens, clartés) tient sur des plaques d'ivoire, les boutons ronds (livre, son, action et épée du tactile) dans l'anneau d'or de la fiche ; les clartés sont les gemmes. Les tailles grandissent d'un dixième (pastilles 58 px, dialogue 840 px et texte jusqu'à 1,6 rem, boutons 48 px).
+
+**La légende des touches** (`game/keys.js`), en bas à gauche sur ordinateur seulement (hover et pointeur fin) : les lettres de déplacement sont lues sur le clavier réel quand le navigateur le permet (ZQSD sur un AZERTY, WASD ailleurs), sinon les flèches ; la ligne « Frapper » n'apparaît que sur la lande, l'épée à la main ; la légende s'efface pendant une conversation ou un panneau.
+
+**L'écran titre** est une page de parchemin : l'illustration du voyageur qui bondit vers la flamme (le dessin en pied du héros et la flamme du logo comme références, la flamme redessinée en lumière du safran au violet), en colonne de gauche sur écran large, en haut sur téléphone ; le titre en encre, le filet, la contrée, l'accroche, puis le menu « Continuer » (s'il y a une sauvegarde) et « Nouvelle partie » sur plaques, le prénom, le côté du joystick et la signature. Au clavier, les flèches changent de bouton, Entrée valide. La flamme du logo en image à part ne sert plus.
+
+Ce qui a résisté :
+
+- **L'échelle des fiches.** Mesurer la hauteur de la silhouette ne marche pas pour un coup (une fente raccourcit, une épée levée allonge) ; mesurer le chapeau par sa plus longue ligne de rouge non plus, la plume et le ruban la coupent. L'envergure du rouge sur une ligne (du premier au dernier pixel, s'ils en font la moitié) donne 199, 177 et 209 pixels pour les trois vues du héros d'origine, et des hauteurs cohérentes (56, 56, 56 au repos armé ; 47, 46, 46 dans la première fente).
+- **Le chapeau vu de biais.** Dans les fentes, le profil montre le chapeau plus large qu'il n'est : échelle forcée à celle de la face pour ces fiches.
+- **Les fonds dorés.** Le générateur a ignoré deux fois le fond transparent demandé pour les cadres, et le détourage automatique de Higgsfield n'y a rien changé. Fond blanc, puis détourage maison.
+- **Le cadre mange la largeur.** Avec 54 px de bordure, les listes de la forge et de la boutique se repliaient : panneaux élargis (680 à 860 px), bouts de plaque plus courts sur les petits boutons, une seule ligne par bouton.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Planche du héros | 24 colonnes × 4 lignes de 80 × 88, soit 1 920 × 352 pixels ; pieds en 85 ; galerie vérifiée dans les quatre directions |
+| Combat à l'écran | élan puis frappe visibles pour les trois coups, image par image (`__lia.freeze`, `__lia.step`), épée à part cachée |
+| Village (maison du héros) | 103 appels de dessin, 37 984 triangles, 38 programmes |
+| Lande | 48 appels, 8 764 triangles, 50 programmes |
+| Ornements | 15 fichiers dans `assets/ui/`, 1,13 Mo (cadres 195 et 171 Ko, plaque 114 Ko, gemmes 33 Ko, illustration du titre 107 Ko) |
+| Avant le lancement | HTML, CSS, JavaScript, polices, illustration du titre, plaque et filet ; les autres ornements et les portraits après |
+| Bureau 800 × 450 | titre sur deux colonnes, dialogue, forge, fiche, boutique, carte, grimoire, légende des touches |
+| Mobile 375 × 812 | titre en une colonne, HUD sur plaques en deux lignes, dialogue avec le portrait posé dessus, gemmes |
+| Console | aucune erreur |
+| Générateur d'images | dix-sept images et deux détourages, environ 25 crédits (225,5 vers 201) |

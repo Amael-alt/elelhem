@@ -3,6 +3,7 @@
 // sont des rectangles de world/layout.js, leurs noms dans data/dialogues.js.
 
 const SHOW_MS = 2600;
+const EXIT_MS = 900; // durée de la sortie (lieu-sort dans styles.css)
 
 // element : #lieu ; regions : liste { id, rect: [x0, z0, x1, z1] } (la
 // première qui contient le point l'emporte) ; names : id -> nom affiché.
@@ -16,12 +17,22 @@ export function createAreaBanner(element, regions, names) {
     return found ? found.id : null;
   }
 
+  // Le bandeau sort, puis se cache vraiment : sans animation (mouvement
+  // réduit), la classe de sortie seule le laisserait affiché.
+  function leave() {
+    clearTimeout(timer);
+    element.classList.add('lieu-sortie');
+    timer = setTimeout(() => {
+      element.hidden = true;
+    }, EXIT_MS);
+  }
+
   function show(id) {
     title.textContent = names[id] ?? '';
     element.hidden = false;
     element.classList.remove('lieu-sortie');
     clearTimeout(timer);
-    timer = setTimeout(() => element.classList.add('lieu-sortie'), SHOW_MS);
+    timer = setTimeout(leave, SHOW_MS);
   }
 
   return {
@@ -31,7 +42,7 @@ export function createAreaBanner(element, regions, names) {
       if (id === current) return;
       current = id;
       if (id) show(id);
-      else element.classList.add('lieu-sortie'); // entre deux quartiers, le bandeau s'efface
+      else if (!element.hidden) leave(); // entre deux quartiers, le bandeau s'efface
     },
     // En entrant dans une pièce (world/rooms.js) : son nom, une fois. En
     // ressortant, le prochain update retrouve le quartier et l'affiche.

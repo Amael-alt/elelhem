@@ -6,6 +6,7 @@
 import { onTap } from '../core/input.js';
 
 const ANNOUNCE_MS = 4500;
+const EXIT_MS = 600; // durée de la sortie (annonce-sort dans styles.css)
 
 // root : #parchemins ; notions : identifiant -> notion (data/dialogues.js),
 // dans l'ordre des emplacements ; texts : textesInterface.parchemins ;
@@ -49,7 +50,14 @@ export function createScrollCounter(root, { notions, texts, state, onOpen = () =
     announce.hidden = false;
     announce.classList.remove('parchemins-sortie');
     clearTimeout(timer);
-    timer = setTimeout(() => announce.classList.add('parchemins-sortie'), ANNOUNCE_MS);
+    // Elle sort, puis se cache vraiment : une annonce transparente resterait
+    // dans la page, et, sans animation (mouvement réduit), visible.
+    timer = setTimeout(() => {
+      announce.classList.add('parchemins-sortie');
+      timer = setTimeout(() => {
+        announce.hidden = true;
+      }, EXIT_MS);
+    }, ANNOUNCE_MS);
   }
 
   refresh();

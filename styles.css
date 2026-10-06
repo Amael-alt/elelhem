@@ -1831,6 +1831,14 @@ body {
   }
 }
 
+/* Sur téléphone, l'annonce d'un parchemin ou d'un coffre tombe là où passe
+   le bandeau de lieu : tant qu'elle est affichée, le bandeau s'efface. */
+@media (max-width: 640px), (max-height: 480px) {
+  body:has(.parchemins-annonce:not([hidden])) #lieu {
+    visibility: hidden;
+  }
+}
+
 /* Écran court (téléphone en paysage) : le HUD tient sur une ligne en haut,
    la minimap rapetisse à côté du son, le bandeau de lieu passe dessous, et la
    boîte de dialogue se compacte : deux lignes réservées au lieu de trois,

@@ -20,5 +20,8 @@ import { heros_ecarlate } from './heros_ecarlate.js';
 import { heros_foret } from './heros_foret.js';
 import { heros_nuit } from './heros_nuit.js';
 import { heros_mage } from './heros_mage.js';
+// Les Hallucinations de la lande (data/enemies.js).
+import { mirage } from './mirage.js';
+import { fantome } from './fantome.js';
 
-export const sprites = { heros, claudette, gepeto, ferrand, marjolaine, basile, pepin, rocard, berthe, gaspard, clodomir, apprenti, heros_ecarlate, heros_foret, heros_nuit, heros_mage };
+export const sprites = { heros, claudette, gepeto, ferrand, marjolaine, basile, pepin, rocard, berthe, gaspard, clodomir, apprenti, heros_ecarlate, heros_foret, heros_nuit, heros_mage, mirage, fantome };

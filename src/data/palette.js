@@ -158,3 +158,21 @@ export const rugColors = {
 export const paintingColors = {
   cielHaut: '#7f98cf', cielBas: '#f2c79a', soleil: '#ffe6ae', collineLoin: '#5f8747', collinePres: '#3e6632', arbre: '#2a4a26', tronc: '#4a3324',
 };
+
+// La lande hors les murs (world/moor.js) : brume mauve et froide, ciel gris
+// violet, sol sombre, un soleil pâle.
+export const moorColors = {
+  brume: '#9a90b8',
+  ciel: '#8f86b3',
+  sol: '#3a3340',
+  soleil: '#e8d2ff',
+};
+
+// L'épée du héros (gfx/weapon.js) : acier, garde d'or, poignée de cuir, et
+// la lame de lumière du coup qui part.
+export const swordColors = {
+  acier: ['#5e6778', '#9aa4b5', '#d7dde8', '#ffffff'],
+  or: ['#8a6414', '#d9a935', '#ffe08a'],
+  cuir: ['#3a2418', '#6e4a2a'],
+  eclair: '#fff3c4',
+};

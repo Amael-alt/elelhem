@@ -30,7 +30,9 @@ export const IDLE_FRAMES = [0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 2];
 export const IDLE_FPS = 3;
 export const WALK_FRAMES = [3, 4, 5, 6, 7, 8];
 export const WALK_FPS = 10; // six images par cycle : une foulée toutes les 0,3 s
-export const COLUMNS = 9;
+// La dixième colonne : la pose du coup d'épée (le corps se penche en avant).
+export const ATTACK_FRAME = 9;
+export const COLUMNS = 10;
 
 const DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
 const EMPTY = -1;
@@ -52,6 +54,7 @@ const FRONT_POSES = [
   { bob: 0, liftL: 1, swing: -1 },
   { bob: 1, liftL: 2, swing: -1 },
   { bob: -1, liftL: 1 },
+  { bob: 1, swing: 1 }, // le coup, de face ou de dos : le corps s'abaisse
 ];
 const SIDE_POSES = [
   { bob: 0 }, { bob: 1 }, { bob: 0 },
@@ -61,7 +64,10 @@ const SIDE_POSES = [
   { bob: 0, stride: -3 },
   { bob: 1, stride: -2, lift: 1 },
   { bob: -1, stride: 0 },
+  { bob: 1, stride: 2, lean: 3 }, // le coup, de profil : le buste penche en avant
 ];
+// Ce qui flotte (les Hallucinations) ne marche pas : tout le corps ondule.
+const FLOAT_POSES = [0, 1, 0, -1, 0, 1, 1, 0, -1, 0].map((bob) => ({ bob }));
 
 // --- Lecture des grilles ----------------------------------------------------
 
@@ -211,6 +217,7 @@ function sideFrame(cells, info, pose) {
   const bob = pose.bob ?? 0;
   const stride = pose.stride ?? 0;
   const lift = pose.lift ?? 0;
+  const lean = pose.lean ?? 0;
   const span = Math.max(1, bottom - hips);
   const inLegs = (x) => Math.abs(x - center) <= LEG_REACH;
   stamp(frame, cells, { rows: [hips, bottom], keep: (x) => !inLegs(x) });
@@ -224,7 +231,16 @@ function sideFrame(cells, info, pose) {
     stamp(frame, cells, { rows: [hips, bottom], dy: -lift, shear: shear(-1), keep: inLegs });
     if (bob < 0) stamp(frame, cells, { rows: [hips, hips], dy: -1, keep: inLegs });
   }
-  stamp(frame, cells, { rows: [top, hips - 1], dy: bob });
+  // Le buste penche vers l'avant (la gauche) : d'autant plus qu'on monte.
+  const bodySpan = Math.max(1, hips - top);
+  stamp(frame, cells, { rows: [top, hips - 1], dy: bob, shear: lean ? (y) => -Math.round((lean * (hips - y)) / bodySpan) : null });
+  return frame;
+}
+
+// Ce qui flotte : la grille entière, décalée du balancement.
+function floatFrame(cells, pose) {
+  const frame = createFrame();
+  stamp(frame, cells, { rows: [0, FRAME_HEIGHT - 1], dy: pose.bob ?? 0 });
   return frame;
 }
 
@@ -259,10 +275,10 @@ export function createCharacterSheet(character) {
     const view = VIEW_OF[direction];
     const cells = grids[view];
     const info = infoOf(view);
-    const poses = view === 'profil' ? SIDE_POSES : FRONT_POSES;
+    const poses = data.flottant ? FLOAT_POSES : view === 'profil' ? SIDE_POSES : FRONT_POSES;
     const mirror = direction === 'right';
     poses.forEach((pose, column) => {
-      const frame = view === 'profil' ? sideFrame(cells, info, pose) : frontFrame(cells, info, pose);
+      const frame = data.flottant ? floatFrame(cells, pose) : view === 'profil' ? sideFrame(cells, info, pose) : frontFrame(cells, info, pose);
       for (let y = 0; y < FRAME_HEIGHT; y += 1) {
         for (let x = 0; x < FRAME_WIDTH; x += 1) {
           const i = y * FRAME_WIDTH + x;

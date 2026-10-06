@@ -23,6 +23,8 @@
 //     guide,       facultatif (ajouté à l'étape 3c) : vrai pour un habitant qui
 //                  guide sans rien enseigner ; seuls nom, intro et retour sont
 //                  lus
+//     boutique,    facultatif (étape 3c) : vrai pour la marchande ; une fois
+//                  son parchemin gagné, elle propose ses tenues après ses pages
 //   }
 //
 // `etat` : { prenom, parchemins: Set, visites: Map, choix: Map, erreurs: Map },
@@ -103,6 +105,34 @@ export const textesInterface = {
   offreLecon: {
     texte: "Je t'explique d'abord, ou tu tentes directement ma question ?",
     choix: ["Explique-moi d'abord.", 'Directement la question !'],
+  },
+  // La bourse : le Token, la monnaie d'Elelhem.
+  tokens: {
+    solde: (n) => `${n} Token${n > 1 ? 's' : ''}`,
+    gain: (n) => `+${n}`,
+    coffre: 'Un coffre !',
+    contenu: (n) => `${n} Tokens dedans`,
+  },
+  // La boutique de Berthe : les tenues du héros (data/tokens.js).
+  boutique: {
+    offre: {
+      texte: 'Tu veux voir mes tenues ? Chaudes, solides, et pas chères. Enfin, pas trop.',
+      choix: ['Voir les tenues', 'Pas maintenant'],
+    },
+    titre: 'Les tenues de Berthe',
+    bourse: (n) => `Ta bourse : ${n} Token${n > 1 ? 's' : ''}`,
+    tenues: {
+      voyage: { nom: 'Cape de voyage', description: 'Celle de tous les jours. Elle a vu du pays.' },
+      ecarlate: { nom: 'Cape écarlate', description: 'On la voit de loin. Les pigeons aussi.' },
+      foret: { nom: 'Cape des bois', description: 'Pour se fondre dans la prairie, ou faire la sieste.' },
+      nuit: { nom: 'Cape de nuit', description: 'Couleur du ciel quand les lucioles sortent.' },
+      mage: { nom: "Habit d'apprenti mage", description: 'Violet et or : de quoi faire sourire l\'Oracle Gépété.' },
+    },
+    acheter: (prix) => `Acheter, ${prix} Tokens`,
+    porter: 'Porter',
+    portee: 'Portée',
+    manque: (n) => `Il manque ${n} Token${n > 1 ? 's' : ''}`,
+    fermer: 'Fermer',
   },
   // La minimap et la carte en grand.
   carte: {
@@ -196,7 +226,7 @@ export const dialogues = {
       `Ah, tu ouvres enfin les yeux${apres(etat)} ! Debout, c'est le grand jour.`,
       "Tu te souviens ? Tu veux apprendre la magie LIA, celle qui répond à tout, écrit et conseille. LIA, comme « l'IA ». Ce n'est pas un hasard.",
       "Pour s'en servir, il faut savoir lui parler. Les formules qu'on lui adresse s'appellent des incantations. Les savants, eux, disent des prompts.",
-      "Les maîtres d'Elelhem gardent chacun un parchemin de savoir. Ils sont huit. Écoute-les, réponds à leur question, et ils te le confieront.",
+      "Les maîtres d'Elelhem gardent chacun un parchemin de savoir. Ils sont huit. Réponds à leur question, et ils te le confieront, avec quelques Tokens.",
       "Rassemble les huit, et Clodomir, l'architecte, te fera apprenti mage. Commence par l'Oracle Gépété, près du puits. Je te retrouve sur la place !",
     ],
 
@@ -233,7 +263,7 @@ export const dialogues = {
 
     lecon: [
       "La magie LIA, celle que j'utilise, a lu tous les livres du royaume. De ces lectures, elle a tiré un talent : deviner ce qui vient ensuite.",
-      'Elle écrit par petits morceaux de mots, les tokens. À chaque fois, elle choisit une suite probable, puis recommence avec le morceau suivant.',
+      'Elle écrit par petits morceaux de mots, les tokens, et choisit chaque fois une suite probable. Oui, comme nos pièces : chaque morceau se paie !',
       "À elle seule, elle ne consulte aucun grimoire et ne vérifie rien : elle continue ta phrase de façon plausible. Souvent juste, parfois faux. Comme moi.",
       "Les savants appellent ça un grand modèle de langage, un LLM. Dis « Elelhem » à voix haute : « èl, èl, hem ». Ça te rappelle quelque chose ?",
       "Plus tu lui apportes de contexte clair, meilleure est la suite qu'elle devine. Elle ne lit pas dans tes pensées : les maîtres te diront comment lui parler.",
@@ -420,6 +450,7 @@ export const dialogues = {
   berthe: {
     nom: 'Berthe',
     maxime: "Si tu veux que je m'en souvienne demain, écris-le dans le registre.",
+    boutique: true,
 
     intro: () => [
       "Entre, entre, la soupe est chaude ! Berthe, aubergiste. Ici, je connais chaque client par son prénom, jusqu'à ce qu'il passe la porte.",

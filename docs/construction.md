@@ -410,3 +410,39 @@ Ce qui a résisté :
 | Textes | `checkDialogues()` vide, répliques comprises |
 | Appels de dessin | 95, inchangés |
 | Console | aucune erreur |
+
+## Étape 3c : The Legend of Elelhem (6 octobre 2026)
+
+**But** : Jordan fait du village un petit RPG avec une histoire. Le jeu s'appelle désormais **The Legend of Elelhem : La Magie de Lia**. Elelhem (un seul l) est le nom du village, et LIA n'est plus un personnage : c'est la magie du monde, celle qui répond à tout, et les prompts y sont des **incantations**. Pas de combat ni de sort à lancer : on explore, on écoute, on répond.
+
+**L'histoire.** La partie commence dans la **maison du héros**, de l'autre côté du pont. Sa sœur **Claudette** (un clin d'œil à Claude) le réveille et lui confie la quête : rassembler les huit parchemins des maîtres d'Elelhem pour devenir apprenti mage. Elle parle la première, sans qu'on ait rien à toucher, puis l'attend sur la place pour lui dire où aller. **L'Oracle Gépété**, vieux magicien qui sait tout et se trompe parfois avec aplomb, reprend la leçon sur les grands modèles de langage : il en est lui-même l'illustration. Il explique aussi le nom du village (« èl, èl, hem », LLM). Clodomir remet le diplôme d'apprenti mage, signé avec Gépété. Le format des dialogues gagne deux champs facultatifs, `guide` (Claudette, qui n'enseigne rien) et `boutique` (Berthe) ; celui des personnages, `lieu` (la pièce où l'on se tient) et `depart` (où l'on attend au tout début).
+
+**Les intérieurs** (`world/interior.js`, `world/rooms.js`, `world/furniture.js`, `game/doors.js`). La maison du héros, l'auberge et la forge ont chacune une pièce : une scène à part, bâtie comme le village (une grille de cases, plancher, murs au nord et sur les côtés, un muret bas au sud pour voir dedans comme dans une maquette ouverte), avec un mobilier fait de boîtes fusionnées par matière : lit, cheminée, coffre, table et bougies chez le héros ; comptoir, étagère de bouteilles, cheminée, tables et bougies à l'auberge, où Berthe passe derrière son comptoir ; four de briques rougeoyant, râtelier d'outils, enclume à la forge. La lumière vient du feu, des bougies et du jour qui entre dans l'axe du soleil du village. On entre en poussant la porte vers le nord, on ressort en franchissant le seuil vers le sud, dans un fondu au noir. Dedans, la caméra se rapproche, la minimap se cache, le bandeau donne le nom de la pièce, la rivière et les oiseaux se taisent, le vent s'étouffe, le plancher sonne creux sous les pas.
+
+**La minimap** (`game/minimap.js`) : en haut à droite, le village dessiné depuis la grille de la carte, le héros en flèche, un point doré pour chaque maître qui a encore une leçon à donner, un point bleu pour Claudette ; un habitant dans une pièce est montré à la porte de sa maison. Un toucher, ou la touche C, ouvre la carte en grand avec le nom des quartiers.
+
+**Les Tokens** (`data/tokens.js`, `game/wallet.js`, `game/shop.js`), la monnaie d'Elelhem, comme les morceaux de mots que la magie LIA facture : 10 par parchemin, 20 pour le diplôme, 2 par lieu découvert pour la première fois, 5 par coffre ouvert dans les pièces. Ils se dépensent chez Berthe, qui propose ses tenues une fois son parchemin gagné : cinq capes (voyage, écarlate, des bois, de nuit, habit d'apprenti mage) qui recolorent le héros.
+
+**Musique** : baissée de 20 %, à la demande de Jordan.
+
+Ce qui a résisté :
+
+- **Les pièces étaient noires avec le post-traitement**, et visibles sans lui. Le fond uni d'une scène pousse three.js à effacer l'écran à chaque rendu ; la dernière passe, celle des sprites, effaçait donc l'image composée juste avant de dessiner les personnages. La passe des sprites retire le fond le temps de son rendu.
+- **La porte ne s'ouvrait pas en biais.** Le passage dépendait du regard du sprite, qui garde sa direction sur une diagonale ; au joystick, on pousse rarement droit. C'est maintenant la direction demandée par le joueur qui compte.
+- **Le héros s'est retrouvé la tête en bas** après son premier achat : la nouvelle planche était recopiée avant son retournement pour la carte graphique.
+- **Une maison dans la prairie** : un arbre de la lisière a dû reculer de deux cases pour lui faire de la place.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Partie neuve | réveil dans la maison, Claudette parle d'elle-même, sortie en biais par le seuil, Claudette déjà sur la place, les huit parchemins (Berthe dans l'auberge), diplôme d'apprenti mage |
+| Portes | entrée en poussant vers le nord devant l'auberge, sortie vers le sud ; bandeau, minimap et sons suivent |
+| Tokens | coffre de la maison ouvert en approchant (+5) ; découvertes et parchemins payés une fois ; achat de la cape écarlate (29 à 14 Tokens), le héros change de couleurs, la tenue survit au rechargement |
+| Textes | `checkDialogues()` vide (Claudette contrôlée comme guide) |
+| Mobile 375×812 | parchemins, bourse dessous, minimap, son, bandeau en dessous : aucun chevauchement |
+| Coût d'une image (`__lia.bench`) | 0,83 ms dehors (101 appels de dessin, 37 800 triangles), 0,62 ms à l'auberge (40 appels, 2 300 triangles) |
+| Pixels saturés | 0 % dehors comme dedans |
+| Console | aucune erreur |
+
+Nouvelle clé de sauvegarde (`elelhem-v1`) : une partie de l'ancien village ne se reprend pas. Reste à relire par Jordan : tous les textes nouveaux de l'étape 3b et de cette étape.

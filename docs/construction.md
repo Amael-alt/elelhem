@@ -779,3 +779,34 @@ Ce qui a résisté :
 | Mobile 375 × 812 | titre en une colonne, HUD sur plaques en deux lignes, dialogue avec le portrait posé dessus, gemmes |
 | Console | aucune erreur |
 | Générateur d'images | dix-sept images et deux détourages, environ 25 crédits (225,5 vers 201) |
+
+## Version 2.2 : les tenues au combat, la marche et la course, les barres de vie, le butin (7 octobre 2026)
+
+Cinq demandes de Jordan après la 2.1 : les fiches de combat des quatre tenues de la boutique ; une marche plus naturelle (« les pieds sont trop collés »), et une course ; la barre de vie au-dessus des Hallucinations ; la sienne sous le héros ou quelque part de clair, au moins dans la zone des ennemis ; et du butin : les Hallucinations lâchent des Tokens, parfois une potion qui soigne quand on marche dessus.
+
+**Les tenues.** Vingt-huit fiches de plus (sept par tenue : l'épée à la main, puis l'élan et la frappe de chaque coup), générées avec deux références chacune : la planche de la tenue pour le costume, la fiche du héros dans la même pose pour la pose. Le générateur a suivi les deux à la lettre. Pour les transcrire sans refaire la calibration du chapeau pour chaque costume, l'outil a reçu `--hauteurs face=47,profil=46,dos=46` : la hauteur voulue de chaque vue, celle que le héros a dans la même pose (multipliée par 62/56 pour le mage et son chapeau pointu), d'où l'échelle ; le repère (`--repere`, qui accepte maintenant des index ou des couleurs en hexa, et `--repere-part` pour ne chercher que dans le haut de la silhouette) ne sert plus qu'à l'ancre : le chapeau rouge pour la cape écarlate, les cheveux pour les capes de nuit et des bois, le chapeau violet pour le mage. Les colonnes de coupe entre les trois silhouettes sont trouvées par un petit script du poste (le milieu des colonnes vraiment vides du creux ; si une lame traverse tout le creux, elle est rattachée au corps dont le bord partage le plus de lignes avec elle). Chaque planche de tenue porte ses `arme` et `coups` comme celle du héros.
+
+**La marche et la course.** La foulée dessinée par le code s'amplifie : de face et de dos, la jambe levée monte de deux à trois pixels et s'écarte d'un pixel vers l'extérieur (un cisaillement depuis la hanche, le genou reste en place), les bras balancent de deux pixels ; de profil, les jambes s'écartent de cinq pixels aux pieds au lieu de trois, la jambe libre monte de deux. Six images de course de plus par direction (colonnes 9 à 14, et 24 à 29 l'épée à la main) : jambe levée de trois à quatre pixels et écartée de deux, bras de trois, rebond de deux, et de profil une foulée de huit pixels aux pieds avec le buste penché de deux. Le héros passe à la course au-delà d'un facteur de vitesse de 1,3 (Maj, ou le joystick poussé à fond). Les habitants gardent la marche. La planche a maintenant trente-six colonnes : 2 880 × 352 pixels.
+
+**Les barres de vie** (`gfx/healthbar.js`) : une image de 32 × 5 pixels dessinée par le code et refaite quand la jauge change. Au-dessus de chaque Hallucination, un `Sprite` de three.js face à la caméra, rouge sur fond sombre, cadre et liseré clair, cachée quand elle se dissipe, pleine au retour sur la lande. Sous les pieds du héros, la même image dorée, posée à plat sur le sol, un peu vers le bas de l'écran pour ne pas cacher les bottes, visible sur la lande seulement, l'épée à la main ; les gemmes du HUD restent.
+
+**Le butin** (`game/pickups.js`) : une Hallucination dissipée ne verse plus ses Tokens dans la bourse, elle les lâche en pièces (une par Token, au plus quatre, de plus grande valeur s'il le faut) qui glissent d'elle vers le sol autour, en sautillant, puis flottent ; une chance sur trois pour le Mirage, une sur deux pour le Fantôme (`potion` dans `data/enemies.js`), elle lâche aussi une fiole de clarté. Le héros ramasse en passant à moins d'une demi-unité : les pièces vont dans la bourse avec le « +n » qui s'envole, la fiole rend une clarté (l'annonce du HUD le dit, ou dit que les clartés étaient au complet). Les deux dessins (pièce à l'étincelle, fiole au liquide rouge) sont des pixels posés par le code, comme l'épée, la pièce brille un peu. Tout disparaît en quittant la lande ou en y revenant.
+
+**Corrigé en passant** : pousser vers le sud sur la lande cherchait la porte de sortie d'une pièce et plantait la boucle à chaque image (`doors.js` lisait `current.door` sur un monde de plein air).
+
+Ce qui a résisté :
+
+- **La coupe des fiches** : la découpe automatique coupait au milieu d'une lame tendue dans le creux entre deux silhouettes (un bout de lame flottait à côté de la cape des bois). Couper dans les colonnes vraiment vides ; s'il n'y en a pas, rattacher la lame au corps qui la tient.
+- **Le repère par costume** : le chapeau mesuré par envergure ne vaut rien pour une cape rouge sous un chapeau rouge (la cape gagne), ni pour une tête nue. D'où l'échelle par hauteur imposée, et le repère réduit à l'ancre, dans le haut de la silhouette.
+- **Les tests dans le navigateur intégré** : une touche envoyée au panneau n'atteint pas toujours le jeu (le dialogue de Claudette restait ouvert, le héros regardait à gauche). Les tests scriptés passent par `__lia.advance()` en boucle et `__lia.walk()` pour orienter le héros.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Planches | cinq tenues complètes (héros et quatre tenues de la boutique), 36 colonnes × 4 lignes de 80 × 88, soit 2 880 × 352 pixels chacune |
+| Galerie | repos armé, coups, marche et course vérifiés pour le héros, la cape écarlate, la cape de nuit et la cape des bois ; le mage sur ses aperçus |
+| Combat | Mirage dissipé en un coup d'acier, trois pièces au sol puis dans la bourse (4 vers 6 Tokens) ; butin forcé de 8 Tokens et une fiole : 8 Tokens ramassés, une clarté rendue avec l'annonce |
+| Barres | rouge au-dessus de chaque Hallucination, pleine au retour ; dorée sous le héros, 2 sur 5 lisible |
+| Console | aucune erreur nouvelle (les 215 du compteur du panneau datent du bug de la porte, avant correction) |
+| Générateur d'images | 29 images pour les quatre tenues (une refusée par la limite de débit, renvoyée), 42 crédits ; il en reste 159 |

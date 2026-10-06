@@ -4,7 +4,7 @@ Un petit RPG en HD-2D, jouable dans le navigateur. À Elelhem, tout le monde par
 
 **Jouer : https://amael-alt.github.io/elelhem/**, sur téléphone ou sur ordinateur, en une dizaine de minutes.
 
-**Aucune image n'est chargée par le jeu**, hors la flamme du logo sur l'écran titre : textures, personnages, ciel, intérieurs et effets de lumière sont générés par le code au chargement de la page.
+**Le décor et les personnages sont générés par le code** au chargement de la page : textures, silhouettes en pixel art, ciel, intérieurs et effets de lumière. Les seules images chargées sont la flamme du logo sur l'écran titre et, une fois le jeu lancé, les portraits de dialogue des habitants, illustrés avec Higgsfield d'après leur description, puis cadrés par un script du dépôt. Les silhouettes elles-mêmes ont été dessinées sur fiche puis transcrites pixel par pixel en grilles de code (voir ).
 
 Version 1.3, du 6 octobre 2026.
 

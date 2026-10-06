@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>The Legend of Elelhem : La Magie de Lia</title>
-  <meta name="description" content="Un petit RPG HD-2D dans le navigateur : à Elelhem, on apprend la magie LIA auprès des maîtres du village, et chacun transpose une notion d'IA. Aucune image chargée, tout est généré par le code.">
+  <meta name="description" content="Un petit RPG HD-2D dans le navigateur : à Elelhem, on apprend la magie LIA auprès des maîtres du village, et chacun transpose une notion d'IA. Décor, lumière et personnages générés par le code, portraits illustrés.">
   <meta name="theme-color" content="#231b2b">
   <meta name="author" content="Jordan Goussery">
   <link rel="canonical" href="https://amael-alt.github.io/elelhem/">
@@ -16,7 +16,7 @@
   <meta property="og:locale" content="fr_FR">
   <meta property="og:site_name" content="The Legend of Elelhem">
   <meta property="og:title" content="The Legend of Elelhem : La Magie de Lia">
-  <meta property="og:description" content="Huit notions d'IA, un village, dix minutes. Un petit RPG à jouer dans le navigateur, sur téléphone ou sur ordinateur, où tout est généré par le code.">
+  <meta property="og:description" content="Huit notions d'IA, un village, dix minutes. Un petit RPG à jouer dans le navigateur, sur téléphone ou sur ordinateur, où le décor et les personnages sont générés par le code.">
   <meta property="og:url" content="https://amael-alt.github.io/elelhem/">
   <meta property="og:image" content="https://amael-alt.github.io/elelhem/assets/social-preview.png">
   <meta property="og:image:type" content="image/png">
@@ -192,6 +192,7 @@
 
   <!-- Boîte de dialogue : remplie par src/game/dialogue.js. -->
   <div id="dialogue" role="dialog" aria-labelledby="dialogue-nom" hidden>
+    <div class="dialogue-portrait" aria-hidden="true" hidden><img alt="" decoding="async"></div>
     <p class="dialogue-nom" id="dialogue-nom"></p>
     <p class="dialogue-texte"><span class="vu"></span><span class="reste"></span></p>
     <ol class="dialogue-choix" hidden></ol>

@@ -2221,3 +2221,80 @@ body {
   margin-top: 22px;
   font-size: 22px;
 }
+
+/* ---- Portrait de dialogue : l'illustration de qui parle, debout à gauche
+   de la boîte, comme dans les RPG HD-2D récents. Un PNG à palette par
+   habitant (assets/portraits/), préchargé après l'écran titre. ---- */
+.dialogue-portrait {
+  position: absolute;
+  right: calc(100% + 14px);
+  bottom: -2px;
+  height: clamp(240px, 46vh, 460px);
+  pointer-events: none;
+}
+
+.dialogue-portrait[hidden] {
+  display: none;
+}
+
+/* Un halo sombre derrière le buste : il se détache du village. */
+.dialogue-portrait::before {
+  content: "";
+  position: absolute;
+  inset: -12% -30% -6%;
+  z-index: -1;
+  background: radial-gradient(ellipse at 50% 70%, rgb(10 8 20 / 0.72), rgb(10 8 20 / 0) 70%);
+}
+
+.dialogue-portrait img {
+  display: block;
+  width: auto;
+  height: 100%;
+  filter: drop-shadow(0 10px 22px rgb(0 0 0 / 0.55));
+  animation: portrait-entre 0.28s ease-out;
+}
+
+@keyframes portrait-entre {
+  from {
+    opacity: 0;
+    translate: -10px 8px;
+  }
+}
+
+/* La boîte glisse vers la droite de la moitié du portrait : l'ensemble reste centré. */
+#dialogue.avec-portrait {
+  transform: translateX(calc(-50% + 130px));
+}
+
+@media (max-width: 1100px) {
+  /* Pas de place à gauche : le portrait se tient sur le bord haut de la boîte,
+     à gauche, et le cartouche du nom passe à droite. */
+  #dialogue.avec-portrait {
+    transform: translateX(-50%);
+  }
+
+  .dialogue-portrait {
+    right: auto;
+    left: -6px;
+    bottom: calc(100% - 6px);
+    height: clamp(150px, 30vh, 260px);
+  }
+
+  #dialogue.avec-portrait .dialogue-nom {
+    left: auto;
+    right: 22px;
+  }
+}
+
+/* Paysage bas (téléphone couché) : la place manque, le portrait s'efface. */
+@media (max-height: 480px) {
+  .dialogue-portrait {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogue-portrait img {
+    animation: none;
+  }
+}

@@ -204,7 +204,8 @@ export const textesInterface = {
       { role: 'Code', noms: ['Claude Code'], note: 'qui a posé chaque pierre, en suivant le plan' },
       { role: 'Les habitants d\'Elelhem', habitants: true, note: 'avec les apprentis du chantier et les pigeons du colombier' },
       { role: 'Musique', noms: ['« The Village Bell »'], note: 'Jordan Goussery, avec Suno' },
-      { role: 'Décors, lumière, personnages et sons', noms: ['Générés par le code'], note: 'aucune image chargée' },
+      { role: 'Décors, lumière, silhouettes et sons', noms: ['Générés par le code'], note: 'aucune image chargée, hors les portraits' },
+      { role: 'Portraits et fiches des personnages', noms: ['Illustrés avec Higgsfield'], note: 'puis transcrits ou cadrés par le code' },
       { role: 'Moteur 3D', noms: ['three.js'], note: 'licence MIT' },
       { role: 'Police', noms: ['Newsreader'], note: 'licence SIL Open Font' },
     ],
@@ -695,7 +696,7 @@ export const dialogues = {
       'Ce village n\'a ni peintre ni maçon. Chaque pierre et chaque rayon de soleil ont été écrits en code, par une IA : Claude Code.',
       'Jordan Goussery, formateur et consultant IA à Bayonne, tenait le plan, et l\'IA posait les pierres. Ça te rappelle un certain chef de chantier ?',
       "Le plan, écrit avec l'aide d'une autre IA avant la première ligne de code, fixait les étapes et comment vérifier chacune. Sans plan, on bâtit de travers.",
-      "À part la flamme de l'écran titre, aucune image n'est chargée : herbe, pierres, visages, lumière, chants d'oiseaux, tout est fabriqué par le code.",
+      "À part la flamme de l'écran titre et nos portraits, aucune image n'est chargée : herbe, pierres, nos silhouettes, lumière, chants d'oiseaux, tout est fabriqué par le code. Nos portraits, eux, ont été peints par une magie d'images, et nos silhouettes recopiées point par point d'après ces peintures.",
       'Ce qui a résisté ? Le décor a été refait une fois, les visages redessinés. Plusieurs chauffes, comme chez Ferrand, et chaque étape vérifiée.',
     ],
 

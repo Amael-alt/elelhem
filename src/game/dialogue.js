@@ -34,11 +34,13 @@ const DIGIT = /^(?:Digit|Numpad)([1-9])$/;
 const NBSP = String.fromCharCode(0xa0);
 export const nonBreaking = (text) => text.replace(/ (?=[:;!?»])/g, NBSP).replace(/(?<=«) /g, NBSP);
 
-export function createDialogueBox(root, { onClose = () => {} } = {}) {
+export function createDialogueBox(root, { onClose = () => {}, portraitOf = () => null } = {}) {
   const nameElement = root.querySelector('.dialogue-nom');
   const seen = root.querySelector('.vu');
   const rest = root.querySelector('.reste');
   const list = root.querySelector('.dialogue-choix');
+  const portrait = root.querySelector('.dialogue-portrait');
+  const portraitImage = portrait.querySelector('img');
   const instant = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
   // La police se charge dès le démarrage : sans cela, la première page
@@ -83,6 +85,11 @@ export function createDialogueBox(root, { onClose = () => {} } = {}) {
   }
 
   function show(name) {
+    // Le portrait de qui parle, s'il en a un (illustration, assets/portraits/).
+    const source = portraitOf(name);
+    portrait.hidden = !source;
+    root.classList.toggle('avec-portrait', Boolean(source));
+    if (source && portraitImage.getAttribute('src') !== source) portraitImage.src = source;
     nameElement.textContent = name;
     open = true;
     root.hidden = false;

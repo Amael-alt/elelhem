@@ -197,7 +197,13 @@ function start() {
   // interaction.js, ce qui se dit et ce qu'on gagne dans quest.js. Le
   // compteur ouvre le grimoire ; diplôme et grimoire suspendent le jeu.
   const notions = textesInterface.parchemins.notions;
-  const dialogue = createDialogueBox(document.getElementById('dialogue'));
+  // Le portrait de qui parle, par son nom affiché : une illustration par
+  // habitant qui a un dialogue (assets/portraits/), aucune pour les figurants.
+  const portraitOf = (name) => {
+    const who = villagers.find((v) => v.nom === name);
+    return who ? `assets/portraits/${who.id}.png` : null;
+  };
+  const dialogue = createDialogueBox(document.getElementById('dialogue'), { portraitOf });
   let playing = params.has('autostart');
   let quest = null;
   const canOpenOverlay = () => playing && !quest.isBusy;
@@ -374,6 +380,13 @@ function start() {
         keyboard.takeAction();
         playing = true;
         music.start();
+        // Les portraits de dialogue se chargent en tâche de fond, le jeu lancé :
+        // la page elle-même ne demande aucune image avant ce geste.
+        for (const who of villagers) {
+          const image = new Image();
+          image.decoding = 'async';
+          image.src = `assets/portraits/${who.id}.png`;
+        }
         music.showButton();
         counter.show();
         wallet.show();

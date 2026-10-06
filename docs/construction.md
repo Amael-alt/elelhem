@@ -524,3 +524,13 @@ Ce qui a résisté :
 | Poids de la page | 77 fichiers, 1,4 Mo, 528 Ko transférés en ligne (mesurés sur l'adresse publique) ; la musique (2,6 Mo) au lancement seulement |
 | Partie complète | les huit parchemins avec erreurs, diplôme, générique ; `checkDialogues()` vide ; adresse de partage à jour |
 | Console et réseau | aucune erreur ; HTML, CSS, JavaScript, police et flamme seulement |
+
+## Étape 6 : version 1.0 (6 octobre 2026)
+
+**But** : publier une version qu'on peut partager, et la marquer.
+
+- **Vérification sur l'adresse publique**, https://amael-alt.github.io/elelhem/, au préréglage mobile 375 × 812 et sur un portable 1366 × 657 : réveil dans la maison avec Claudette, sortie par la porte au joystick, les huit parchemins avec erreurs puis bonne réponse, diplôme, générique ; `checkDialogues()` vide ; aucune erreur en console ; balises de partage et image de partage servies.
+- **README final** : le lien de jeu en tête, les commandes au clavier et au doigt, les coulisses.
+- **Étiquette `v1.0`** posée sur cette version.
+
+Reste à mesurer sur de vrais téléphones, ce que le navigateur intégré ne sait pas faire : images par seconde, deux pouces en même temps, pincement, partage du diplôme. Les corrections qui en sortiront iront dans une version 1.0.1.

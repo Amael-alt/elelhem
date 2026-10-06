@@ -2,14 +2,25 @@
 
 Un petit RPG en HD-2D, jouable dans le navigateur. À Elelhem, tout le monde parle de la magie LIA, celle qui répond à tout : pour devenir apprenti mage, il faut rassembler les parchemins des maîtres du village. Chaque maître transpose une notion d'intelligence artificielle en univers médiéval fantastique : le forgeron forge des incantations (des prompts), la bibliothécaire veille sur le contexte, l'apothicaire se méfie des potions trop belles pour être vraies, et l'Oracle Gépété répond à tout, parfois à tort.
 
-**Aucune image n'est chargée par le jeu.** Textures, personnages, ciel, intérieurs et effets de lumière sont générés par le code au chargement de la page.
+**Jouer : https://amael-alt.github.io/elelhem/**, sur téléphone ou sur ordinateur, en une dizaine de minutes.
 
-> **En construction, en public.** La partie commence dans la maison du héros, où Claudette, sa sœur, lui confie la quête. Le village se parcourt au clavier ou au pouce, à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. On entre dans la maison, l'auberge et la forge. Huit maîtres enseignent chacun une notion, posent une question à trois choix et remettent un parchemin ; les huit réunis, Clodomir, l'architecte, remet un diplôme d'apprenti mage, avec une mention selon les erreurs, à partager ou à télécharger. Chaque leçon est facultative et se relit dans le grimoire. Une minimap montre qui attend encore. Au clavier : ZQSD, WASD ou flèches, Maj pour courir, molette pour le zoom, E, Entrée ou Espace pour parler, flèches ou chiffres 1, 2, 3 pour répondre, G pour le grimoire, C pour la carte, M pour couper la musique. Au doigt : un joystick apparaît sous le pouce dans le bas de l'écran (poussé à fond, on court), un bouton d'action parle à l'habitant à portée, deux doigts pincent pour zoomer ; l'écran titre permet de passer le joystick à droite pour jouer de la main gauche. Le récit de la construction est dans [`docs/construction.md`](docs/construction.md).
+**Aucune image n'est chargée par le jeu**, hors la flamme du logo sur l'écran titre : textures, personnages, ciel, intérieurs et effets de lumière sont générés par le code au chargement de la page.
 
-- **Jouer** : https://amael-alt.github.io/elelhem/
+Version 1.0, du 6 octobre 2026.
+
+## Le jeu
+
+La partie commence dans la maison du héros, où Claudette, sa sœur, lui confie la quête. Le village se parcourt à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. On entre dans la maison, l'auberge et la forge. Huit maîtres enseignent chacun une notion, posent une question à trois choix et remettent un parchemin ; chaque leçon est facultative et se relit dans le grimoire. Les huit parchemins réunis, Clodomir, l'architecte, remet un diplôme d'apprenti mage, avec une mention selon les erreurs, à partager ou à télécharger, puis vient le générique. Une minimap montre qui attend encore, et les Tokens gagnés en chemin s'échangent contre des tenues chez Berthe.
+
+- **Au clavier** : ZQSD, WASD ou flèches pour marcher, Maj pour courir, molette pour le zoom, E, Entrée ou Espace pour parler, flèches ou chiffres 1, 2, 3 pour répondre, G pour le grimoire, C pour la carte, M pour couper la musique.
+- **Au doigt** : un joystick apparaît sous le pouce dans le bas de l'écran (poussé à fond, on court), un bouton d'action parle à l'habitant à portée, deux doigts pincent pour zoomer. L'écran titre permet de passer le joystick à droite pour jouer de la main gauche.
+
+## Les coulisses
+
 - **Mesurer** : ajouter `?debug` à l'adresse pour afficher les images par seconde et le coût du rendu.
 - **Revoir l'accueil** : la partie est sauvegardée dans le navigateur ; `?reset` repart de zéro, `?autostart` saute l'écran titre.
-- **Voir les coulisses** : `?nofx` montre le village sans post-traitement, `?view=coc` la carte du flou (net en noir, lointain en bleu, premier plan en orange), `?view=bloom` le halo seul, `?view=raw` la scène nette avant flou et halo, `?vignette` l'écran titre recomposé pour l'image de partage.
+- **Voir l'envers du décor** : `?nofx` montre le village sans post-traitement, `?view=coc` la carte du flou (net en noir, lointain en bleu, premier plan en orange), `?view=bloom` le halo seul, `?view=raw` la scène nette avant flou et halo, `?vignette` l'écran titre recomposé pour l'image de partage.
+- **Lire le récit de la construction** : [`docs/construction.md`](docs/construction.md), une entrée par étape, avec ses mesures.
 
 ## Lancer en local
 
@@ -57,6 +68,7 @@ Tout le code de ce dépôt a été écrit par Claude Code, les 5 et 6 octobre 20
 | 3c | l'histoire : Elelhem, Claudette, l'Oracle Gépété, les intérieurs, la minimap, les Tokens |
 | 4 | le tactile : joystick, course, pincement, bouton d'action, main gauche, paysage |
 | 5 | les finitions : générique de fin, favicon, image de partage |
+| 6 | la version 1.0 : vérification sur l'adresse publique, étiquette `v1.0` |
 
 **Ce que le code fabrique** : les textures (des pixels posés dans des palettes de quelques tons, avec un tramage), les personnages (un générateur qui calcule la silhouette, la marche et les quatre directions, puis habille chacun), le village (une grille de caractères), le ciel, la lumière et les effets (des shaders), les sons d'ambiance (Web Audio : rivière, cascade, oiseaux, feu, marteau, pas), le diplôme et la minimap (un canvas 2D), le favicon (un SVG écrit dans la page) et l'image de partage (`outils/vignette.mjs`).
 

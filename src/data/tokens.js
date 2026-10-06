@@ -17,8 +17,11 @@ export const gains = {
 // rampes de la tenue par-dessus les siennes, et son allure (look : tenue,
 // coiffure, accessoire) si la tenue en change. Sans tenue, la fiche telle quelle.
 export function habiller(hero, tenue) {
-  if (!tenue?.palette && !tenue?.look) return hero;
-  return { ...hero, ...(tenue.look ?? {}), palette: { ...hero.palette, ...(tenue.palette ?? {}) } };
+  if (!tenue) return hero;
+  const dressed = { ...hero, ...(tenue.look ?? {}) };
+  if (tenue.sprite) dressed.sprite = tenue.sprite;
+  if (tenue.palette) dressed.palette = { ...hero.palette, ...tenue.palette };
+  return dressed;
 }
 
 // Les tenues du héros, vendues par Berthe à l'auberge. Chacune remplace des
@@ -85,6 +88,7 @@ export const tenues = [
   { id: 'voyage', prix: 0, palette: null },
   {
     id: 'ecarlate',
+    sprite: 'heros_ecarlate',
     prix: 15,
     palette: {
       accent: ['#7a1d22', '#b02a2f', '#d9453f', '#f07a63'],
@@ -102,6 +106,7 @@ export const tenues = [
   },
   {
     id: 'foret',
+    sprite: 'heros_foret',
     prix: 15,
     palette: {
       accent: ['#1f3a22', '#2f5a30', '#468442', '#6aa65a'],
@@ -132,6 +137,7 @@ export const tenues = [
   },
   {
     id: 'nuit',
+    sprite: 'heros_nuit',
     prix: 25,
     palette: {
       accent: ['#1a1238', '#2c1f5e', '#443587', '#6552b0'],
@@ -221,6 +227,7 @@ export const tenues = [
   },
   {
     id: 'mage',
+    sprite: 'heros_mage',
     prix: 40,
     palette: {
       accent: ['#6b4e10', '#a67c1c', '#d9a935', '#ffd96a'],

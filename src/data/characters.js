@@ -40,6 +40,7 @@
 // Aucun trait de genre.
 export const hero = {
   id: 'heros',
+  sprite: 'heros',
   nom: 'Voyageur',
   position: null,
   direction: 'down',
@@ -155,6 +156,7 @@ export const hero = {
 // cheval auburn, robe vert sauge, une sacoche en bandoulière avec son fermoir.
 export const claudette = {
   id: 'claudette',
+  sprite: 'claudette',
   nom: 'Claudette',
   palette: {
     peau: ['#9a6650', '#c48a6a', '#e2ab88', '#f5cba8'],
@@ -233,6 +235,7 @@ const batonDos = '.....b..................';
 const batonProfil = '..b.....................';
 export const gepeto = {
   id: 'gepeto',
+  sprite: 'gepeto',
   nom: "L'Oracle Gépété",
   palette: {
     peau: ['#8a5d4a', '#b0806a', '#d2a184', '#ebc3a4'],
@@ -313,6 +316,7 @@ export const gepeto = {
 // cuir, et son marteau posé sur l'épaule.
 export const ferrand = {
   id: 'ferrand',
+  sprite: 'ferrand',
   nom: 'Maître Ferrand',
   palette: {
     peau: ['#7a4b36', '#a56a4c', '#c78d68', '#e0aa84'],
@@ -405,6 +409,7 @@ export const ferrand = {
 const sansLunettes = '................';
 export const marjolaine = {
   id: 'marjolaine',
+  sprite: 'marjolaine',
   nom: 'Dame Marjolaine',
   palette: {
     peau: ['#a9755c', '#cf9a7c', '#ebb999', '#f8d3b8'],
@@ -460,6 +465,7 @@ export const marjolaine = {
 // remède luit d'un vert douteux.
 export const basile = {
   id: 'basile',
+  sprite: 'basile',
   nom: 'Basile',
   palette: {
     peau: ['#8d6048', '#b88265', '#dba585', '#f1c7a8'],
@@ -518,6 +524,7 @@ export const basile = {
 // la courroie de sa sacoche en travers de la poitrine.
 export const pepin = {
   id: 'pepin',
+  sprite: 'pepin',
   nom: 'Pépin',
   palette: {
     peau: ['#8a5a44', '#b67c5d', '#d9a07c', '#efc29b'],
@@ -591,6 +598,7 @@ const hampeDos = '......b.....................';
 const hampeProfil = '....b.......................';
 export const rocard = {
   id: 'rocard',
+  sprite: 'rocard',
   nom: 'Capitaine Rocard',
   palette: {
     peau: ['#845542', '#ae7960', '#d19b7a', '#e8bc9a'],
@@ -669,6 +677,7 @@ export const rocard = {
 const sansCruche = '......................';
 export const berthe = {
   id: 'berthe',
+  sprite: 'berthe',
   nom: 'Berthe',
   palette: {
     peau: ['#a06a52', '#c78b6c', '#e5ab88', '#f6cba9'],
@@ -756,6 +765,7 @@ const regleDos = ['...................b....', '..................Bb....'];
 const regleProfil = ['...b....................', '...bB...................'];
 export const gaspard = {
   id: 'gaspard',
+  sprite: 'gaspard',
   nom: 'Maître Gaspard',
   palette: {
     peau: ['#7c4f3a', '#a56f52', '#c99172', '#e3b190'],
@@ -816,6 +826,7 @@ export const gaspard = {
 const sansCompas = '...........................';
 export const clodomir = {
   id: 'clodomir',
+  sprite: 'clodomir',
   nom: 'Clodomir',
   palette: {
     peau: ['#94644e', '#bd8a6c', '#dfac8a', '#f3ccaa'],
@@ -897,6 +908,7 @@ export const clodomir = {
 const apprenti = (id, palette, trajet, coiffure) => ({
   id,
   nom: 'Apprenti',
+  sprite: 'apprenti',
   palette,
   coiffure,
   tenue: 'tunique',

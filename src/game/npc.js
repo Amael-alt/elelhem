@@ -6,13 +6,13 @@
 // connaît aucun habitant par son nom.
 
 import { createBlobShadow, createSprite } from '../gfx/billboard.js';
-import { DIRECTIONS, IDLE_FPS, IDLE_FRAMES, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
+import { DIRECTIONS, FEET_ROW, IDLE_FPS, IDLE_FRAMES, PIXELS_PER_UNIT, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
 import { SPRITE_LAYER } from '../gfx/post/pipeline.js';
 
 export const INTERACTION_RADIUS = 2.2; // en dessous, on peut lui parler
 export const NAME_RADIUS = 4.5; // en dessous, son nom s'affiche et il se tourne vers le héros
 const BODY_RADIUS = 0.35; // le héros ne le traverse pas
-const HEAD_HEIGHT = 2.05; // au-dessus de ses pieds, où se pose l'indicateur
+const HEAD_MARGIN = 0.12; // au-dessus du haut du sprite, où se pose l'indicateur
 const TURN_BIAS = 1.25; // garde son regard sur la diagonale, pas de tremblement
 const GLOW_PULSE = 0.16; // respiration de la lumière, en part de l'émission
 const GLOW_RATE = 2.2; // radians par seconde
@@ -41,6 +41,8 @@ export function createNpc({ character, sheet, village, sunDirection, post, at = 
   let world = village;
   let rest = at?.direction ?? character.direction; // où il regarde au repos
   const sprite = createSprite(sheet, sunDirection, post);
+  // Haut du personnage (chapeau compris), lu dans sa planche.
+  const headHeight = (FEET_ROW + 1 - sheet.top) / PIXELS_PER_UNIT + HEAD_MARGIN;
   sprite.object.layers.set(SPRITE_LAYER);
   const shadow = createBlobShadow();
 
@@ -98,7 +100,7 @@ export function createNpc({ character, sheet, village, sunDirection, post, at = 
     },
     // Point au-dessus de sa tête, pour ancrer l'indicateur à l'écran.
     headPoint(target) {
-      return target.set(position.x, ground + HEAD_HEIGHT, position.z);
+      return target.set(position.x, ground + headHeight, position.z);
     },
     // Le regard va vers le héros dans TURN_RADIUS, revient à sa direction
     // d'origine au-delà.

@@ -618,3 +618,37 @@ Avant de publier, Jordan a demandé deux choses de plus : un flou « réduit de 
 | La forge | 6 × 4, 33 appels, 1 370 triangles, 3 lumières | 9 × 6, 36 appels, 2 120 triangles, 4 lumières |
 
 Dehors, rien n'a bougé (89 à 101 appels). Partie neuve : réveil sur le tapis face à Claudette, sortie par le seuil, retour par la porte (la pièce s'ouvre sur son entrée), les trois pièces visitées ; console sans erreur dans un onglet neuf.
+
+## Version 1.3 : écran titre lisible, intérieurs façon HD-2D (6 octobre 2026)
+
+**But** : deux remarques de Jordan après avoir rejoué. Sur l'écran titre, les textes se lisaient mal sur les pavés et les fanions du village. Dans les maisons, « une espèce de filtre bleu, pas joli, un vieil effet cache-misère » : il voulait des intérieurs qui s'inspirent des vrais RPG en HD-2D (Octopath Traveler II, Final Fantasy), avec de la profondeur et du détail, « la beauté est dans le détail ». Référence regardée côte à côte avant de commencer : la taverne de Gil dans Octopath Traveler II (plancher de lattes sombres, lumière chaude et localisée, noir autour de la pièce, du détail partout).
+
+**L'écran titre** (`styles.css`) : un voile en `::before`, flou (6 px) et un peu désaturé derrière les textes, masqué en ellipse pour que le village reste net sur les bords ; l'assombrissement du fond est monté (0,15 à 0,5 au centre) ; chaque texte porte un halo serré de 3 px sous son ombre large ; l'invitation est un peu plus grande et ne s'efface plus qu'à 60 % quand elle clignote. L'image de partage a été refaite (`node outils/vignette.mjs`).
+
+**Le filtre bleu** venait de l'étalonnage (`gfx/post/composite.js`), pas de l'éclairage : la teinte scindée pousse les ombres vers le bleu et une remontée des noirs les tire vers le bleu-vert, deux réglages faits pour l'heure dorée du dehors, où le ciel éclaire ce que le soleil ne touche pas. Dans une pièce, sans ciel, ils posaient un voile froid sur le feu, le bois et le noir autour de la pièce. L'étalonnage reçoit maintenant `uInterior` (réglé par `pipeline.setInterior`, partagé avec les sprites) : dedans, les ombres tirent sur le brun, la remontée des noirs est coupée, la vignette passe de 0,45 à 0,62 et le bloom est ramené à 55 %. Le fond autour de la pièce est un noir chaud au lieu d'un violet sombre.
+
+**Les intérieurs façon Octopath**, après quatre choix de Jordan : tout le lot d'un coup ; un soubassement de pierre sous la façade coupée ; une ambiance sombre et contrastée ; refaire l'image de partage.
+
+- **Les sols** (`gfx/textures.js`) : un plancher de lattes (8 pixels de large, longues d'une à trois unités, décalées d'une rangée à l'autre, joint sombre, chanfrein, fibres, un nœud sur quatre lattes, un clou à chaque bout) dans une rampe de bois brun, à la place du bois rouge des colombages, qui faisait un bruit rouge sans lattes ; des dalles de pierre à la forge (Voronoï d'une unité, joints larges, éclats), avec un seuil de pierre (lettres `d` et `Q` dans `world/map.js`).
+- **Les murs** : un enduit à la chaux ocre pour les intérieurs (`plasterIn`), un lambris de planches verticales de la plinthe à une cimaise à 0,95 m sur les trois murs d'enduit (`buildTrim`), des tableaux (un paysage naïf de 20 × 14 pixels dans un cadre de bois, `buildPainting`).
+- **Le tapis** : une texture tissée à sa taille (16 pixels par unité, `createRugTexture`, un matériau par taille) : bordure crème entre deux filets, losanges d'or, franges. Il n'est plus une toile d'auvent rayée.
+- **La lumière** (`world/interior.js`) : le jour vient maintenant des fenêtres du mur nord et tombe vers le sud-est (`DAY_DIRECTION`), moins fort (1,6 au lieu de 2,4) ; l'ambiance baisse (1,15 au lieu de 1,7) ; le feu monte (12, portée 8,5) et les bougies aussi (4,5, portée 5) : les coins restent dans l'ombre, le feu porte. **Des rais de lumière** (`gfx/fx/shafts.js`, nouveau) : par fenêtre, trois nappes translucides tendues de la fenêtre au sol dans la direction du jour, qui s'élargissent en descendant, et une tache claire sur le plancher ; mélange additif tramé sur quatre paliers comme les rayons du village, respiration lente, un appel de dessin par pièce. La forge a gagné une fenêtre. **De la poussière** flotte dans l'air (`createDust` prend maintenant une boîte fixe, un nombre, une taille et un éclat). La lueur au sol devant un feu est ramenée de 1,1 à 0,5.
+- **Le soubassement** : sous le muret de façade, une assise de pavés de 0,4 (`BASE_DEPTH`), d'un angle à l'autre ; le socle du sol d'un intérieur ne descend plus jusqu'à la roche (`createTerrain` prend `baseHeight`), le flanc du seuil est en pavés.
+- **La vaisselle** : une assiette et une miche sur les tables (`buildTableware`).
+
+Ce qui a résisté :
+
+- **Une bande rouge sous le muret**, prise pour un flanc de plancher : trois expériences (flancs en eau, muret en fer, main courante retirée) pour découvrir que c'était l'ombre de la main courante, projetée sur le muret par le jour qui venait du sud-ouest. Le jour venant maintenant du nord, le muret est dans l'ombre et le soubassement le porte.
+- **La poussière** : à 70 grains d'un gros pixel, on aurait dit de la neige. Trente-six grains plus petits, moitié moins brillants.
+- **Les tableaux sur les murs est et ouest** : la caméra regarde vers le nord, ces murs sont vus de profil, un tableau n'y est qu'un trait. Ils sont sur le mur nord.
+- **La revue de sécurité** (skill `/security-review`, passée sur tout le code faute de diff) n'a rien trouvé dans le jeu publié : pas de HTML injecté, sauvegarde lue champ par champ, paramètres d'adresse lus comme des drapeaux. Une remarque sur le serveur local, qui écoutait sur toutes les interfaces et servait les fichiers cachés : il n'écoute plus que la boucle locale, sans fichiers cachés (`.claude/launch.json`).
+
+### Mesures
+
+| Pièce | Version 1.2 | Version 1.3 |
+|---|---|---|
+| Ta maison | 41 appels, 2 980 triangles | 54 appels, 3 234 triangles |
+| L'auberge | 39 appels, 4 070 triangles | 50 appels, 4 476 triangles |
+| La forge | 36 appels, 2 120 triangles | 38 appels, 2 160 triangles |
+
+Pixels saturés 0 à 0,01 %. Console sans erreur, avec et sans post-traitement (`?nofx`). Écran titre vérifié en bureau et au préréglage mobile ; les trois pièces vérifiées en bureau et en mobile, la maison et l'auberge jusqu'au tapis et à la vaisselle. Dehors, rien n'a changé.

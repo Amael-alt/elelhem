@@ -64,7 +64,7 @@ Trois démos publiques servent de référence : `Legerdo/hd2d-diorama` pour le r
 
 ## Vérification, à chaque sous-étape et avant de pousser
 
-1. Navigateur intégré : `preview_start` sur la configuration `village` (`.claude/launch.json`, `npx -y http-server . -p 8080 -c-1`). Recharger, lire la console et les requêtes réseau : zéro erreur, aucune image hors de la flamme.
+1. Navigateur intégré : `preview_start` sur la configuration `village` (`.claude/launch.json`, `npx -y http-server . -a 127.0.0.1 --no-dotfiles -c-1`, qui lit le port dans la variable `PORT` : boucle locale seulement, fichiers cachés non servis, `.motifs-interdits` compris). Recharger, lire la console et les requêtes réseau : zéro erreur, aucune image hors de la flamme.
 2. Captures au même endroit (grâce à `window.__lia`, dès qu'il existe) : bureau, préréglage mobile 375×812, paysage 812×375. Remettre le préréglage bureau à la fin.
 3. Mesures avec `?debug` : images/s, appels de dessin, triangles, ratio de pixels. Dès l'étape 1c, vues `?nofx` et `?view=raw|coc|bloom`. Si le panneau du navigateur intégré est masqué, les images ne tournent pas et les images/s ne veulent rien dire : le noter plutôt que de les recopier.
 4. Grille de comparaison et chiffres notés dans `docs/construction.md`.

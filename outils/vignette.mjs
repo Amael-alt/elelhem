@@ -7,7 +7,7 @@
 // Aucune dépendance : le protocole de débogage du navigateur, parlé avec le
 // WebSocket intégré à Node (version 22 ou plus). Un outil du poste, pas du jeu.
 //
-// Usage, le serveur local lancé (npx -y http-server . -p 8080 -c-1) :
+// Usage, le serveur local lancé (npx -y http-server . -p 8080 -a 127.0.0.1 --no-dotfiles -c-1) :
 //   node outils/vignette.mjs
 // Variables facultatives : NAVIGATEUR (chemin de Chrome ou d'Edge, s'il n'est
 // pas trouvé seul), ADRESSE (par défaut http://localhost:8080/).

@@ -4,8 +4,9 @@
     {
       "name": "village",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["-y", "http-server", ".", "-p", "8080", "-c-1"],
-      "port": 8080
+      "runtimeArgs": ["-y", "http-server", ".", "-a", "127.0.0.1", "--no-dotfiles", "-c-1"],
+      "port": 8080,
+      "autoPort": true
     }
   ]
 }

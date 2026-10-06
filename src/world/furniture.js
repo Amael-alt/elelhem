@@ -2,14 +2,17 @@
 // coffre, tapis, fenêtre, râtelier, puis (version 1.2) les boiseries des murs,
 // appliques, rideaux, bibliothèque, pupitre, armoire, tabouret, lustre,
 // tonnelet, chaudron, herbes, panier, tapisserie, établi, meule, baquet, fers
-// à cheval, charbon. Même fabrique que le village (world/builder.js) : chaque
-// meuble empile des boîtes dans le constructeur de sa matière. Il renvoie ses
-// obstacles ronds (liste de { x, z, radius }) et, pour un feu, le point où
-// poser la flamme (flame, ou flames pour plusieurs ; small : une bougie ;
-// noLight : la flamme se voit mais n'éclaire pas, pour ménager le téléphone).
+// à cheval, charbon, puis (version 1.3) le lambris, le soubassement de pierre,
+// les tableaux, la vaisselle. Même fabrique que le village (world/builder.js) :
+// chaque meuble empile des boîtes dans le constructeur de sa matière. Il
+// renvoie ses obstacles ronds (liste de { x, z, radius }) et, pour un feu, le
+// point où poser la flamme (flame, ou flames pour plusieurs ; small : une
+// bougie ; noLight : la flamme se voit mais n'éclaire pas, pour ménager le
+// téléphone).
 //
 // Les meubles « contre le mur nord » prennent la face du mur en z et avancent
-// vers le sud (z croissant) ; une applique prend le mur (side) qui la porte.
+// vers le sud (z croissant) ; une applique ou un tableau prend le mur (side)
+// qui le porte.
 
 import { createFrame, pushBox } from './builder.js';
 
@@ -25,6 +28,10 @@ const BEAM = 0.16; // section des poutres
 const POST_WIDTH = 0.14;
 const POST_SPACING = 1.5;
 const BOOK_MATTERS = ['brick', 'iron', 'awning', 'plaster', 'wood', 'door'];
+// Version 1.3 : le soubassement sous la façade coupée, le lambris du bas des murs.
+export const BASE_DEPTH = 0.4; // profondeur du soubassement sous le plancher (le socle de world/terrain.js descend d'autant)
+const DADO_Y = 0.95; // haut du lambris, sous les fenêtres
+const PANEL_DEPTH = 0.035; // saillie du lambris, moindre que celle des poteaux
 
 // Lit le long de l'axe z, tête au nord : cadre, tête de lit, matelas, oreiller
 // et couverture rayée.
@@ -118,10 +125,14 @@ export function buildChest({ x, z }, builders) {
   return { posts: [{ x, z, radius: 0.4 }] };
 }
 
-// Tapis posé au sol, rayé, sans épaisseur qui gêne : aucun obstacle.
+// Tapis posé au sol, à motif tissé : sa texture est faite à sa taille
+// (gfx/textures.js) et posée une seule fois, le nord de l'image au nord. Le
+// constructeur `rug` est fourni par la pièce (world/interior.js), un par tapis.
+// Sans épaisseur qui gêne : aucun obstacle.
 export function buildRug({ x0, z0, x1, z1 }, builders) {
-  const cloth = createFrame(builders.awning, [0, 0, 0]);
-  pushBox(cloth, [x0, 0, z0], [x1, 0.015, z1], { groundAo: 1 });
+  const cloth = createFrame(builders.rug, [0, 0, 0]);
+  const y = 0.012;
+  cloth.polygon([[x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0]], FULL_UV);
   return { posts: [] };
 }
 
@@ -164,8 +175,12 @@ export function buildCandle({ x, z, y = 1.05 }, builders) {
 // collisions, mais ce qu'on voit est une cloison mince posée au bord intérieur
 // de ces cases, le reste de la case est du vide, comme une maquette ouverte.
 // Trois murs hauts (nord, ouest, est) et un muret de façade ouvert au seuil.
+// Sous le muret, d'un angle à l'autre, le soubassement de pierre : la maison
+// coupée en deux montre ses fondations (version 1.3). Les murs d'enduit
+// prennent la chaux ocre des intérieurs (plasterIn), pas le blanc des façades.
 export function buildWalls(map, { stone = false, doorX }, builders) {
-  const wall = createFrame(builders[stone ? 'stonewall' : 'plaster'], [0, 0, 0]);
+  const wall = createFrame(builders[stone ? 'stonewall' : 'plasterIn'], [0, 0, 0]);
+  const base = createFrame(builders.stone, [0, 0, 0]);
   const [x0, x1, z0, z1] = [1, map.width - 1, 1, map.depth - 1];
   const t = WALL_THICKNESS;
   pushBox(wall, [x0 - t, 0, z0 - t], [x1 + t, WALL_TOP, z0]);
@@ -173,6 +188,9 @@ export function buildWalls(map, { stone = false, doorX }, builders) {
   pushBox(wall, [x1, 0, z0], [x1 + t, WALL_TOP, z1 + t]);
   pushBox(wall, [x0 - t, 0, z1], [doorX, LOW_WALL, z1 + t]);
   pushBox(wall, [doorX + 1, 0, z1], [x1 + t, LOW_WALL, z1 + t]);
+  // Le dessus du soubassement reste un peu sous le plancher du seuil, qui le
+  // recouvre : pas deux faces au même niveau.
+  pushBox(base, [x0 - t, -BASE_DEPTH, z1 - 0.02], [x1 + t, -0.01, z1 + t + 0.02]);
   return { posts: [] };
 }
 
@@ -198,6 +216,16 @@ export function buildTrim(map, { stone = false, avoid = [], doorX }, builders) {
     pushBox(wood, [x0 - 0.01, GIRT_Y, z0 - 0.01], [x1 + 0.01, GIRT_Y + BEAM, z0 + d]);
     pushBox(wood, [x0 - 0.01, GIRT_Y, z0], [x0 + d, GIRT_Y + BEAM, z1]);
     pushBox(wood, [x1 - d, GIRT_Y, z0], [x1 + 0.01, GIRT_Y + BEAM, z1]);
+    // Le lambris (version 1.3) : des planches verticales de la plinthe à la
+    // cimaise sur les trois murs d'enduit, et la cimaise de bois qui le coiffe.
+    // Ce qui est posé contre le mur passe devant, les poteaux aussi.
+    const panel = createFrame(builders.paneling, [0, 0, 0]);
+    pushBox(panel, [x0, PLINTH_HEIGHT, z0], [x1, DADO_Y, z0 + PANEL_DEPTH]);
+    pushBox(panel, [x0, PLINTH_HEIGHT, z0], [x0 + PANEL_DEPTH, DADO_Y, z1]);
+    pushBox(panel, [x1 - PANEL_DEPTH, PLINTH_HEIGHT, z0], [x1, DADO_Y, z1]);
+    pushBox(wood, [x0, DADO_Y, z0], [x1, DADO_Y + 0.06, z0 + d]);
+    pushBox(wood, [x0, DADO_Y, z0], [x0 + d, DADO_Y + 0.06, z1]);
+    pushBox(wood, [x1 - d, DADO_Y, z0], [x1, DADO_Y + 0.06, z1]);
   }
   if (!stone) {
     const free = (x) => avoid.every(([a, b]) => x + POST_WIDTH < a || x - POST_WIDTH > b);
@@ -454,4 +482,48 @@ export function buildCoal({ x, z }, builders) {
     pushBox(iron, [cx - s / 2, 0, cz - s / 2], [cx + s / 2, h, cz + s / 2]);
   }
   return { posts: [{ x, z, radius: 0.4 }] };
+}
+
+// --- Version 1.3 : les détails qui font la pièce ------------------------------
+
+// Petit tableau accroché au mur (side : north, west ou east), à hauteur y de
+// son centre : un cadre de bois en saillie et une toile peinte par le code
+// (gfx/textures.js). Les murs est et ouest ont leur face intérieure en x.
+export function buildPainting({ x, z, y = 1.4, width = 0.6, height = 0.42, side = 'north' }, builders) {
+  const wood = createFrame(builders.wood, [x, y, z]);
+  const canvas = createFrame(builders.painting, [x, y, z]);
+  const f = 0.04; // largeur du cadre
+  const hw = width / 2;
+  const hh = height / 2;
+  if (side === 'north') {
+    canvas.polygon([[-hw, -hh, 0.03], [hw, -hh, 0.03], [hw, hh, 0.03], [-hw, hh, 0.03]], FULL_UV);
+    pushBox(wood, [-hw - f, hh, 0.01], [hw + f, hh + f, 0.05]);
+    pushBox(wood, [-hw - f, -hh - f, 0.01], [hw + f, -hh, 0.05]);
+    pushBox(wood, [-hw - f, -hh, 0.01], [-hw, hh, 0.05]);
+    pushBox(wood, [hw, -hh, 0.01], [hw + f, hh, 0.05]);
+    return { posts: [] };
+  }
+  // Mur ouest : la toile regarde l'est (+x), son bord gauche au sud ; mur est :
+  // elle regarde l'ouest, son bord gauche au nord.
+  const [near, far] = side === 'west' ? [0.01, 0.05] : [-0.05, -0.01];
+  const face = side === 'west' ? 0.03 : -0.03;
+  canvas.polygon(side === 'west'
+    ? [[face, -hh, hw], [face, -hh, -hw], [face, hh, -hw], [face, hh, hw]]
+    : [[face, -hh, -hw], [face, -hh, hw], [face, hh, hw], [face, hh, -hw]], FULL_UV);
+  pushBox(wood, [near, hh, -hw - f], [far, hh + f, hw + f]);
+  pushBox(wood, [near, -hh - f, -hw - f], [far, -hh, hw + f]);
+  pushBox(wood, [near, -hh, -hw - f], [far, hh, -hw]);
+  pushBox(wood, [near, -hh, hw], [far, hh, hw + f]);
+  return { posts: [] };
+}
+
+// Vaisselle sur une table (x, z : ceux de la table ; y : son plateau) : une
+// assiette de faïence et une miche dessus, à côté des chopes de la table.
+// Aucun obstacle, la table en a un.
+export function buildTableware({ x, z, y = 0.78 }, builders) {
+  const linen = createFrame(builders.plaster, [x, y, z]);
+  const bread = createFrame(builders.thatch, [x, y, z]);
+  pushBox(linen, [-0.2, 0, 0.12], [0.08, 0.025, 0.34]);
+  pushBox(bread, [-0.14, 0.025, 0.16], [0.02, 0.1, 0.3]);
+  return { posts: [] };
 }

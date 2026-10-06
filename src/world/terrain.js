@@ -30,7 +30,10 @@ const SOIL_DEPTH = 0.55; // épaisseur de terre au bord du socle, la roche desso
 const LIP_DEPTH = 0.2; // l'herbe déborde sur le haut des flancs (falaises, socle)
 const LIP_OUT = 0.025; // juste devant le flanc, pour ne pas le traverser
 
-export function createTerrain(map, materials) {
+// baseHeight : hauteur du dessous du socle. Celui du village descend jusqu'à
+// la roche (BASE_HEIGHT) ; un intérieur n'a qu'un soubassement peu profond,
+// d'une seule matière.
+export function createTerrain(map, materials, { baseHeight = BASE_HEIGHT } = {}) {
   const builders = {};
   const builderFor = (matter) => (builders[matter] ??= createMeshBuilder());
   const u = (value) => value / TILE_UNITS;
@@ -64,7 +67,7 @@ export function createTerrain(map, materials) {
 
       for (const edge of EDGES) {
         const neighbor = map.cellAt(x + edge.dx, z + edge.dz);
-        const low = neighbor ? neighbor.height : BASE_HEIGHT;
+        const low = neighbor ? neighbor.height : baseHeight;
         if (low >= h) continue;
         const [[ax, az], [bx, bz]] = edge.corners(x, z);
         const ua = u(edge.along === 'x' ? ax : az);
@@ -89,6 +92,9 @@ export function createTerrain(map, materials) {
         }
         if (neighbor) {
           band(cell.side, low, h, BANK_FOOT_AO, 1);
+        } else if (h - baseHeight <= SOIL_DEPTH + 1e-6) {
+          // Socle peu profond (un intérieur) : le flanc est d'une seule matière.
+          band(cell.side, low, h, BASE_FOOT_AO, 1);
         } else {
           // Bord du socle : une couche de terre, puis la roche jusqu'en bas.
           const soil = h - SOIL_DEPTH;

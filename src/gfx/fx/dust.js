@@ -2,6 +2,8 @@
 // soir. Ils remplissent une boîte qui suit la caméra, mais restent fixes dans
 // le monde : quand la boîte avance, les grains sortis d'un côté rentrent de
 // l'autre (modulo), en s'effaçant près des bords. Un seul appel de dessin.
+// Dans une pièce (version 1.3), la boîte est fixe : c'est la pièce elle-même,
+// et les grains dérivent à peine, comme dans un air immobile.
 
 import * as THREE from 'three';
 import { effectColors } from '../../data/palette.js';
@@ -11,37 +13,53 @@ import { FX_OUTPUT_GLSL, POINT_SIZE_GLSL } from './points.js';
 const COUNT = 90;
 const SIZE = 0.0625; // un gros pixel
 const BOX = [26, 3, 20];
+const DRIFT = [0.18, 0.04, -0.12]; // dérive par seconde, en unités
 
-export function createDust(uniforms) {
+const f = (value) => value.toFixed(3);
+
+// options : count, box (dimensions de la boîte), origin (son coin bas
+// nord-ouest, fixe ; sans origine, la boîte suit la caméra), drift, size
+// (taille d'un grain, en unités), glow (éclat, 1 dehors).
+export function createDust(uniforms, { count = COUNT, box = BOX, origin = null, drift = DRIFT, size = SIZE, glow = 1 } = {}) {
   const rng = createRng(91);
   const seeds = [];
-  for (let i = 0; i < COUNT; i += 1) seeds.push(rng(), rng(), rng(), rng());
+  for (let i = 0; i < count; i += 1) seeds.push(rng(), rng(), rng(), rng());
   const geometry = new THREE.BufferGeometry();
   // Les positions sont calculées par le GPU ; three.js veut tout de même un
   // attribut position pour connaître le nombre de points.
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(COUNT * 3), 3));
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(count * 3), 3));
   geometry.setAttribute('seed', new THREE.Float32BufferAttribute(seeds, 4));
 
   const material = new THREE.ShaderMaterial({
-    uniforms: { ...uniforms, uColor: { value: new THREE.Color(effectColors.poussiere) } },
+    defines: { FIXED_ORIGIN: origin ? 1 : 0 },
+    uniforms: {
+      ...uniforms,
+      uColor: { value: new THREE.Color(effectColors.poussiere) },
+      uOrigin: { value: new THREE.Vector3(...(origin ?? [0, 0, 0])) },
+    },
     vertexShader: /* glsl */`
       attribute vec4 seed;
       uniform float uTime;
       uniform vec3 uFocus;
+      uniform vec3 uOrigin;
       varying float vLight;
       ${POINT_SIZE_GLSL}
       void main() {
-        vec3 box = vec3( ${BOX.map((v) => v.toFixed(1)).join(', ')} );
-        vec3 origin = vec3( uFocus.x - box.x * 0.5, 0.2, uFocus.z - box.z * 0.5 );
-        vec3 drift = vec3( 0.18, 0.04, -0.12 ) * uTime
+        vec3 box = vec3( ${box.map(f).join(', ')} );
+        #if FIXED_ORIGIN
+          vec3 origin = uOrigin;
+        #else
+          vec3 origin = vec3( uFocus.x - box.x * 0.5, 0.2, uFocus.z - box.z * 0.5 );
+        #endif
+        vec3 drift = vec3( ${drift.map(f).join(', ')} ) * uTime
           + vec3( sin( uTime * 0.3 + seed.w * 6.28 ) * 0.3, sin( uTime * 0.5 + seed.w * 3.1 ) * 0.2, 0.0 );
         vec3 local = mod( seed.xyz * box + drift - origin, box );
         vec3 edge = min( local, box - local ) / box;
         float fade = smoothstep( 0.0, 0.08, min( edge.x, min( edge.y, edge.z ) ) );
         vec4 mvPosition = viewMatrix * vec4( origin + local, 1.0 );
         gl_Position = projectionMatrix * mvPosition;
-        gl_PointSize = pixelPointSize( ${SIZE.toFixed(4)}, mvPosition );
-        vLight = fade * ( 0.35 + 0.65 * ( 0.5 + 0.5 * sin( uTime * 1.6 + seed.w * 20.0 ) ) );
+        gl_PointSize = pixelPointSize( ${size.toFixed(4)}, mvPosition );
+        vLight = ${f(glow)} * fade * ( 0.35 + 0.65 * ( 0.5 + 0.5 * sin( uTime * 1.6 + seed.w * 20.0 ) ) );
       }
     `,
     fragmentShader: /* glsl */`

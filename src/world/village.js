@@ -43,8 +43,9 @@ import {
   createBrickTextures, createCobbleTextures, createDirtTextures, createDoorTexture, createGrassTextures,
   createLeafTextures, createPlasterTextures, createRockTextures, createRoofTextures, createWaterTextures,
   createWindowTextures, createWoodTextures, createAwningTexture, createSlateTextures, createStoneWallTextures, createThatchTextures,
+  createFlagstoneTextures, createPaintingTexture, createPanelTextures, createPlankTextures, createRugTexture, RUG_PIXELS_PER_UNIT,
 } from '../gfx/textures.js';
-import { foliageTints, hazeColor, ironColor, lanternColor, natureRamps } from '../data/palette.js';
+import { foliageTints, hazeColor, interiorRamps, ironColor, lanternColor, natureRamps } from '../data/palette.js';
 
 const SUN_COLOR = 0xffc07a;
 const SUN_INTENSITY = 6.5;
@@ -79,6 +80,16 @@ function createMaterials() {
   const tile = (textures, options) => createPixelMaterial({ ...textures, ...options });
   const door = createDoorTexture();
   const windows = createWindowTextures();
+  // Le tapis d'un intérieur a une texture à sa taille, faite à la demande et
+  // gardée par taille (deux tapis de même taille partagent la leur).
+  const rugs = new Map();
+  const rug = (width, depth) => {
+    const w = Math.round(width * RUG_PIXELS_PER_UNIT);
+    const d = Math.round(depth * RUG_PIXELS_PER_UNIT);
+    const key = `${w}x${d}`;
+    if (!rugs.has(key)) rugs.set(key, createPixelMaterial({ map: createRugTexture(w, d), texSize: [w, d], roughness: 1 }));
+    return rugs.get(key);
+  };
   return {
     grass: tile(createGrassTextures(11), { normalStrength: 0.35, roughness: 0.95 }),
     dirt: tile(createDirtTextures(23), { normalStrength: 0.8, roughness: 0.95 }),
@@ -98,6 +109,14 @@ function createMaterials() {
     thatch: tile(createThatchTextures(103), { normalStrength: 0.9, roughness: 1 }),
     stonewall: tile(createStoneWallTextures(107), { normalStrength: 0.8, roughness: 0.9 }),
     awning: createPixelMaterial({ ...createAwningTexture(), roughness: 0.9 }),
+    // Les intérieurs (version 1.3, world/interior.js) : plancher de lattes,
+    // dalles de la forge, lambris, enduit à la chaux, les tableaux, le tapis.
+    plank: tile(createPlankTextures(113), { normalStrength: 0.6, roughness: 0.85 }),
+    flagstone: tile(createFlagstoneTextures(127), { normalStrength: 0.9, roughness: 0.95 }),
+    paneling: tile(createPanelTextures(131), { normalStrength: 0.6, roughness: 0.8 }),
+    plasterIn: tile(createPlasterTextures(137, interiorRamps.enduit), { normalStrength: 0.4, roughness: 0.95 }),
+    painting: createPixelMaterial({ map: createPaintingTexture(139), texSize: [20, 14], roughness: 0.9 }),
+    rug,
   };
 }
 

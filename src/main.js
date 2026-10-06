@@ -101,9 +101,7 @@ function start() {
 
   const village = createVillage(scene, { narrowScreen });
   // Les intérieurs (world/rooms.js), bâtis avec les matériaux du village.
-  const rooms = Object.fromEntries(Object.entries(ROOMS).map(([id, room]) => [
-    id, createInterior(room, { materials: village.materials, sunDirection: village.sunDirection }),
-  ]));
+  const rooms = Object.fromEntries(Object.entries(ROOMS).map(([id, room]) => [id, createInterior(room, { materials: village.materials })]));
   const worldOf = (lieu) => (lieu ? rooms[lieu] : village);
   const follow = createFollowCamera();
   const keyboard = createKeyboard();
@@ -177,7 +175,8 @@ function start() {
     renderer.setSize(width, height, false);
     renderer.getDrawingBufferSize(drawingBuffer);
     pipeline.setSize(drawingBuffer.x, drawingBuffer.y);
-    village.setPointScale(drawingBuffer.y / (2 * Math.tan(THREE.MathUtils.degToRad(follow.camera.fov / 2))));
+    const pointScale = drawingBuffer.y / (2 * Math.tan(THREE.MathUtils.degToRad(follow.camera.fov / 2)));
+    for (const world of [village, ...Object.values(rooms)]) world.setPointScale(pointScale);
     follow.setAspect(width / height);
   }
   // Suit la taille réelle du canvas (fenêtre redimensionnée, page affichée).

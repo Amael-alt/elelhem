@@ -135,3 +135,26 @@ export const interiorColors = {
   ciel: '#ffe2bd',
   sol: '#3a2a20',
 };
+
+// Version 1.3 : les matières propres aux intérieurs, façon RPG en HD-2D. Un
+// plancher de lattes sombres (le bois rouge des colombages était fait pour les
+// façades), les dalles de la forge, le lambris du bas des murs, et un enduit à
+// la chaux plus chaud que celui des façades.
+export const interiorRamps = {
+  plancher: ['#1d120d', '#2c1b13', '#3d281b', '#4f3524', '#63442f', '#78553c'],
+  dalles: ['#242120', '#322e2d', '#413b38', '#4f4844', '#5f5650', '#6f655d'],
+  lambris: ['#22140e', '#33201a', '#452d21', '#583b2b', '#6c4a36'],
+  enduit: ['#6d5945', '#836e56', '#9a8567', '#b09b7b', '#c4b08f', '#d4c3a3'],
+};
+
+// Le tapis : laine rouge chinée, bordure crème entre deux filets sombres,
+// losanges d'or, franges.
+export const rugColors = {
+  fond: '#7b1f1d', fondClair: '#8d2924', bordure: '#e2cc98', filet: '#4a1211', motif: '#d8a647', frange: '#cbb684',
+};
+
+// Le petit tableau accroché au mur : un paysage naïf, ciel du soir, le soleil,
+// deux collines, un arbre.
+export const paintingColors = {
+  cielHaut: '#7f98cf', cielBas: '#f2c79a', soleil: '#ffe6ae', collineLoin: '#5f8747', collinePres: '#3e6632', arbre: '#2a4a26', tronc: '#4a3324',
+};

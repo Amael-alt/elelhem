@@ -3,8 +3,9 @@
 // sa maison (HOUSES de world/layout.js).
 //
 // Chaque pièce est une grille comme celle du village (lettres de world/map.js) :
-// cases de mur au nord et sur les côtés, muret bas au sud, un seuil P dans le
-// muret, par où l'on ressort. Les cases de mur ne servent qu'aux collisions :
+// cases de mur au nord et sur les côtés, muret bas au sud, un seuil P (de
+// bois) ou Q (de pierre) dans le muret, par où l'on ressort ; f un plancher de
+// lattes, d des dalles. Les cases de mur ne servent qu'aux collisions :
 // la cloison qu'on voit est mince, posée à leur bord intérieur. Repère propre
 // à la pièce : x vers l'est, z vers le sud, la case (0, 0) au coin nord-ouest.
 // La face intérieure du mur nord est en z = 1, celle du mur ouest en x = 1,
@@ -20,6 +21,9 @@
 // courante) sont ajoutées d'office d'après la grille.
 //
 // Version 1.2 : pièces agrandies (la maison fait 8 × 6 au lieu de 5 × 4).
+// Version 1.3 : un tableau par mur libre, de la vaisselle sur les tables, une
+// fenêtre à la forge (le jour entre en rais par les fenêtres, voir
+// world/interior.js), ses dalles et son seuil de pierre.
 
 export const ROOMS = {
   // La maison du héros, de l'autre côté du pont : là où la partie commence.
@@ -59,9 +63,13 @@ export const ROOMS = {
       { type: 'candle', x: 7.72, z: 4.32, y: 0.78 },
       { type: 'stool', x: 7.3, z: 5.35 },
       { type: 'table', x: 2.6, z: 5.4 },
+      { type: 'tableware', x: 2.6, z: 5.4 },
       { type: 'basket', x: 1.5, z: 6.5 },
       { type: 'sconce', x: 1, z: 4.2, side: 'west' },
       { type: 'sconce', x: 9, z: 4.6, side: 'east' },
+      // Au mur nord, au-dessus de la tête du lit : les murs est et ouest sont
+      // vus de profil par la caméra, un tableau n'y serait qu'un trait.
+      { type: 'painting', x: 1.7, z: 1, y: 1.5 },
     ],
   },
 
@@ -93,6 +101,11 @@ export const ROOMS = {
       { type: 'table', x: 2.6, z: 4.4 },
       { type: 'table', x: 4.6, z: 6.6 },
       { type: 'table', x: 10.0, z: 5.6 },
+      { type: 'tableware', x: 2.6, z: 4.4 },
+      { type: 'tableware', x: 4.6, z: 6.6 },
+      { type: 'tableware', x: 10.0, z: 5.6 },
+      { type: 'painting', x: 1.5, z: 1, y: 1.45 },
+      { type: 'painting', x: 5.7, z: 1, y: 1.4 },
       { type: 'candle', x: 7.4, z: 2.45, y: 1.05 },
       { type: 'candle', x: 2.6, z: 4.42, y: 0.78 },
       { type: 'candle', x: 10.0, z: 5.62, y: 0.78 },
@@ -117,18 +130,19 @@ export const ROOMS = {
     lieu: 'forge',
     rows: [
       'SSSSSSSSSSS',
-      'SfffffffffS',
-      'SfffffffffS',
-      'SfffffffffS',
-      'SfffffffffS',
-      'SfffffffffS',
-      'SfffffffffS',
-      'sssssPsssss',
+      'SdddddddddS',
+      'SdddddddddS',
+      'SdddddddddS',
+      'SdddddddddS',
+      'SdddddddddS',
+      'SdddddddddS',
+      'sssssQsssss',
     ],
     entry: { x: 5.5, z: 6.4 },
     reserve: [[1, 1, 3, 1]],
     props: [
       { type: 'furnace', x: 2.2, z: 1 },
+      { type: 'window', x: 3.75, z: 1, y: 1.5, width: 0.7, height: 0.7 },
       { type: 'toolrack', x0: 4.4, x1: 6.4, z: 1 },
       { type: 'workbench', x0: 6.6, x1: 8.6, z: 1 },
       { type: 'horseshoes', x0: 8.8, x1: 9.9, z: 1, y: 1.45 },

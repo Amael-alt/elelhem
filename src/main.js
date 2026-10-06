@@ -31,7 +31,7 @@ import { createMinimap } from './game/minimap.js';
 import { createDoors } from './game/doors.js';
 import { createWallet } from './game/wallet.js';
 import { createShop } from './game/shop.js';
-import { gains, tenues } from './data/tokens.js';
+import { gains, habiller, tenues } from './data/tokens.js';
 import { createInterior } from './world/interior.js';
 import { ROOMS } from './world/rooms.js';
 import { createGameState, resetGameState, saveGameState } from './game/state.js';
@@ -123,14 +123,12 @@ function start() {
   const sheet = createCharacterSheet(hero);
   const sheets = { [hero.id]: sheet };
   const sprite = createSprite(sheet, village.sunDirection, pipeline.spriteHooks);
-  // La tenue du héros (data/tokens.js) : une palette qui remplace la sienne.
+  // La tenue du héros (data/tokens.js) : une palette, et depuis la version 1.1
+  // une allure (cape, chapeau, robe), qui remplacent les siennes.
   const dressHero = (id) => {
     const outfit = tenues.find((t) => t.id === id);
-    if (!outfit?.palette) {
-      sprite.setSheet(sheet);
-      return;
-    }
-    sprite.setSheet(createCharacterSheet({ ...hero, palette: { ...hero.palette, ...outfit.palette } }));
+    const dressed = habiller(hero, outfit);
+    sprite.setSheet(dressed === hero ? sheet : createCharacterSheet(dressed));
   };
   sprite.object.layers.set(SPRITE_LAYER);
   const shadow = createBlobShadow();
@@ -426,7 +424,7 @@ function start() {
 
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
-    counter, diploma, quest, grimoire, chatter, minimap, doors, rooms, wallet, shop, controls, actionButton, setLeftHanded, credits,
+    counter, diploma, quest, grimoire, chatter, minimap, doors, rooms, wallet, shop, controls, actionButton, setLeftHanded, credits, dressHero,
   });
 
   let last = performance.now();

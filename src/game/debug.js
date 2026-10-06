@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { repliques } from '../data/dialogues.js';
 import { createCharacterSheet, FRAME_HEIGHT, FRAME_WIDTH } from '../gfx/sprites.js';
 import { figurants, hero, villagers } from '../data/characters.js';
+import { habiller, tenues } from '../data/tokens.js';
 
 const REFRESH_SECONDS = 0.5;
 
@@ -135,7 +136,7 @@ function checkDialogues(texts, characters) {
 // game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
 // dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap, doors, wallet, shop, controls, actionButton, setLeftHanded, credits } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap, doors, wallet, shop, controls, actionButton, setLeftHanded, credits, dressHero } = game;
   let viewer = null;
 
   const info = () => ({
@@ -275,6 +276,7 @@ export function installDebugApi(game) {
     // Galerie d'images choisies, pour juger une pose pixel par pixel : rows est
     // une liste de lignes, chaque ligne une liste de [id, direction (0 bas,
     // 1 gauche, 2 droite, 3 haut), colonne de la planche, sansAccessoire].
+    // L'id « heros:nuit » montre le héros dans une tenue de data/tokens.js.
     // Les planches sont refaites depuis les fiches, sans toucher au jeu.
     galerie(rows, scale = 4) {
       document.getElementById('lia-galerie')?.remove();
@@ -284,7 +286,8 @@ export function installDebugApi(game) {
       const sheetOf = (id, bare) => {
         const key = `${id}:${bare ? 'nu' : 'habille'}`;
         if (!cache.has(key)) {
-          const fiche = fiches.find((c) => c.id === id);
+          const [base, outfit] = id.split(':');
+          const fiche = outfit ? habiller(hero, tenues.find((t) => t.id === outfit)) : fiches.find((c) => c.id === base);
           cache.set(key, createCharacterSheet(bare ? { ...fiche, accessoire: null } : fiche));
         }
         return cache.get(key);
@@ -387,6 +390,13 @@ export function installDebugApi(game) {
       if (on) shop.open();
       else shop.close();
       return shop.isOpen;
+    },
+    // Habille le héros d'une tenue (id de data/tokens.js), comme un achat.
+    tenue(id = 'voyage') {
+      gameState.tenues.add(id);
+      gameState.tenue = id;
+      dressHero(id);
+      return gameState.tenue;
     },
     // La carte en grand.
     carte(on = true) {

@@ -33,6 +33,12 @@ export function createAreaBanner(element, regions, names) {
       if (id) show(id);
       else element.classList.add('lieu-sortie'); // entre deux quartiers, le bandeau s'efface
     },
+    // En entrant dans une pièce (world/rooms.js) : son nom, une fois. En
+    // ressortant, le prochain update retrouve le quartier et l'affiche.
+    showRoom(id) {
+      current = `piece:${id}`;
+      show(id);
+    },
     get current() {
       return current;
     },

@@ -87,11 +87,12 @@ function arrow(context, x, y, size, angle) {
 
 // small : le bouton #minimap (son canvas dedans) ; overlay : #carte ; map :
 // la grille du village ; trees : TREES de world/layout.js ; regions et names :
-// les quartiers et leurs noms ; npcs : les habitants ; player : { position,
-// facing } ; markerKind(npc) : 'quete', 'fait' ou null (pas de repère) ;
+// les quartiers et leurs noms ; player : { position, facing } ; markers() :
+// les repères à dessiner, [{ x, z, kind }] en coordonnées du village, kind
+// valant 'guide', 'quete' ou 'fait' ;
 // labels : textesInterface.carte ; canOpen() : faux tant que la carte ne peut
 // pas s'ouvrir (écran titre, conversation).
-export function createMinimap(small, overlay, { map, trees, regions, names, npcs, player, markerKind, labels, canOpen }) {
+export function createMinimap(small, overlay, { map, trees, regions, names, player, markers, labels, canOpen }) {
   const plan = paintPlan(map, trees);
   const smallCanvas = small.querySelector('canvas');
   const bigCanvas = overlay.querySelector('.carte-toile');
@@ -100,7 +101,7 @@ export function createMinimap(small, overlay, { map, trees, regions, names, npcs
   const close = overlay.querySelector('.carte-fermer');
   close.textContent = labels.fermer;
   const legend = overlay.querySelector('.carte-legende');
-  legend.replaceChildren(...['heros', 'quete', 'fait'].map((kind) => {
+  legend.replaceChildren(...['heros', 'guide', 'quete', 'fait'].map((kind) => {
     const item = document.createElement('li');
     item.dataset.repere = kind;
     item.textContent = labels.legende[kind];
@@ -137,11 +138,7 @@ export function createMinimap(small, overlay, { map, trees, regions, names, npcs
       }
     }
     const radius = Math.max(2.5 * ratio, scale * (big ? 0.42 : 0.55));
-    for (const npc of npcs) {
-      const kind = markerKind(npc);
-      if (!kind) continue;
-      dot(context, npc.position.x * scale, npc.position.z * scale, radius, COLORS[kind]);
-    }
+    for (const { x, z, kind } of markers()) dot(context, x * scale, z * scale, radius, COLORS[kind]);
     arrow(context, player.position.x * scale, player.position.z * scale, radius * 1.6, HEADINGS[player.facing] ?? 0);
   }
 

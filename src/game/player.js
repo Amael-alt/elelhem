@@ -20,14 +20,17 @@ function chooseFacing(move, current) {
   return horizontal ? h : v;
 }
 
+// village : le lieu où se trouve le héros (le village, ou un intérieur de
+// world/interior.js) ; il en change avec setWorld.
 export function createPlayer({ sprite, shadow, village }) {
-  const position = { x: village.spawn.x, z: village.spawn.z };
+  let world = village;
+  const position = { x: world.spawn.x, z: world.spawn.z };
   let facing = 'down';
   let moving = false;
   let clock = 0;
 
   function place() {
-    const y = village.groundHeight(position.x, position.z);
+    const y = world.groundHeight(position.x, position.z);
     sprite.object.position.set(position.x, y, position.z);
     shadow.position.set(position.x, y + 0.01, position.z);
   }
@@ -49,7 +52,7 @@ export function createPlayer({ sprite, shadow, village }) {
       if (moving !== wasMoving) clock = 0;
       clock += dt;
       if (moving) {
-        village.collider.move(position, direction.x * SPEED * dt, direction.z * SPEED * dt, RADIUS);
+        world.collider.move(position, direction.x * SPEED * dt, direction.z * SPEED * dt, RADIUS);
         facing = chooseFacing(direction, facing);
       }
       const frames = moving ? WALK_FRAMES : IDLE_FRAMES;
@@ -67,7 +70,20 @@ export function createPlayer({ sprite, shadow, village }) {
       place();
     },
     worldPosition(target) {
-      return target.set(position.x, village.groundHeight(position.x, position.z), position.z);
+      return target.set(position.x, world.groundHeight(position.x, position.z), position.z);
+    },
+    // Passe dans un autre lieu, posé en (x, z), le regard vers direction. Ses
+    // objets (sprite, ombre) changent de scène.
+    setWorld(newWorld, x, z, direction = facing) {
+      world = newWorld;
+      world.scene.add(sprite.object, shadow);
+      facing = direction;
+      position.x = x;
+      position.z = z;
+      place();
+    },
+    get world() {
+      return world;
     },
   };
 }

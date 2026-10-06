@@ -31,21 +31,26 @@ export function directionToward(dx, dz, current) {
 }
 
 // character : une entrée de data/characters.js avec une position ; sheet : sa
-// planche (createCharacterSheet) ; post : crochets du post-traitement.
-export function createNpc({ character, sheet, village, sunDirection, post }) {
+// planche (createCharacterSheet) ; village : le lieu où il se tient (le
+// village ou un intérieur, voir world/interior.js) ; post : crochets du
+// post-traitement. at : { x, z, direction } pour le poser ailleurs qu'à sa
+// position de la fiche (Claudette, qui attend dans la maison au début).
+export function createNpc({ character, sheet, village, sunDirection, post, at = null }) {
   if (!character.position) throw new Error(`Habitant « ${character.id} » sans position.`);
-  const position = { x: character.position.x, z: character.position.z };
+  const position = { x: (at ?? character.position).x, z: (at ?? character.position).z };
+  let world = village;
+  let rest = at?.direction ?? character.direction; // où il regarde au repos
   const sprite = createSprite(sheet, sunDirection, post);
   sprite.object.layers.set(SPRITE_LAYER);
   const shadow = createBlobShadow();
 
-  const ground = village.groundHeight(position.x, position.z);
+  let ground = world.groundHeight(position.x, position.z);
   sprite.object.position.set(position.x, ground, position.z);
   shadow.position.set(position.x, ground + 0.01, position.z);
   const route = character.trajet ?? null;
-  if (!route) village.addObstacle(position.x, position.z, BODY_RADIUS);
+  let obstacle = route ? null : world.addObstacle(position.x, position.z, BODY_RADIUS);
 
-  let facing = character.direction;
+  let facing = rest;
   let clock = 0;
   let leg = 0; // trajet : indice du point visé
   let step = 1; // sens du parcours, 1 ou -1
@@ -104,16 +109,34 @@ export function createNpc({ character, sheet, village, sunDirection, post }) {
         const frames = walking ? WALK_FRAMES : IDLE_FRAMES;
         const fps = walking ? WALK_FPS : IDLE_FPS;
         sprite.setFrame(DIRECTIONS.indexOf(facing), frames[Math.floor(clock * fps) % frames.length]);
-        const y = village.groundHeight(position.x, position.z);
+        const y = world.groundHeight(position.x, position.z);
         sprite.object.position.set(position.x, y, position.z);
         shadow.position.set(position.x, y + 0.01, position.z);
         return;
       }
       const dx = heroPosition.x - position.x;
       const dz = heroPosition.z - position.z;
-      facing = Math.hypot(dx, dz) < NAME_RADIUS ? directionToward(dx, dz, facing) : character.direction;
+      facing = Math.hypot(dx, dz) < NAME_RADIUS ? directionToward(dx, dz, facing) : rest;
       sprite.setFrame(DIRECTIONS.indexOf(facing), IDLE_FRAMES[Math.floor(clock * IDLE_FPS) % IDLE_FRAMES.length]);
       sprite.setGlow(1 + GLOW_PULSE * Math.sin(time * GLOW_RATE));
+    },
+    get world() {
+      return world;
+    },
+    // L'habitant change de lieu (du village à un intérieur, ou l'inverse) :
+    // ses objets passent dans l'autre scène, son obstacle le suit.
+    moveTo(newWorld, x, z, direction = character.direction) {
+      if (obstacle) world.removeObstacle(obstacle);
+      world = newWorld;
+      position.x = x;
+      position.z = z;
+      rest = direction;
+      facing = direction;
+      ground = world.groundHeight(x, z);
+      sprite.object.position.set(x, ground, z);
+      shadow.position.set(x, ground + 0.01, z);
+      world.scene.add(sprite.object, shadow);
+      if (!route) obstacle = world.addObstacle(x, z, BODY_RADIUS);
     },
     // Tourne l'habitant vers un point (au début d'une conversation).
     faceToward(point) {

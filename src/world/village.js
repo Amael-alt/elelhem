@@ -303,10 +303,20 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
 
   return {
     map,
+    scene,
+    // Les matériaux du village, repris par les intérieurs (world/interior.js).
+    materials,
     collider: createCollider(map, posts),
     // Obstacle rond posé après coup (un habitant) : le collider lit la même liste.
     addObstacle(x, z, radius) {
-      posts.push({ x, z, radius });
+      const post = { x, z, radius };
+      posts.push(post);
+      return post;
+    },
+    // Un habitant qui s'en va (vers un intérieur) libère sa place.
+    removeObstacle(post) {
+      const i = posts.indexOf(post);
+      if (i !== -1) posts.splice(i, 1);
     },
     sunDirection,
     spawn: SPAWN,

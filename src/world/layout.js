@@ -45,6 +45,14 @@ export const HOUSES = {
     door: { side: 'south', offset: 0 },
     windows: [{ side: 'east', offset: 0 }],
   },
+  // La maison du héros, dans la prairie de l'est, de l'autre côté du pont :
+  // petite, chaume et jardinières. La partie commence dedans.
+  maison: {
+    x: 35, z: 4, sizeX: 3, sizeZ: 3, wall: 2.3, rise: 1.5, ridge: 'x', roof: 'thatch', planters: true,
+    door: { side: 'south', offset: 0 },
+    windows: [{ side: 'south', offset: 1.0 }, { side: 'west', offset: 0 }],
+    chimney: [0.5, 0.25],
+  },
   // L'auberge : la plus grande maison, cheminée qui fume.
   auberge: {
     x: 7, z: 19, sizeX: 6, sizeZ: 4, wall: 2.8, rise: 1.7, ridge: 'x', planters: true,
@@ -133,7 +141,7 @@ export const DECOR_LANTERNS = [
 // 'automne' pour les roux de la prairie de l'est et du sud).
 export const TREES = [
   [5.2, 4.8, 1.1], [8.6, 4.0, 1.0], [9.7, 5.8, 0.9], [17.3, 7.6, 0.95], [22.0, 4.0, 1.1],
-  [25.5, 3.5, 1.0], [33.8, 6.5, 1.1, 'automne'], [35.5, 10.0, 1.0, 'automne'], [36.2, 20.5, 1.2, 'automne'],
+  [25.5, 3.5, 1.0], [33.4, 8.8, 1.1, 'automne'], [35.5, 10.0, 1.0, 'automne'], [36.2, 20.5, 1.2, 'automne'],
   [34.5, 24.0, 1.05, 'automne'], [4.5, 17.5, 1.1], [5.0, 22.0, 1.0, 'automne'], [16.5, 27.0, 1.0],
   [24.5, 28.0, 1.15, 'automne'], [9.0, 27.5, 0.9], [28.5, 12.0, 0.9], [12.0, 14.0, 0.8], [3.8, 27.0, 1.05],
 ];
@@ -180,6 +188,7 @@ export const REGIONS = [
   { id: 'colombier', rect: [24.5, 16.5, 29.5, 21] },
   { id: 'chantier', rect: [21, 21, 31, 28.5] },
   { id: 'auberge', rect: [6, 19, 18, 26.5] },
+  { id: 'maison', rect: [33.5, 3, 38, 9.5] },
   { id: 'prairie', rect: [33.5, 3, 38, 28.5] },
 ];
 

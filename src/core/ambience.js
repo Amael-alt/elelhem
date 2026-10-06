@@ -26,6 +26,7 @@ const LEVELS = {
 };
 const REACH = { riviere: 10, cascade: 16, feu: 7, pigeon: 9, marteau: 13 };
 const STRIDE = 0.62; // unités entre deux pas
+const INDOOR_WIND = 0.12; // part du vent qu'on entend encore dans une maison
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // Volume selon la distance : plein près de la source, nul à « reach ».
@@ -71,6 +72,10 @@ function createCrackleBuffer(context, seconds = 3) {
 export function createAmbience(audio, sources, surfaceAt) {
   let engine = null;
   let clock = 0;
+  // Dans un intérieur : { fires: [[x, z], ...] } dans les coordonnées de la
+  // pièce ; dehors : null. Dedans, ni rivière, ni oiseaux, ni forge lointaine,
+  // le vent étouffé, seulement le feu de la pièce.
+  let indoors = null;
   let sinceUpdate = UPDATE_SECONDS;
   let stride = 0;
   let last = null;
@@ -115,8 +120,13 @@ export function createAmbience(audio, sources, surfaceAt) {
     gust.connect(gustDepth).connect(wind.gain.gain);
     gust.start();
     wind.gain.gain.value = LEVELS.vent;
+    // À l'abri d'un mur, le vent ne passe presque plus.
+    const shelter = context.createGain();
+    wind.pan.disconnect();
+    wind.pan.connect(shelter).connect(destination);
 
-    engine = { context, destination, noise, river, waterfall, fire };
+    engine = { context, destination, noise, river, waterfall, fire, shelter };
+    if (indoors) shelter.gain.value = INDOOR_WIND;
   });
 
   // Un son ponctuel : enveloppe d'attaque et de chute, panoramique.
@@ -207,6 +217,7 @@ export function createAmbience(audio, sources, surfaceAt) {
     cobble: ['bandpass', 2200, 1.4, 0.05],
     dirt: ['lowpass', 700, 0.8, 0.07],
     grass: ['highpass', 2600, 0.5, 0.09],
+    wood: ['bandpass', 420, 2.2, 0.07], // plancher : un bruit sourd et creux
   };
   function step(surface) {
     const { context, noise } = engine;
@@ -263,12 +274,13 @@ export function createAmbience(audio, sources, surfaceAt) {
             riverX = sources.river[i][0];
           }
         }
+        if (indoors) riverDistance = Infinity;
         setLevel(engine.river, LEVELS.riviere * falloff(riverDistance, REACH.riviere), (riverX - x) / PAN_SPREAD);
         const [wx, wz] = sources.waterfall;
-        setLevel(engine.waterfall, LEVELS.cascade * falloff(Math.hypot(wx - x, wz - z), REACH.cascade), (wx - x) / PAN_SPREAD);
+        setLevel(engine.waterfall, indoors ? 0 : LEVELS.cascade * falloff(Math.hypot(wx - x, wz - z), REACH.cascade), (wx - x) / PAN_SPREAD);
         let fireDistance = Infinity;
         let fireX = x;
-        for (const [fx, fz] of sources.fires) {
+        for (const [fx, fz] of indoors ? indoors.fires : sources.fires) {
           const d = Math.hypot(fx - x, fz - z);
           if (d < fireDistance) {
             fireDistance = d;
@@ -278,8 +290,9 @@ export function createAmbience(audio, sources, surfaceAt) {
         setLevel(engine.fire, LEVELS.feu * falloff(fireDistance, REACH.feu), (fireX - x) / PAN_SPREAD);
       }
 
-      // Sons ponctuels.
+      // Sons ponctuels, dehors seulement.
       for (const key of Object.keys(timers)) timers[key] -= dt;
+      if (indoors) return;
       if (timers.oiseau <= 0) {
         timers.oiseau = 1.8 + Math.random() * 5;
         bird((Math.random() - 0.5) * 1.6);
@@ -297,6 +310,11 @@ export function createAmbience(audio, sources, surfaceAt) {
         timers.marteau = Math.random() < 0.6 ? 0.55 : 2.2 + Math.random() * 1.5;
         if (forge > 0.01) clang((ax - x) / PAN_SPREAD, LEVELS.marteau * forge);
       }
+    },
+    // room : { fires } en entrant dans une pièce, null en sortant.
+    setIndoors(room) {
+      indoors = room;
+      if (engine) engine.shelter.gain.setTargetAtTime(room ? INDOOR_WIND : 1, engine.context.currentTime, SMOOTHING);
     },
     get state() {
       if (!engine) return { contexte: 'absent' };

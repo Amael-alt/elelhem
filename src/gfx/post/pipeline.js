@@ -174,7 +174,13 @@ export function createPipeline(renderer, { enabled = true, view = 'final', narro
       if (view === 'coc' || view === 'bloom') return;
       camera.layers.set(SPRITE_LAYER);
       renderer.clearDepth();
+      // Un fond uni (celui des intérieurs) forcerait three.js à effacer l'écran
+      // avant les sprites, image composée comprise : on le retire le temps de
+      // cette passe.
+      const background = scene.background;
+      scene.background = null;
       renderer.render(scene, camera);
+      scene.background = background;
     },
   };
 }

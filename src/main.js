@@ -26,10 +26,13 @@ import { createDiploma } from './game/diploma.js';
 import { createGrimoire } from './game/grimoire.js';
 import { createChatter } from './game/chatter.js';
 import { createMinimap } from './game/minimap.js';
+import { createDoors } from './game/doors.js';
+import { createInterior } from './world/interior.js';
+import { ROOMS } from './world/rooms.js';
 import { createGameState, resetGameState, saveGameState } from './game/state.js';
 import { createTitleScreen } from './game/title.js';
 import { createAreaBanner } from './game/banner.js';
-import { ANVIL, CAMPFIRE, HEARTH, PIGEONS, REGIONS, TOWERS, TREES, WATERFALL } from './world/layout.js';
+import { ANVIL, CAMPFIRE, HEARTH, HOUSES, PIGEONS, REGIONS, TOWERS, TREES, WATERFALL } from './world/layout.js';
 import { createDebugPanel, installDebugApi, isDebugEnabled } from './game/debug.js';
 import { backgroundColor } from './data/palette.js';
 import { figurants, hero, villagers } from './data/characters.js';
@@ -42,6 +45,8 @@ const MAX_FRAME_SECONDS = 0.1; // au retour d'un onglet en veille, pas de saut
 const NARROW_SCREEN = 600; // en dessous (en pixels CSS), ombres moins définies
 const STANDING = { x: 0, z: 0 }; // direction du héros pendant une conversation
 const PIGEON_HEAR_RADIUS = 3.2; // les pigeons parlent quand on passe sous leur vol
+const INTERIOR_FRAMING = 0.55; // dans une pièce, la caméra se rapproche
+const FIRST_TALK_DELAY_MS = 700; // au réveil, Claudette parle après un instant
 
 const canvas = document.getElementById('scene');
 trackViewportHeight();
@@ -83,6 +88,11 @@ function start() {
   const scene = new THREE.Scene();
 
   const village = createVillage(scene, { narrowScreen });
+  // Les intérieurs (world/rooms.js), bâtis avec les matériaux du village.
+  const rooms = Object.fromEntries(Object.entries(ROOMS).map(([id, room]) => [
+    id, createInterior(room, { materials: village.materials, sunDirection: village.sunDirection }),
+  ]));
+  const worldOf = (lieu) => (lieu ? rooms[lieu] : village);
   const follow = createFollowCamera();
   const keyboard = createKeyboard();
   const stick = createFloatingStick(canvas, document.getElementById('stick'));
@@ -96,14 +106,26 @@ function start() {
   scene.add(sprite.object, shadow);
   const player = createPlayer({ sprite, shadow, village });
 
-  // Les habitants : de la donnée (data/characters.js), une planche chacun.
+  // Les habitants : de la donnée (data/characters.js), une planche chacun. Chacun
+  // vit dans son lieu (le village ou une pièce) ; celui qui a un départ
+  // (Claudette) y attend tant qu'on ne lui a pas parlé.
+  const waiting = (character) => Boolean(character.depart) && !gameState.visites.has(character.id);
   const npcs = [...villagers, ...figurants].map((character) => {
     const npcSheet = createCharacterSheet(character);
     sheets[character.id] = npcSheet;
-    const npc = createNpc({ character, sheet: npcSheet, village, sunDirection: village.sunDirection, post: pipeline.spriteHooks });
-    scene.add(...npc.objects);
+    const world = waiting(character) ? worldOf(character.depart.lieu) : worldOf(character.lieu);
+    const npc = createNpc({
+      character, sheet: npcSheet, village: world, sunDirection: village.sunDirection, post: pipeline.spriteHooks,
+      at: waiting(character) ? character.depart : null,
+    });
+    world.scene.add(...npc.objects);
     return npc;
   });
+  // Ceux du lieu où se trouve le héros : eux seuls bougent, parlent, s'affichent.
+  const activeNpcs = [];
+  const refreshActive = (world) => activeNpcs.splice(0, activeNpcs.length, ...npcs.filter((npc) => npc.world === world));
+  refreshActive(village);
+  let doors = null;
 
   const focusTarget = new THREE.Vector3();
   const sharpPoint = new THREE.Vector3();
@@ -156,16 +178,26 @@ function start() {
     ids: counter.ids, notions, texts: dialogues, labels: textesInterface.grimoire, state: gameState, canOpen: canOpenOverlay,
   });
   const diploma = createDiploma(document.getElementById('diplome'), { texts: textesInterface.diplome, notions, state: gameState });
-  // La minimap : un point doré pour l'habitant qui a encore une leçon à donner.
+  // La minimap : un point doré pour l'habitant qui a encore une leçon à donner,
+  // un point bleu pour Claudette. Un habitant dans une pièce est montré à la
+  // porte de sa maison.
   const markerKind = (npc) => {
     const key = npc.character.dialogue;
     const entry = dialogues[key];
     if (npc.isExtra || !entry) return null;
+    if (entry.guide) return 'guide';
     if (entry.diplome) return !gameState.choix.has(key) && counter.ids.every((id) => gameState.parchemins.has(id)) ? 'quete' : 'fait';
     return gameState.parchemins.has(key) ? 'fait' : 'quete';
   };
+  const markers = () => npcs.flatMap((npc) => {
+    const kind = markerKind(npc);
+    if (!kind) return [];
+    if (npc.world === village) return [{ x: npc.position.x, z: npc.position.z, kind }];
+    const door = doors?.doors.find((d) => d.interior === npc.world);
+    return door ? [{ x: door.x, z: door.z + 0.5, kind }] : [];
+  });
   const minimap = createMinimap(document.getElementById('minimap'), document.getElementById('carte'), {
-    map: village.map, trees: TREES, regions: REGIONS, names: textesInterface.lieux, npcs, player, markerKind,
+    map: village.map, trees: TREES, regions: REGIONS, names: textesInterface.lieux, player, markers,
     labels: textesInterface.carte, canOpen: canOpenOverlay,
   });
   quest = createQuest({
@@ -176,7 +208,7 @@ function start() {
   const hint = createInteractionHint(document.getElementById('indice'), () => interaction.request());
   const label = createNameLabel(document.getElementById('nom'));
   interaction = createInteraction({
-    player, npcs, hint, label, dialogue, quest, talkLabel: textesInterface.parlerA, camera: follow.camera, canvas,
+    player, npcs: activeNpcs, hint, label, dialogue, quest, talkLabel: textesInterface.parlerA, camera: follow.camera, canvas,
   });
 
   // Musique de fond et sons d'ambiance : lancés par le geste qui ferme l'écran titre.
@@ -207,14 +239,58 @@ function start() {
     fires: [[HEARTH.x, HEARTH.z], [CAMPFIRE.x, CAMPFIRE.z]],
     anvil: [ANVIL.x, ANVIL.z],
     dovecote: [dovecoteCenter.x, dovecoteCenter.z],
-  }, (x, z) => village.map.cellAt(Math.floor(x), Math.floor(z))?.matter ?? 'grass');
+  }, (x, z) => (doors?.current ?? village).map.cellAt(Math.floor(x), Math.floor(z))?.matter ?? 'grass');
 
   // Écran titre (sauf ?autostart, pour les tests) et bandeau de lieu.
   const banner = createAreaBanner(document.getElementById('lieu'), REGIONS, textesInterface.lieux);
+
+  // Les portes des maisons : à chaque changement de lieu, les habitants
+  // présents, la caméra, la minimap, les sons et le bandeau suivent.
+  doors = createDoors(document.getElementById('fondu'), {
+    village, rooms, houses: HOUSES, player,
+    onChange(world, room) {
+      // En sortant, celui qui attendait au départ (Claudette) est déjà parti
+      // à son poste, si on lui a parlé.
+      if (!room) {
+        for (const npc of npcs) {
+          const home = worldOf(npc.character.lieu);
+          if (npc.character.depart && !waiting(npc.character) && npc.world !== home) {
+            npc.moveTo(home, npc.character.position.x, npc.character.position.z, npc.character.direction);
+          }
+        }
+      }
+      refreshActive(world);
+      follow.setFraming(room ? INTERIOR_FRAMING : 1);
+      follow.snap(player.worldPosition(focusTarget));
+      minimap.setVisible(playing && !room);
+      ambience.setIndoors(room ? { fires: world.fires } : null);
+      if (room) banner.showRoom(world.room.lieu);
+      hint.hide();
+      label.hide();
+    },
+  });
+
+  // Une partie neuve commence dans la maison, face à Claudette, qui parle la
+  // première.
+  function wakeUp() {
+    for (const npc of npcs) {
+      const { depart } = npc.character;
+      if (depart && npc.world !== worldOf(depart.lieu)) npc.moveTo(worldOf(depart.lieu), depart.x, depart.z, depart.direction);
+    }
+    const home = Object.keys(ROOMS).find((id) => ROOMS[id].start);
+    doors.enter(home, { instant: true, at: ROOMS[home].start });
+    setTimeout(() => {
+      const guide = activeNpcs.find((npc) => npc.character.depart);
+      if (guide && !dialogue.isOpen) interaction.start(guide);
+    }, FIRST_TALK_DELAY_MS);
+  }
+  const freshGame = () => gameState.visites.size === 0;
+
   if (playing) {
     music.showButton();
     counter.show();
     minimap.setVisible(true);
+    if (freshGame()) wakeUp();
   }
   if (!playing) {
     createTitleScreen(document.getElementById('titre'), {
@@ -230,7 +306,8 @@ function start() {
         music.start();
         music.showButton();
         counter.show();
-        minimap.setVisible(true);
+        minimap.setVisible(!doors.room);
+        if (freshGame()) wakeUp();
       },
     });
   }
@@ -244,16 +321,17 @@ function start() {
     const pushed = stick.direction();
     // autoDirection : direction imposée par les tests scriptés (__lia.walk).
     const wanted = state.autoDirection ?? (pushed.x !== 0 || pushed.z !== 0 ? pushed : keyboard.direction());
-    player.update(step, interaction.isTalking || !playing ? STANDING : wanted);
-    for (const npc of npcs) npc.update(step, state.time, player.position);
+    player.update(step, interaction.isTalking || !playing || doors.isBusy ? STANDING : wanted);
+    for (const npc of activeNpcs) npc.update(step, state.time, player.position);
     follow.follow(player.worldPosition(focusTarget), step);
     // Après la caméra : la bulle se pose sur l'image qui va être dessinée.
     // Le temps de la conversation est réel : le gel du temps ne fige pas le texte.
     if (playing) {
       if (keyboard.takeCancel()) dialogue.close();
       interaction.update(dt, keyboard.takeAction());
-      banner.update(player.position);
-      chatter.update(dt, quest.isBusy);
+      if (!doors.room) banner.update(player.position);
+      if (!interaction.isTalking) doors.update(wanted);
+      chatter.update(dt, quest.isBusy || doors.room !== null);
       minimap.update(dt);
       music.setDucked(interaction.isTalking);
       ambience.update(player.position, dt);
@@ -261,16 +339,16 @@ function start() {
       keyboard.takeAction();
       keyboard.takeCancel();
     }
-    village.update(state.time, follow.focus, follow.distance);
+    doors.current.update(state.time, follow.focus, follow.distance);
     // Le point net du flou : le buste du héros.
     sharpPoint.copy(player.worldPosition(focusTarget)).y += 0.9;
-    pipeline.render(scene, follow.camera, sharpPoint, state.time);
+    pipeline.render(doors.current.scene, follow.camera, sharpPoint, state.time);
     gate.frameRendered();
   }
 
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
-    counter, diploma, quest, grimoire, chatter, minimap,
+    counter, diploma, quest, grimoire, chatter, minimap, doors, rooms,
   });
 
   let last = performance.now();

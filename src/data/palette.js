@@ -77,7 +77,7 @@ export const hazeColor = '#e8c9a0';
 // Cuir des bottes et des ceintures, commun à tous les personnages.
 export const leatherRamp = ['#2a1b16', '#46302a', '#634435', '#815b43'];
 
-// Lumière propre aux personnages (joyau et orbe de Lia) : or pâle, du plus
+// Lumière propre aux personnages (le bâton de l'Oracle Gépété) : or pâle, du plus
 // sombre au presque blanc. Ces pixels brillent même dans l'ombre.
 export const glowRamp = ['#ffc56e', '#ffd88f', '#ffeab5', '#fff6dc'];
 
@@ -117,6 +117,16 @@ export const mapColors = {
   fond: '#1a1830',
   heros: '#fff6dc',
   contour: '#1b1a2e',
+  guide: '#8fd3ff',
   quete: '#ffd08a',
   fait: '#9a9488',
+};
+
+// Les intérieurs : le noir autour de la pièce, le jour qui entre par les
+// fenêtres, une lumière d'ambiance chaude venue du plafond et du plancher.
+export const interiorColors = {
+  fond: '#0d0b14',
+  jour: '#ffd9a8',
+  ciel: '#ffe2bd',
+  sol: '#3a2a20',
 };

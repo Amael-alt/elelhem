@@ -23,9 +23,10 @@ export function createFollowCamera() {
   const goal = new THREE.Vector3();
   let zoom = 1;
   let portrait = 1;
+  let framing = 1; // plus près dans une petite pièce (setFraming)
 
   function place() {
-    const distance = (DISTANCE * portrait) / zoom;
+    const distance = (DISTANCE * portrait * framing) / zoom;
     camera.position.set(focus.x, focus.y + Math.sin(pitch) * distance, focus.z + Math.cos(pitch) * distance);
     camera.lookAt(focus);
   }
@@ -39,12 +40,17 @@ export function createFollowCamera() {
     // Point visé et recul actuel : l'ombre du soleil et la brume s'y calent.
     focus,
     get distance() {
-      return (DISTANCE * portrait) / zoom;
+      return (DISTANCE * portrait * framing) / zoom;
     },
     setAspect(aspect) {
       camera.aspect = aspect;
       camera.updateProjectionMatrix();
       portrait = Math.min(PORTRAIT_MAX, Math.max(1, PORTRAIT_REFERENCE / aspect));
+      place();
+    },
+    // Recul relatif : 1 dehors, moins dans un intérieur.
+    setFraming(value) {
+      framing = value;
       place();
     },
     zoomBy(steps) {

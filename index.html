@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Le Village de LIA</title>
-  <meta name="description" content="Un petit RPG HD-2D dans le navigateur : chaque habitant d'Ellelhem transpose une notion d'IA. Aucune image chargée, tout est généré par le code.">
+  <title>The Legend of Elelhem : La Magie de Lia</title>
+  <meta name="description" content="Un petit RPG HD-2D dans le navigateur : à Elelhem, on apprend la magie LIA auprès des maîtres du village, et chacun transpose une notion d'IA. Aucune image chargée, tout est généré par le code.">
   <meta name="theme-color" content="#231b2b">
   <link rel="stylesheet" href="styles.css">
 
@@ -32,7 +32,7 @@
   <script type="module" src="src/main.js"></script>
 </head>
 <body>
-  <canvas id="scene" aria-label="Le village d'Ellelhem"></canvas>
+  <canvas id="scene" aria-label="Le village d'Elelhem"></canvas>
   <div id="debug" hidden></div>
 
   <!-- Joystick flottant : apparaît sous le pouce, moitié gauche de l'écran. -->
@@ -142,6 +142,9 @@
     <ol class="dialogue-choix" hidden></ol>
     <span class="dialogue-suite" aria-hidden="true"></span>
   </div>
+
+  <!-- Fondu au noir, au passage d'une porte (src/game/doors.js). -->
+  <div id="fondu" hidden></div>
 
   <div id="message" role="alert" hidden></div>
   <noscript><div class="noscript">Le village a besoin de JavaScript pour s'afficher.</div></noscript>

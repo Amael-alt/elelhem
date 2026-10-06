@@ -1,6 +1,6 @@
 # Journal de construction
 
-Comment le Village de LIA a été construit avec Claude Code, étape par étape. Le plan (rendu visé, valeurs chiffrées, étapes, critères de vérification) a été écrit avec Claude Fable 5.1 ; la construction est menée avec Claude Opus 5.5, une étape par session, chacune vérifiée dans le navigateur intégré de Claude Code avant d'être publiée.
+Comment The Legend of Elelhem (d'abord « Le Village de LIA ») a été construit avec Claude Code, étape par étape. Le plan (rendu visé, valeurs chiffrées, étapes, critères de vérification) a été écrit avec Claude Fable 5.1 ; la construction est menée avec Claude Opus 5.5, une étape par session, chacune vérifiée dans le navigateur intégré de Claude Code avant d'être publiée.
 
 ## Étape 0 : le socle (5 octobre 2026)
 
@@ -212,7 +212,7 @@ Mesures (navigateur intégré, préréglage mobile 375×812 et paysage 812×375,
 
 Pas mesurés : les images par seconde, pour la même raison qu'en 1e (le panneau du navigateur intégré ne fait pas tourner la boucle). Le préréglage 375×812 ne remplace pas un téléphone. Un redimensionnement du préréglage sans rechargement n'envoie pas les événements de redimensionnement : recharger après chaque changement de préréglage.
 
-**À faire par Jordan** : ouvrir https://amael-alt.github.io/village-de-lia/?debug sur le téléphone, jouer une minute au pouce, et renvoyer les images/s, l'échelle affichée et les appels de dessin. Objectif 30 images/s au moins ; en dessous, on réduit (échelle, ombres, mips) avant l'étape 2.
+**À faire par Jordan** : ouvrir https://amael-alt.github.io/elelhem/?debug sur le téléphone, jouer une minute au pouce, et renvoyer les images/s, l'échelle affichée et les appels de dessin. Objectif 30 images/s au moins ; en dessous, on réduit (échelle, ombres, mips) avant l'étape 2.
 
 ## Étape 2 : le village complet et ses habitants (5 octobre 2026)
 
@@ -491,3 +491,36 @@ Navigateur intégré, gestes rejoués par des événements de pointeur tactiles.
 | Console et réseau | aucune erreur ; HTML, CSS, JavaScript, police et flamme seulement |
 
 Reste à mesurer sur un vrai téléphone, ce que le navigateur intégré ne sait pas faire : images par seconde avec `?debug`, deux pouces en même temps, pincement, gestes de Safari, partage du diplôme.
+
+## Étape 5 : générique, image de partage, nouvelle adresse (6 octobre 2026)
+
+**But** : les finitions d'avant la mise en ligne. Ce que voit quelqu'un qui reçoit le lien (l'aperçu sur LinkedIn), et ce que voit celui qui va au bout du jeu.
+
+**La nouvelle adresse** : le dépôt devient `elelhem`, le jeu https://amael-alt.github.io/elelhem/. Choix de Jordan, avant que le lien ne circule : GitHub Pages ne redirige pas l'ancienne adresse.
+
+**Le générique de fin** (`game/credits.js`). Quand on referme le diplôme que Clodomir vient de remettre, les noms défilent sur le village assombri : la conception (Jordan Goussery), le code (Claude Code), les habitants (leurs noms lus dans leur fiche), la musique, les décors générés, three.js, la police, puis « Merci d'avoir joué » avec le prénom, qui s'arrête au milieu de l'écran. Un toucher, un clic, Échap ou la touche d'action le referment. Il ne se joue qu'à la remise : revenir voir Clodomir rouvre le diplôme, pas le générique. Avec le mouvement réduit, rien ne défile tout seul, le texte se lit d'un bloc.
+
+**L'image de partage** (`assets/social-preview.png`, 1200 × 630), celle qu'affichent LinkedIn et les autres sous le lien : l'écran titre en mode `?vignette`, sur deux colonnes, la flamme grande à gauche, le titre, la contrée, l'accroche et la signature à droite, sur la place du puits. Elle est capturée par `outils/vignette.mjs` : un Edge ou un Chrome sans fenêtre, piloté par son protocole de débogage avec le WebSocket de Node, sans aucune dépendance. Même la vignette est fabriquée par le code. Balises `og:` et `twitter:card`, adresse canonique ; la page, elle, ne charge jamais cette image.
+
+**Le favicon** : l'étincelle dorée de la magie LIA, celle du bouton d'action, sur fond nuit, en SVG écrit dans la page.
+
+**L'écran titre sur écran large** (ordinateur, tablette, téléphone en paysage) passe aussi sur deux colonnes, comme la vignette : la flamme y mesure de 240 à 470 px de haut, au lieu de 200 au mieux.
+
+**Le README** raconte comment le village a été construit : les étapes, ce que le code fabrique, ce qui a résisté, le poids de la page.
+
+Ce qui a résisté :
+
+- **L'écran titre débordait sur un portable** (1366 × 657) dès qu'une sauvegarde ajoute « Nouvelle partie ». Et le resserrage de l'étape 4, prévu pour les téléphones courts, touchait aussi les portables de 720 px de haut : la flamme y était tombée de 201 à 173 px. Les deux colonnes règlent les deux ; le resserrage ne vaut plus que pour les écrans étroits.
+- **La touche qui ferme le générique rouvrait la conversation** avec Clodomir, resté juste à côté. Elle est arrêtée avant d'atteindre le jeu.
+- **Les noms passaient nets sous le rappel du bas** : un fondu les fait apparaître et s'effacer, en haut comme en bas.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Générique | joué à la fermeture du diplôme remis, 33 s en portrait, remerciement centré (390 px sur 812) ; fermé au toucher, à Échap, à Espace ; pas rejoué en revenant voir Clodomir |
+| Écran titre avec une sauvegarde | 1920 × 950 : de 229 à 721 px, flamme de 470 ; 1366 × 657 : de 94 à 563, flamme de 421 ; 1024 × 768 : de 144 à 624 ; 812 × 375 : de 63 à 312 ; 667 × 375 : de 31 à 344 ; 375 × 812 : de 31 à 781 ; 375 × 667 : de 29 à 638 |
+| Image de partage | 1200 × 630, PNG de 966 Ko, sans métadonnées, jamais demandée par la page |
+| Poids de la page | 77 fichiers, 1,4 Mo, environ 500 Ko une fois compressés ; la musique (2,6 Mo) au lancement seulement |
+| Partie complète | les huit parchemins avec erreurs, diplôme, générique ; `checkDialogues()` vide ; adresse de partage à jour |
+| Console et réseau | aucune erreur ; HTML, CSS, JavaScript, police et flamme seulement |

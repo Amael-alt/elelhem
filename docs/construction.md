@@ -446,3 +446,48 @@ Ce qui a résisté :
 | Console | aucune erreur |
 
 Nouvelle clé de sauvegarde (`elelhem-v1`) : une partie de l'ancien village ne se reprend pas. Reste à relire par Jordan : tous les textes nouveaux de l'étape 3b et de cette étape.
+
+## Étape 4 : le tactile (6 octobre 2026)
+
+**But** : un jeu qui se joue vraiment au pouce, puisque la plupart des joueurs arrivent d'un post LinkedIn, sur leur téléphone, souvent en le tenant à deux mains.
+
+**Le joystick complet** (`createTouchControls` dans `core/input.js`). Le stick naît sous le pouce dans le bas de l'écran (le tiers haut reste au HUD et au bandeau), du côté gauche par défaut. Rayon 64 px, zone morte 13 %. Jusqu'à 85 % de la course, on marche, d'autant plus vite qu'on pousse loin ; au-delà, on court, à 1,6 fois la vitesse de marche, et l'anneau se dore. Au clavier, Maj fait courir. Le centre suit le doigt s'il dépasse le rayon, un seul doigt tient le stick, capturé pour ne pas le perdre hors du canvas.
+
+**Le pincement** : deux doigts sur le canvas zooment, dans les bornes de la molette. Le second doigt posé prend le relais du joystick (le héros s'arrête) ; quand un doigt se lève, celui qui reste redevient le joystick s'il est de son côté, recentré sous lui pour que le héros ne parte pas tout seul. Un troisième doigt ne compte pas.
+
+**Le bouton d'action** (`createActionButton` dans `game/ui.js`) : 74 px, en bas à droite, seulement sur écran tactile. Une étincelle discrète au repos ; un habitant à portée, il devient la bulle, sur fond de parchemin. Il agit dès que le doigt se pose, comme un bouton de manette, et se cache pendant une conversation : la boîte de dialogue, en bas, se touche elle-même pour avancer.
+
+**La main gauche** (`game/settings.js`) : sur l'écran titre, un bouton « Joystick à gauche » passe le joystick à droite et le bouton d'action à gauche. C'est un réglage de l'appareil, gardé à part de la partie : une nouvelle partie ne l'efface pas.
+
+**Les garde-fous** (`core/guards.js`) : `user-scalable=no`, gestes de Safari bloqués (il ignore la balise pour le pincement), double toucher, menu du doigt long (sauf dans le champ du prénom et sur le lien du site), deux doigts sur un panneau. Safari ne grossit plus le texte en paysage.
+
+**Le paysage** (écrans de 480 px de haut au plus) : HUD sur une ligne, minimap à côté du son, bandeau de lieu dessous ; boîte de dialogue compacte, deux lignes réservées au lieu de trois, et les choix d'une question côte à côte au lieu d'empilés. L'écran titre passe sur deux colonnes, la flamme grande à gauche ; le diplôme prend toute la hauteur, ses boutons à droite.
+
+Ce qui a résisté :
+
+- **Un second doigt ne fait pas de « click ».** Un navigateur de téléphone ne fabrique pas de click pour un doigt qui touche l'écran pendant qu'un autre y est posé : en paysage, le pouce gauche tient le joystick quand le droit touche la minimap ou la boîte de dialogue. Les boutons du jeu (boîte de dialogue, choix, bulle, compteur, minimap, son) écoutent maintenant le doigt posé puis relevé (`onTap` dans `core/input.js`), qui arrive pour chaque doigt.
+- **Une porte ne s'ouvrait qu'en poussant fort.** Le test demandait une direction déjà longue vers le nord ; au joystick poussé à 40 % en biais, jamais. Seule l'orientation du geste compte désormais.
+- **L'annonce d'un parchemin et le bandeau de lieu ne se cachaient jamais.** Leur animation de sortie les rendait transparents, mais ils restaient dans la page ; avec le mouvement réduit, sans animation, ils restaient visibles pour toujours. Ils se cachent après leur sortie. Sur téléphone, l'annonce tombe là où passe le bandeau : tant qu'elle est là, le bandeau s'efface.
+- **En paysage, la boutique de Berthe débordait** : le bouton Fermer tombait à 548 px sur un écran de 375. Seule la liste rapetisse et défile désormais.
+- **L'écran titre débordait** en paysage (de 73 px) et sur un petit téléphone en portrait avec une sauvegarde (de 42 px à 375 × 667).
+
+### Mesures
+
+Navigateur intégré, gestes rejoués par des événements de pointeur tactiles.
+
+| Critère | Résultat |
+|---|---|
+| Joystick | décalage de 5 px : immobile ; 20 px : 0,37 ; 40 px : 0,73 ; 54 px : 0,99 (marche) ; 56 px et plus : 1,6 (course), anneau doré |
+| Pincement | écart des doigts de 291 à 361 px : zoom de 1 à 1,24 ; relais au joystick quand un doigt se lève ; trois doigts ignorés |
+| Main gauche | joystick seulement à droite, bouton d'action à gauche ; le réglage survit au rechargement |
+| Bouton d'action | bulle à portée de Claudette, conversation ouverte avec le pouce gauche resté sur le joystick, caché pendant la conversation |
+| Portes au joystick | poussée à 40 % et à 35° du nord : les trois portes s'ouvrent, les trois seuils se franchissent |
+| Mobile 375 × 812 | aucun chevauchement : HUD, bandeau, annonce, dialogue, bouton d'action |
+| Paysage 812 × 375 | aucun chevauchement ; question et choix sur 33 à 39 % de la hauteur (environ 75 % avant) ; titre de 37 à 337 px ; diplôme de 497 px de large (262 avant) |
+| Cibles tactiles | toutes à 44 px de haut au moins ; onglets du grimoire 42 × 44 px à 375 px de large (28 × 34 avant) |
+| Bureau 1280 × 720 | inchangé, pas de bouton d'action ; Maj : 1,6 fois plus vite |
+| Partie complète | les huit parchemins avec erreurs puis bonne réponse, diplôme ; `checkDialogues()` vide |
+| Coût d'une image (`__lia.bench`) | 0,63 ms dehors, 95 appels de dessin, 37 700 triangles : rien de changé, tout est en DOM |
+| Console et réseau | aucune erreur ; HTML, CSS, JavaScript, police et flamme seulement |
+
+Reste à mesurer sur un vrai téléphone, ce que le navigateur intégré ne sait pas faire : images par seconde avec `?debug`, deux pouces en même temps, pincement, gestes de Safari, partage du diplôme.

@@ -15,6 +15,10 @@
 //     position,    { x, z } dans le village, ou null pour le héros (point de départ)
 //     direction,   'down' | 'left' | 'right' | 'up' : où il regarde au repos
 //     dialogue,    clé de son texte dans data/dialogues.js, ou null
+//     lieu,        facultatif (étape 3c) : la pièce où il se tient (clé de
+//                  world/rooms.js) ; sa position est alors celle de la pièce
+//     depart,      facultatif (étape 3c) : { lieu, x, z, direction }, où il
+//                  attend au tout début, avant la première conversation
 //   }
 // Le moteur ne lit que ces champs : un nouvel habitant n'est que de la donnée.
 //
@@ -101,91 +105,141 @@ export const hero = {
   },
 };
 
-// Lia, la guide. Se lit « l'IA » : une petite lumière d'Ellelhem, cheveux
-// argentés, robe crème, un joyau au front et une orbe qui flotte à son côté.
-// Joyau, pendentif et orbe sont de la lumière (lettre l) : ils brillent.
-export const lia = {
-  id: 'lia',
-  nom: 'Lia',
+// Claudette, notre sœur (un clin d'œil à Claude) : la guide. Elle nous donne
+// la quête dans la maison, au début, puis nous attend sur la place. Queue de
+// cheval auburn, robe vert sauge, une sacoche en bandoulière.
+export const claudette = {
+  id: 'claudette',
+  nom: 'Claudette',
   palette: {
-    peau: ['#9a6b55', '#c08a6c', '#e0aa88', '#f3c9a6'],
-    vetement: ['#8a7a5e', '#b5a27a', '#dcc896', '#f5e6b8'],
-    accent: ['#2c2650', '#453b7a', '#6a5aa8', '#9a8ad0'],
-    cheveux: ['#6d6a8c', '#9a97b8', '#c4c2dc', '#ecebf7'],
+    peau: ['#9a6650', '#c48a6a', '#e2ab88', '#f5cba8'],
+    vetement: ['#2c3d2a', '#45603f', '#628457', '#86a877'],
+    accent: ['#6b4e10', '#a67c1c', '#d9a935', '#ffd96a'],
+    cheveux: ['#4a1e12', '#6e2e1a', '#94431f', '#b8612e'],
   },
   position: { x: 17.4, z: 15.0 },
   direction: 'down',
-  coiffure: 'long',
+  depart: { lieu: 'maison', x: 4.3, z: 2.4, direction: 'left' },
+  coiffure: 'queue',
   tenue: 'robe',
-  dialogue: 'lia',
+  dialogue: 'claudette',
   accessoire: {
-    nom: 'joyau et orbe de lumière',
-    ancre: [6, 2],
+    nom: 'sacoche en bandoulière',
+    ancre: [8, 15],
     face: [
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '......aaallaaa.........',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '...................lll.',
-      '..................lllll',
-      '......aaaaaaaa....lllll',
-      '..................lllll',
-      '.........ll........lll.',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
+      '.....b..........',
+      '......b.........',
+      '.......b........',
+      '........b.......',
+      '.........b......',
+      '..........b.....',
+      '..........BBBBB.',
+      '..........bbabb.',
+      '..........bbbbb.',
+      '..........BBBBB.',
     ],
     dos: [
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '......aaaaaaaa.........',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '...................lll.',
-      '..................lllll',
-      '..................lllll',
-      '..................lllll',
-      '...................lll.',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
+      '..........b.....',
+      '.........b......',
+      '........b.......',
+      '.......b........',
+      '......b.........',
+      '.....b..........',
+      'BBBBB...........',
+      'bbbbb...........',
+      'bbbbb...........',
+      'BBBBB...........',
     ],
     profil: [
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.....llaaaaaaaa........',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.lll...................',
-      'lllll..................',
-      'lllll..................',
-      'lllll..................',
-      '.lll...l...............',
-      '.......................',
-      '.......................',
-      '.......................',
-      '.......................',
+      '.......b........',
+      '.......b........',
+      '.......b........',
+      '.......b........',
+      '.......b........',
+      '.......b........',
+      '......BBBB......',
+      '......bbab......',
+      '......bbbb......',
+      '......BBBB......',
+    ],
+  },
+};
+
+// L'Oracle Gépété : un vieux magicien qui sait plein de choses, et qui se
+// trompe parfois avec aplomb. Il se sert de la magie LIA. Chapeau pointu, longue
+// barbe blanche, robe bleue, et un bâton qui porte la lumière de la magie
+// (lettre l : elle brille, même à l'ombre).
+const bourdon = '.....................b..';
+export const gepeto = {
+  id: 'gepeto',
+  nom: "L'Oracle Gépété",
+  palette: {
+    peau: ['#8a5d4a', '#b0806a', '#d2a184', '#ebc3a4'],
+    vetement: ['#1b2550', '#2a3a78', '#3d55a3', '#5f7cc8'],
+    accent: ['#2a1a4a', '#40296e', '#5c3f96', '#7d5fbd'],
+    cheveux: ['#8f8f9c', '#b8b8c6', '#dcdce6', '#f7f7fb'],
+  },
+  position: { x: 21.4, z: 15.7 },
+  direction: 'down',
+  coiffure: 'long',
+  tenue: 'robe',
+  dialogue: 'gepeto',
+  accessoire: {
+    nom: 'chapeau pointu, barbe et bâton de lumière',
+    ancre: [4, 0],
+    face: [
+      '...........aa...........',
+      '...........aaa..........',
+      '..........aaaa..........',
+      '..........aaaaa.....lll.',
+      '.........aaaaaa....lllll',
+      '.........aaaaaaa...lllll',
+      '........aaaaaaaa...lllll',
+      '.....AAAAAAAAAAAAAA.lll.',
+      bourdon, bourdon, bourdon, bourdon,
+      '.......cccccccccc....b..',
+      '.......cccccccccc....b..',
+      '........cccccccc.....b..',
+      '........cccccccc.....b..',
+      '.........cccccc......b..',
+      '.........cccccc......b..',
+      '..........cccc.......b..',
+      '..........cccc.......b..',
+      '...........cc........b..',
+      bourdon, bourdon, bourdon, bourdon, bourdon, bourdon, bourdon, bourdon, bourdon, bourdon,
+    ],
+    dos: [
+      '...........aa...........',
+      '...........aaa..........',
+      '..........aaaa..........',
+      '..........aaaaa.....lll.',
+      '.........aaaaaa....lllll',
+      '.........aaaaaaa...lllll',
+      '........aaaaaaaa...lllll',
+      '.....AAAAAAAAAAAAAA.lll.',
+      ...Array(23).fill(bourdon),
+    ],
+    profil: [
+      '..............aa........',
+      '..............aaa.......',
+      '.............aaaa.......',
+      '..lll........aaaaa......',
+      '.lllll......aaaaaa......',
+      '.lllll......aaaaaaa.....',
+      '.lllll.....aaaaaaaa.....',
+      '..lll..AAAAAAAAAAAAAA...',
+      '...b....................',
+      '...b....................',
+      '...b....................',
+      '...b....................',
+      '...b...ccc..............',
+      '...b..cccc..............',
+      '...b..cccc..............',
+      '...b..ccc...............',
+      '...b..ccc...............',
+      '...b..cc................',
+      '...b...c................',
+      ...Array(12).fill('...b....................'),
     ],
   },
 };
@@ -560,8 +614,10 @@ export const berthe = {
     accent: ['#a59a86', '#cfc4ad', '#ece3cf', '#fbf6ea'],
     cheveux: ['#5b2f1c', '#80482b', '#a8683f', '#cf8f5e'],
   },
-  position: { x: 13, z: 24.6 },
-  direction: 'left',
+  // Derrière son comptoir, dans l'auberge (coordonnées de la pièce, world/rooms.js).
+  lieu: 'auberge',
+  position: { x: 7.0, z: 1.7 },
+  direction: 'down',
   coiffure: 'court',
   tenue: 'robe',
   dialogue: 'berthe',
@@ -810,4 +866,4 @@ export const figurants = [
 ];
 
 // Les habitants du village, dans l'ordre où ils sont posés.
-export const villagers = [lia, ferrand, marjolaine, basile, pepin, rocard, berthe, gaspard, clodomir];
+export const villagers = [claudette, gepeto, ferrand, marjolaine, basile, pepin, rocard, berthe, gaspard, clodomir];

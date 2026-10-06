@@ -95,6 +95,13 @@ function checkDialogues(texts, characters) {
   }
   for (const [key, entry] of Object.entries(texts)) {
     if (typeof entry.nom !== 'string') problems.push(`${key} : nom absent`);
+    if (entry.guide) {
+      states.forEach((state, n) => {
+        pages(`${key}.intro(état ${n})`, entry.intro(state));
+        pages(`${key}.retour(état ${n})`, entry.retour(state));
+      });
+      continue;
+    }
     states.forEach((state, n) => {
       pages(`${key}.intro(état ${n})`, entry.intro(state));
       pages(`${key}.retour(état ${n})`, entry.retour(state));
@@ -126,7 +133,7 @@ function checkDialogues(texts, characters) {
 // game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
 // dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap, doors } = game;
   let viewer = null;
 
   const info = () => ({
@@ -222,7 +229,7 @@ export function installDebugApi(game) {
       const ms = (performance.now() - start) / frames;
       return { msPerFrame: Number(ms.toFixed(2)), fpsCeiling: Math.round(1000 / ms), ...info() };
     },
-    // Planche d'un personnage ('heros', 'lia'...) agrandie dans un coin.
+    // Planche d'un personnage ('heros', 'gepeto'...) agrandie dans un coin.
     showSheet(on = true, id = 'heros') {
       viewer?.remove();
       viewer = null;
@@ -265,7 +272,7 @@ export function installDebugApi(game) {
     },
     // Conversations. talk ouvre celle d'un habitant sans condition de distance ;
     // advance fait l'action (termine la page, passe à la suivante, ferme).
-    talk(id = 'lia') {
+    talk(id = 'claudette') {
       interaction.start(npcs.find((npc) => npc.id === id));
       return dialogue.snapshot();
     },
@@ -292,8 +299,9 @@ export function installDebugApi(game) {
     converse(id, mode = 'erreurs', lecon = true) {
       const npc = npcs.find((candidate) => candidate.id === id);
       const { question } = texts[npc.character.dialogue];
-      const right = question.choix.findIndex((c) => c.bon);
-      const picks = mode === 'direct' ? [right] : [...question.choix.keys()].filter((i) => i !== right).concat(right);
+      // Un guide (Claudette) n'a pas de question : on lit ses pages, rien de plus.
+      const right = question ? question.choix.findIndex((c) => c.bon) : 0;
+      const picks = !question || mode === 'direct' ? [right] : [...question.choix.keys()].filter((i) => i !== right).concat(right);
       const log = { pages: [], essais: [] };
       interaction.start(npc);
       for (let guard = 0; dialogue.isOpen && guard < 400; guard += 1) {
@@ -322,6 +330,13 @@ export function installDebugApi(game) {
       if (on) grimoire.open(page);
       else grimoire.close();
       return { ouvert: grimoire.isOpen, page: grimoire.page };
+    },
+    // Change de lieu sans fondu : un intérieur de world/rooms.js, ou null pour
+    // ressortir dans le village.
+    lieu(id = null) {
+      if (id) doors.enter(id, { instant: true });
+      else doors.exit({ instant: true });
+      return doors.room;
     },
     // La carte en grand.
     carte(on = true) {

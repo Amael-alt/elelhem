@@ -11,6 +11,7 @@
 //                           essayé grisé
 //   bonne réponse           son retour, le parchemin (sauvegardé aussitôt,
 //                           compteur animé), puis la recompense
+//   un guide (Claudette)    intro, puis retour : il n'enseigne rien
 //   l'habitant du diplôme   ne pose sa question que si tous les parchemins
 //                           sont réunis ; la recompense ouvre le diplôme, et
 //                           chaque visite suivante le rouvre
@@ -87,7 +88,9 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
       const opening = first ? entry.intro(state) : entry.retour(state);
       recordVisit(state, npc.id);
 
-      if (entry.diplome) {
+      if (entry.guide) {
+        dialogue.open(entry.nom, opening);
+      } else if (entry.diplome) {
         if (state.choix.has(key)) dialogue.open(entry.nom, opening, showDiploma);
         else if (missing() > 0) dialogue.open(entry.nom, opening);
         else lessonOrQuestion(entry, key, opening);

@@ -19,7 +19,7 @@
 // miroir de la gauche.
 //
 // Canal émissif : la lettre « l » d'une grille d'accessoire est de la lumière
-// (le joyau et l'orbe de Lia). Ces pixels sont copiés dans une seconde planche,
+// (le bâton lumineux de l'Oracle Gépété). Ces pixels sont copiés dans une seconde planche,
 // de même taille, lue comme carte d'émission : ils brillent même à l'ombre.
 
 import { faceColors, glowRamp, leatherRamp, outlineColor } from '../data/palette.js';

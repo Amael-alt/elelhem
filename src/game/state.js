@@ -15,7 +15,9 @@
 // ou avec les données de site bloquées, il peut être absent ou lancer. Le jeu
 // marche alors sans sauvegarde, rien de plus.
 
-const STORAGE_KEY = 'village-lia-v1';
+// Nouvelle clé avec « The Legend of Elelhem » (étape 3c) : Lia n'y est plus
+// un personnage, une partie de l'ancien village ne se reprend pas.
+const STORAGE_KEY = 'elelhem-v1';
 
 function emptyState() {
   return { prenom: '', parchemins: new Set(), visites: new Map(), choix: new Map(), erreurs: new Map() };

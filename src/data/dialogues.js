@@ -20,6 +20,9 @@
 //     maxime,      facultatif (ajouté à l'étape 3b) : la phrase écrite sur le
 //                  parchemin, reprise telle quelle dans recompense et affichée
 //                  par le grimoire
+//     guide,       facultatif (ajouté à l'étape 3c) : vrai pour un habitant qui
+//                  guide sans rien enseigner ; seuls nom, intro et retour sont
+//                  lus
 //   }
 //
 // `etat` : { prenom, parchemins: Set, visites: Map, choix: Map, erreurs: Map },
@@ -41,7 +44,7 @@
 // l'habitant qui le remet, et la notion qu'il porte (affichée dans le
 // compteur et sur le diplôme).
 const NOTIONS = {
-  lia: 'Le grand modèle de langage',
+  gepeto: 'Le grand modèle de langage',
   ferrand: "L'art du prompt",
   marjolaine: 'Le contexte et les biais',
   basile: 'Les hallucinations',
@@ -51,7 +54,7 @@ const NOTIONS = {
   rocard: 'La sécurité des données',
 };
 
-// Nombre de parchemins à gagner : Lia et sept artisans. Le dernier habitant,
+// Nombre de parchemins à gagner : l'Oracle Gépété et sept artisans. Le dernier habitant,
 // l'architecte, remet le diplôme.
 export const PARCHEMINS_TOTAL = Object.keys(NOTIONS).length;
 
@@ -62,8 +65,8 @@ const ADRESSE_DU_JEU = 'https://amael-alt.github.io/village-de-lia/';
 // affichés dans le bandeau de lieu (les rectangles sont dans world/layout.js),
 // compteur de parchemins, questions et diplôme.
 export const textesInterface = {
-  titre: 'Le Village de LIA',
-  contree: "Contrée d'Ellelhem",
+  titre: 'The Legend of Elelhem',
+  contree: 'La Magie de Lia',
   accroche: "Huit notions d'IA, un village, dix minutes",
   signature: 'Jordan Goussery, formateur et consultant IA à Bayonne',
   site: 'https://maintenant-vous-savez.com',
@@ -85,6 +88,7 @@ export const textesInterface = {
     chantier: 'Le chantier',
     pont: 'Le pont',
     prairie: "La prairie de l'est",
+    maison: 'Ta maison',
   },
   parchemins: {
     notions: NOTIONS,
@@ -102,14 +106,14 @@ export const textesInterface = {
   },
   // La minimap et la carte en grand.
   carte: {
-    titre: 'Carte du village',
+    titre: "Carte d'Elelhem",
     ouvrir: 'Ouvrir la carte',
     fermer: 'Fermer',
-    legende: { heros: 'Toi', quete: "Une leçon t'attend", fait: "Rien de plus pour l'instant" },
+    legende: { heros: 'Toi', guide: 'Claudette', quete: "Une leçon t'attend", fait: "Rien de plus pour l'instant" },
   },
   // Le livre des parchemins gagnés : la notion, l'habitant, la maxime et la leçon.
   grimoire: {
-    titre: "Le grimoire d'Ellelhem",
+    titre: "Le grimoire d'Elelhem",
     numero: (n, total) => `Parchemin ${n} sur ${total}`,
     vierge: (nom) => `Page encore vierge. ${nom} garde ce parchemin quelque part dans le village.`,
     precedente: 'Précédente',
@@ -118,14 +122,14 @@ export const textesInterface = {
     page: (n, notion) => `Page ${n} : ${notion}`,
   },
   diplome: {
-    titre: "Diplôme d'Ellelhem",
-    village: 'Le Village de LIA',
+    titre: "Diplôme d'apprenti mage",
+    village: 'The Legend of Elelhem',
     decerne: 'décerné à',
     motif: 'pour avoir rassemblé les huit parchemins du village, et compris :',
-    date: (jour) => `Fait à Ellelhem, le ${jour.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+    date: (jour) => `Fait à Elelhem, le ${jour.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`,
     signatures: [
       { nom: 'Clodomir', role: 'architecte' },
-      { nom: 'Lia', role: 'guide' },
+      { nom: 'Gépété', role: 'oracle' },
     ],
     sceau: 'LIA',
     pied: 'Jordan Goussery, formateur et consultant IA à Bayonne',
@@ -141,15 +145,15 @@ export const textesInterface = {
     },
     partager: 'Partager',
     partage: {
-      titre: "Mon diplôme d'Ellelhem",
-      texte: "J'ai obtenu mon diplôme d'Ellelhem : huit notions d'IA apprises dans un petit village. À toi de jouer : " + ADRESSE_DU_JEU,
+      titre: "Mon diplôme d'apprenti mage",
+      texte: "J'ai obtenu mon diplôme d'apprenti mage à Elelhem : huit notions d'IA apprises dans un petit village. À toi de jouer : " + ADRESSE_DU_JEU,
     },
     telecharger: 'Télécharger',
     copier: 'Copier le lien du jeu',
     copie: 'Lien copié',
     fermer: 'Fermer',
-    fichier: 'diplome-village-de-lia.jpg',
-    alt: (prenom) => `Diplôme d'Ellelhem${prenom ? ` décerné à ${prenom}` : ''}, pour les huit parchemins du Village de LIA`,
+    fichier: 'diplome-apprenti-mage-elelhem.jpg',
+    alt: (prenom) => `Diplôme d'apprenti mage d'Elelhem${prenom ? ` décerné à ${prenom}` : ''}, pour les huit parchemins du village`,
   },
 };
 
@@ -162,14 +166,16 @@ const gagnes = (etat) => Object.keys(NOTIONS).filter((cle) => etat.parchemins.ha
 const restants = (etat) => PARCHEMINS_TOTAL - gagnes(etat);
 const diplomeRemis = (etat) => etat.choix.has('clodomir');
 
-// Où Lia envoie le joueur : le premier artisan pas encore visité, dans un
-// ordre qui suit la progression des notions (le prompt, puis ce qu'on donne
-// à lire, puis ce qu'il faut vérifier, retenir, brancher, déléguer, protéger).
+// Où Claudette envoie le joueur : le premier maître dont on n'a pas encore le
+// parchemin, dans un ordre qui suit la progression des notions (la magie
+// elle-même, l'incantation, puis ce qu'on donne à lire, ce qu'il faut
+// vérifier, retenir, brancher, déléguer, protéger).
 const CHEMIN = [
+  ['gepeto', "l'Oracle Gépété, près du puits, sur la place"],
   ['ferrand', "Maître Ferrand, à la forge, à l'ouest de la place"],
   ['marjolaine', 'Dame Marjolaine, devant la bibliothèque, au nord-ouest'],
   ['basile', "Basile, à l'apothicairerie, au nord-est"],
-  ['berthe', "Berthe, devant l'auberge, au sud-ouest"],
+  ['berthe', "Berthe, dans l'auberge, au sud-ouest"],
   ['pepin', "Pépin, au pied du colombier, à l'est"],
   ['gaspard', 'Maître Gaspard, sur le chantier, au sud-est'],
   ['rocard', "le capitaine Rocard, à la porte de la muraille, tout à l'ouest"],
@@ -180,67 +186,89 @@ const CHEMIN = [
 const retourArtisan = (cle, gagne, reprise) => (etat) => [etat.parchemins.has(cle) ? gagne(etat) : reprise(etat)];
 
 export const dialogues = {
-  lia: {
-    nom: 'Lia',
-    maxime: "Un LLM devine la suite la plus probable d'un texte.",
+  // Claudette, notre sœur : elle donne la quête dans la maison, puis guide.
+  // Elle n'enseigne rien et ne remet rien (guide : intro et retour seulement).
+  claudette: {
+    nom: 'Claudette',
+    guide: true,
 
     intro: (etat) => [
-      `Bienvenue à Ellelhem${apres(etat)}. Moi, c'est Lia, et ça se prononce comme « l'IA ». Ce n'est pas un hasard.`,
-      'Dis le nom de la contrée à voix haute : « èl, èl, hem ». Presque L, L, M, comme les grands modèles de langage qui font tourner les IA que tu utilises.',
-      'Ici, chaque habitant garde une notion de l\'IA. Écoute-le, réponds à sa question, et il te confiera un parchemin. Il y en a huit à rassembler.',
-      "Je suis brillante, mais je ne vois que ce qu'on m'apporte. Commençons par moi : voici ce que je suis vraiment.",
-    ],
-
-    lecon: [
-      'Un grand modèle de langage, un LLM, a lu une quantité immense de textes. De ces lectures, il a tiré un talent : deviner ce qui vient ensuite.',
-      'Il écrit par petits morceaux de mots, les tokens. À chaque fois, il choisit une suite probable, puis recommence avec le morceau suivant.',
-      'À lui seul, il ne consulte aucune encyclopédie et ne vérifie rien : il continue ta phrase de façon plausible. Souvent juste, parfois faux avec aplomb.',
-      "Plus tu lui apportes de contexte clair, meilleure est la suite qu'il devine. Il ne lit pas dans tes pensées : les habitants te diront comment l'aider.",
-    ],
-
-    question: {
-      texte: 'Que fait un grand modèle de langage, au fond ?',
-      choix: [
-        {
-          texte: 'Il cherche la réponse exacte dans une encyclopédie.',
-          bon: false,
-          retour: "C'est ce qu'on croit souvent ! Mais à lui seul, il ne consulte rien : il continue le texte de façon plausible. D'où des erreurs très bien présentées.",
-        },
-        {
-          texte: "Il prédit la suite la plus probable d'un texte.",
-          bon: true,
-          retour: "Bien vu : il enchaîne des morceaux de mots plausibles, un par un, d'après tout ce qu'il a lu.",
-        },
-        {
-          texte: 'Il réfléchit comme une personne, avec ses opinions.',
-          bon: false,
-          retour: "On s'y tromperait, tant il écrit bien ! Mais il n'a ni vécu ni opinions à lui : il calcule, morceau après morceau, la suite la plus probable.",
-        },
-      ],
-    },
-
-    recompense: [
-      "Voici mon parchemin : « Un LLM devine la suite la plus probable d'un texte. » Garde-le bien, il y en a sept autres dans le village.",
-      'Approche-toi des habitants : leur nom s\'affiche au-dessus de leur tête. Et si tu te perds, reviens me voir, je t\'indiquerai le chemin.',
+      `Ah, tu ouvres enfin les yeux${apres(etat)} ! Debout, c'est le grand jour.`,
+      "Tu te souviens ? Tu veux apprendre la magie LIA, celle qui répond à tout, écrit et conseille. LIA, comme « l'IA ». Ce n'est pas un hasard.",
+      "Pour s'en servir, il faut savoir lui parler. Les formules qu'on lui adresse s'appellent des incantations. Les savants, eux, disent des prompts.",
+      "Les maîtres d'Elelhem gardent chacun un parchemin de savoir. Ils sont huit. Écoute-les, réponds à leur question, et ils te le confieront.",
+      "Rassemble les huit, et Clodomir, l'architecte, te fera apprenti mage. Commence par l'Oracle Gépété, près du puits. Je te retrouve sur la place !",
     ],
 
     retour: (etat) => {
-      if (!etat.parchemins.has('lia')) {
-        return [`Te revoilà${apres(etat)}. On reprend où on en était ?`];
-      }
       if (diplomeRemis(etat)) {
-        return [`Ton diplôme est entre tes mains${apres(etat)}. Merci d'avoir traversé Ellelhem. Reviens quand tu veux, le village t'attendra.`];
+        return [`Apprenti mage d'Elelhem${apres(etat)} ! Je suis fière de toi. Reviens quand tu veux, le village t'attendra.`];
       }
       const reste = restants(etat);
       if (reste === 0) {
         return [`Les huit parchemins${apres(etat)} ! Va voir Clodomir, l'architecte, au pied de sa tour au nord. Il t'attend avec une surprise.`];
       }
       const suivant = CHEMIN.find(([cle]) => !etat.parchemins.has(cle));
+      if (reste === PARCHEMINS_TOTAL) {
+        return [`Alors${apres(etat)}, on y va ? Commence par ${suivant[1]}. Il connaît la magie LIA mieux que personne.`];
+      }
       return [
         `Te revoilà${apres(etat)}. Il te reste ${reste} parchemin${pluriel(reste)} à gagner.`,
-        `Essaie ${suivant[1]}. Mais l'ordre est libre : parle à qui tu veux.`,
+        `Essaie ${suivant[1]}. Mais l'ordre est libre : parle à qui tu veux. Et la carte, en haut, montre qui t'attend.`,
       ];
     },
+  },
+
+  // L'Oracle Gépété : un vieux magicien qui sait tout, ou presque, et se trompe
+  // parfois avec aplomb. Il enseigne ce qu'est la magie LIA : un grand modèle
+  // de langage.
+  gepeto: {
+    nom: "L'Oracle Gépété",
+    maxime: "Un LLM devine la suite la plus probable d'un texte.",
+
+    intro: () => [
+      "Hmm ? Ah, de la visite ! Je suis l'Oracle Gépété. Pose-moi n'importe quelle question : je réponds toujours. Toujours !",
+      "Ce puits, par exemple, a été creusé par un dragon, en l'an 312. Ou par le grand-père du boulanger. L'un des deux, sûrement.",
+    ],
+
+    lecon: [
+      "La magie LIA, celle que j'utilise, a lu tous les livres du royaume. De ces lectures, elle a tiré un talent : deviner ce qui vient ensuite.",
+      'Elle écrit par petits morceaux de mots, les tokens. À chaque fois, elle choisit une suite probable, puis recommence avec le morceau suivant.',
+      "À elle seule, elle ne consulte aucun grimoire et ne vérifie rien : elle continue ta phrase de façon plausible. Souvent juste, parfois faux. Comme moi.",
+      "Les savants appellent ça un grand modèle de langage, un LLM. Dis « Elelhem » à voix haute : « èl, èl, hem ». Ça te rappelle quelque chose ?",
+      "Plus tu lui apportes de contexte clair, meilleure est la suite qu'elle devine. Elle ne lit pas dans tes pensées : les maîtres te diront comment lui parler.",
+    ],
+
+    question: {
+      texte: 'Que fait la magie LIA, au fond ?',
+      choix: [
+        {
+          texte: 'Elle cherche la réponse exacte dans un grimoire.',
+          bon: false,
+          retour: "C'est ce qu'on croit souvent ! Mais à elle seule, elle ne consulte rien : elle continue le texte de façon plausible. D'où des erreurs très bien présentées.",
+        },
+        {
+          texte: "Elle prédit la suite la plus probable d'un texte.",
+          bon: true,
+          retour: "Bien vu : elle enchaîne des morceaux de mots plausibles, un par un, d'après tout ce qu'elle a lu.",
+        },
+        {
+          texte: 'Elle réfléchit comme une personne, avec ses opinions.',
+          bon: false,
+          retour: "On s'y tromperait, tant elle écrit bien ! Mais elle n'a ni vécu ni opinions : elle calcule, morceau après morceau, la suite la plus probable.",
+        },
+      ],
+    },
+
+    recompense: [
+      "Voici mon parchemin : « Un LLM devine la suite la plus probable d'un texte. » Il en reste neuf dans le village. Non, sept. Vérifie quand même !",
+    ],
+
+    retour: retourArtisan(
+      'gepeto',
+      (etat) => `Te revoilà${apres(etat)} ! Une question ? J'ai toujours une réponse. Parfois même la bonne.`,
+      (etat) => `Te revoilà${apres(etat)}. Où en étions-nous ? Ah oui : la magie LIA.`,
+    ),
   },
 
   ferrand: {
@@ -248,8 +276,8 @@ export const dialogues = {
     maxime: 'Un bon prompt se forge en plusieurs chauffes.',
 
     intro: () => [
-      "Approche, mais pas trop de l'enclume. Maître Ferrand, forgeron d'Ellelhem. Ici, on forge des lames, des fers à cheval, et des prompts.",
-      "Un prompt, c'est la commande que tu passes à l'IA. Une commande floue donne une lame tordue, et ce n'est pas la faute du marteau.",
+      "Approche, mais pas trop de l'enclume. Maître Ferrand, forgeron d'Elelhem. Ici, on forge des lames, des fers à cheval, et des incantations.",
+      "Une incantation, ou un prompt, c'est la commande que tu passes à la magie LIA. Une commande floue donne une lame tordue, et ce n'est pas la faute du marteau.",
     ],
 
     lecon: [
@@ -447,7 +475,7 @@ export const dialogues = {
     maxime: 'Un pigeon par château, un protocole pour tous.',
 
     intro: () => [
-      "Attention, ça roucoule ! Pépin, messager d'Ellelhem. Mes pigeons portent les messages entre l'IA et le reste du monde.",
+      "Attention, ça roucoule ! Pépin, messager d'Elelhem. Mes pigeons portent les messages entre l'IA et le reste du monde.",
       'Seule, l\'IA ne voit que sa table. Avec un pigeon, elle peut lire ton agenda ou envoyer un message pour toi.',
     ],
 
@@ -545,7 +573,7 @@ export const dialogues = {
     maxime: 'Ce qui franchit la porte ne revient pas.',
 
     intro: () => [
-      "Halte ! Qui va là ? Ah, c'est toi. Capitaine Rocard, garde de la porte. Rien ne sort d'Ellelhem sans passer devant moi.",
+      "Halte ! Qui va là ? Ah, c'est toi. Capitaine Rocard, garde de la porte. Rien ne sort d'Elelhem sans passer devant moi.",
       "Ta porte à toi, c'est la fenêtre où tu écris à l'IA. Et crois-moi, il en sort des choses qui n'auraient jamais dû la franchir.",
     ],
 
@@ -596,11 +624,11 @@ export const dialogues = {
     intro: (etat) => {
       const reste = restants(etat);
       if (reste === 0) {
-        return ['Les huit parchemins ! Je les attendais. Clodomir, architecte d\'Ellelhem. Approche, j\'ai un secret à te confier sur ce village.'];
+        return ['Les huit parchemins ! Je les attendais. Clodomir, architecte d\'Elelhem. Approche, j\'ai un secret à te confier sur ce village.'];
       }
       return [
-        "Ah, de la visite. Clodomir, architecte d'Ellelhem : chaque pierre de ce village, c'est moi qui l'ai dessinée. Ou presque.",
-        `Reviens avec les huit parchemins${reste < PARCHEMINS_TOTAL ? ` : il t'en manque ${reste}` : ''}. Je te confierai alors le secret du village, et une surprise. Lia sait où les trouver.`,
+        "Ah, de la visite. Clodomir, architecte d'Elelhem : chaque pierre de ce village, c'est moi qui l'ai dessinée. Ou presque.",
+        `Reviens avec les huit parchemins${reste < PARCHEMINS_TOTAL ? ` : il t'en manque ${reste}` : ''}. Je te confierai alors le secret du village, et une surprise. Claudette sait où les trouver.`,
       ];
     },
 
@@ -635,7 +663,7 @@ export const dialogues = {
 
     recompense: [
       'Chaque pierre que tu vois est une ligne de code. Et ce code est public : n\'importe qui peut lire comment ce village a été bâti.',
-      "Quant à toi, voici ce qui t'attendait : le diplôme d'Ellelhem. Montre-le, et envoie d'autres voyageurs jusqu'ici.",
+      "Quant à toi, voici ce qui t'attendait : le diplôme d'apprenti mage d'Elelhem. Montre-le, et envoie d'autres voyageurs jusqu'ici.",
     ],
 
     retour: (etat) => {
@@ -646,7 +674,7 @@ export const dialogues = {
       if (reste === 0) {
         return [`Te voilà avec les huit parchemins${apres(etat)} ! Approche, j'ai un secret à te confier sur ce village.`];
       }
-      return [`Il te manque encore ${reste} parchemin${pluriel(reste)}${apres(etat)}. Lia saura te dire où aller.`];
+      return [`Il te manque encore ${reste} parchemin${pluriel(reste)}${apres(etat)}. Claudette saura te dire où aller.`];
     },
   },
 };

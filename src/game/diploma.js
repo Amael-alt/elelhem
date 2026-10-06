@@ -1,4 +1,4 @@
-// Le diplôme d'Ellelhem : dessiné sur un canvas 2D, au prénom du joueur et à
+// Le diplôme d'apprenti mage d'Elelhem : dessiné sur un canvas 2D, au prénom du joueur et à
 // la date du jour, avec les huit notions apprises, un sceau de cire et les
 // signatures de l'architecte et de la guide, et une mention selon les erreurs.
 // On le partage d'un geste depuis un téléphone, on le télécharge en image, et

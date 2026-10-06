@@ -1,9 +1,10 @@
 // Planches de personnages à partir des sprites transcrits (data/sprites/) :
 // trois vues dessinées (face, profil tourné vers la gauche, dos) deviennent
-// une planche de 24 colonnes × 4 lignes (bas, gauche, droite, haut). Le
+// une planche de 36 colonnes × 4 lignes (bas, gauche, droite, haut). Le
 // mouvement est fabriqué ici : respiration au repos, marche à six images (le
-// corps rebondit d'un pixel, les jambes se lèvent de face et se croisent de
-// profil, les bras balancent). La droite est le miroir de la gauche.
+// corps rebondit d'un pixel, les jambes se lèvent et s'écartent de face, se
+// croisent de profil, les bras balancent), course à six images plus amples.
+// La droite est le miroir de la gauche.
 //
 // Un sprite : { cadre: [largeur, hauteur], pieds, couleurs: [hex...],
 // lumiere: [caractères...], face, profil, dos : [lignes] }, un caractère par
@@ -39,14 +40,17 @@ export const IDLE_FRAMES = [0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 2];
 export const IDLE_FPS = 3;
 export const WALK_FRAMES = [3, 4, 5, 6, 7, 8];
 export const WALK_FPS = 10; // six images par cycle : une foulée toutes les 0,3 s
-// Les mêmes, l'épée à la main (colonnes 9 à 17) : sur la lande, le héros la
-// porte au repos comme en marchant.
-const ARMED_OFFSET = 9;
+// La course (colonnes 9 à 14) : la même foulée, plus ample, le buste penché.
+export const RUN_FRAMES = [9, 10, 11, 12, 13, 14];
+// Les mêmes, l'épée à la main (colonnes 15 à 29) : sur la lande, le héros la
+// porte au repos, en marchant et en courant.
+const ARMED_OFFSET = 15;
 export const ARMED_IDLE_FRAMES = IDLE_FRAMES.map((column) => column + ARMED_OFFSET);
 export const ARMED_WALK_FRAMES = WALK_FRAMES.map((column) => column + ARMED_OFFSET);
-// Les trois coups (colonnes 18 à 23) : pour chacun, l'élan puis la frappe.
-export const STRIKE_FRAMES = [[18, 19], [20, 21], [22, 23]];
-export const COLUMNS = 24;
+export const ARMED_RUN_FRAMES = RUN_FRAMES.map((column) => column + ARMED_OFFSET);
+// Les trois coups (colonnes 30 à 35) : pour chacun, l'élan puis la frappe.
+export const STRIKE_FRAMES = [[30, 31], [32, 33], [34, 35]];
+export const COLUMNS = 36;
 
 const DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
 const EMPTY = -1;
@@ -58,32 +62,47 @@ const ARM_WIDTH = 3; // pixels du bord du buste qui suivent le bras
 const BACK_LEG_SHADE = 0.72; // la jambe arrière, de profil, est plus sombre
 
 // Repos : respiration d'un pixel. Marche : contact, réception (le corps
-// descend, le pied libre monte), passage (le corps remonte), puis l'autre
-// jambe. De profil, stride écarte les jambes, en pixels aux pieds.
+// descend, le pied libre monte et s'écarte), passage (le corps remonte), puis
+// l'autre jambe ; les bras balancent. Course : la même foulée, plus haute et
+// plus large, le buste penché en avant. De profil, stride écarte les jambes,
+// en pixels aux pieds (version 2.1 : pas plus amples, « les pieds étaient
+// trop collés »).
 const FRONT_POSES = [
   { bob: 0 }, { bob: 1 }, { bob: 0 },
-  { bob: 0, liftR: 1, swing: 1 },
-  { bob: 1, liftR: 2, swing: 1 },
+  { bob: 0, liftR: 2, spreadR: 1, swing: 2 },
+  { bob: 1, liftR: 3, spreadR: 1, swing: 2 },
   { bob: -1, liftR: 1 },
-  { bob: 0, liftL: 1, swing: -1 },
-  { bob: 1, liftL: 2, swing: -1 },
+  { bob: 0, liftL: 2, spreadL: 1, swing: -2 },
+  { bob: 1, liftL: 3, spreadL: 1, swing: -2 },
   { bob: -1, liftL: 1 },
+  { bob: 1, liftR: 3, spreadR: 2, swing: 3 },
+  { bob: 2, liftR: 4, spreadR: 2, swing: 3 },
+  { bob: -1, liftR: 2, spreadR: 1 },
+  { bob: 1, liftL: 3, spreadL: 2, swing: -3 },
+  { bob: 2, liftL: 4, spreadL: 2, swing: -3 },
+  { bob: -1, liftL: 2, spreadL: 1 },
 ];
 const SIDE_POSES = [
   { bob: 0 }, { bob: 1 }, { bob: 0 },
-  { bob: 0, stride: 3 },
-  { bob: 1, stride: 2, lift: 1 },
+  { bob: 0, stride: 5 },
+  { bob: 1, stride: 3, lift: 2 },
   { bob: -1, stride: 0 },
-  { bob: 0, stride: -3 },
-  { bob: 1, stride: -2, lift: 1 },
+  { bob: 0, stride: -5 },
+  { bob: 1, stride: -3, lift: 2 },
   { bob: -1, stride: 0 },
+  { bob: 1, stride: 8, lean: 2 },
+  { bob: 2, stride: 5, lift: 3, lean: 2 },
+  { bob: -1, stride: 1, lean: 2 },
+  { bob: 1, stride: -8, lean: 2 },
+  { bob: 2, stride: -5, lift: 3, lean: 2 },
+  { bob: -1, stride: -1, lean: 2 },
 ];
 // Un personnage sans fiche de combat frappe quand même : le corps s'abaisse de
 // face ou de dos, le buste penche en avant de profil (l'épée est dessinée à part).
 const FRONT_STRIKE = { bob: 1, swing: 1 };
 const SIDE_STRIKE = { bob: 1, stride: 2, lean: 3 };
 // Ce qui flotte (les Hallucinations) ne marche pas : tout le corps ondule.
-const FLOAT_POSES = [0, 1, 0, -1, 0, 1, 1, 0, -1].map((bob) => ({ bob }));
+const FLOAT_POSES = [0, 1, 0, -1, 0, 1, 1, 0, -1, -1, 0, 1, 1, 0, -1].map((bob) => ({ bob }));
 
 // --- Lecture des grilles ----------------------------------------------------
 
@@ -194,9 +213,14 @@ function frontFrame(cells, info, pose) {
   const inLegs = (x) => Math.abs(x - center) <= LEG_REACH;
   // Ce qui, dans les lignes des jambes, n'est pas une jambe (un bâton) ne bouge pas.
   stamp(frame, cells, { rows: [hips, bottom], keep: (x) => !inLegs(x) });
-  for (const [side, lift] of [['left', pose.liftL ?? 0], ['right', pose.liftR ?? 0]]) {
+  for (const [side, lift, spread] of [['left', pose.liftL ?? 0, pose.spreadL ?? 0], ['right', pose.liftR ?? 0, pose.spreadR ?? 0]]) {
     const cols = side === 'left' ? [center - LEG_REACH, center - 1] : [center, center + LEG_REACH];
-    stamp(frame, cells, { rows: [hips, bottom], cols, dy: -lift });
+    // La jambe levée s'écarte du corps (spread), d'autant plus qu'on descend
+    // vers le pied : le genou reste près de la hanche.
+    const legSpan = Math.max(1, bottom - hips);
+    const sign = side === 'left' ? -1 : 1;
+    const shear = spread ? (y) => sign * Math.round((spread * (y - hips)) / legSpan) : null;
+    stamp(frame, cells, { rows: [hips, bottom], cols, dy: -lift, shear });
     // Le corps remonte : la ligne des hanches se répète pour ne laisser aucun trou.
     if (bob < 0) stamp(frame, cells, { rows: [hips, hips], cols, dy: -lift - 1 });
   }
@@ -328,7 +352,9 @@ export function createCharacterSheet(character) {
         const rgb = (frame.shade[i] ? views.darker : views.colors)[index];
         const px = column * FRAME_WIDTH + (mirror ? FRAME_WIDTH - 1 - x : x);
         setPixel(buffer, px, row * FRAME_HEIGHT + y, rgb);
-        if (views === base && glowing.has(index)) {
+        // Les index de lumière valent pour tous les jeux de vues : les poses
+        // de combat reprennent la palette de base aux mêmes index.
+        if (glowing.has(index) && index < base.colors.length) {
           setPixel(glow, px, row * FRAME_HEIGHT + y, views.colors[index]);
           hasGlow = true;
         }
@@ -336,7 +362,8 @@ export function createCharacterSheet(character) {
     }
   };
 
-  // Les neuf images de repos et de marche d'un jeu de vues, à partir de column.
+  // Les quinze images de repos, de marche et de course d'un jeu de vues, à
+  // partir de column.
   const animate = (views, view, column, row, mirror) => {
     const cells = views.grids[view];
     const info = views.infoOf(view);

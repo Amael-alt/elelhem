@@ -1,9 +1,10 @@
 // Le héros : déplacement, collisions, direction du regard et animation.
 
-import { ARMED_IDLE_FRAMES, ARMED_WALK_FRAMES, DIRECTIONS, IDLE_FPS, IDLE_FRAMES, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
+import { ARMED_IDLE_FRAMES, ARMED_RUN_FRAMES, ARMED_WALK_FRAMES, DIRECTIONS, IDLE_FPS, IDLE_FRAMES, RUN_FRAMES, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
 
 const SPEED = 3.4; // unités par seconde
 const RADIUS = 0.3;
+const RUN_FROM = 1.3; // au-delà de ce facteur de vitesse, la foulée de course
 
 // En diagonale, on garde la direction en cours si elle fait partie du
 // mouvement : le personnage ne tremble pas entre deux vues.
@@ -56,9 +57,13 @@ export function createPlayer({ sprite, shadow, village, extras = [] }) {
         world.collider.move(position, direction.x * SPEED * dt, direction.z * SPEED * dt, RADIUS);
         facing = chooseFacing(direction, facing);
       }
-      const frames = moving ? (armed ? ARMED_WALK_FRAMES : WALK_FRAMES) : (armed ? ARMED_IDLE_FRAMES : IDLE_FRAMES);
+      const pace = Math.hypot(direction.x, direction.z);
+      const running = moving && pace >= RUN_FROM;
+      const frames = !moving ? (armed ? ARMED_IDLE_FRAMES : IDLE_FRAMES)
+        : running ? (armed ? ARMED_RUN_FRAMES : RUN_FRAMES)
+          : (armed ? ARMED_WALK_FRAMES : WALK_FRAMES);
       // En courant (direction plus longue que 1), les jambes vont plus vite.
-      const fps = moving ? WALK_FPS * Math.max(1, Math.hypot(direction.x, direction.z)) : IDLE_FPS;
+      const fps = moving ? WALK_FPS * Math.max(1, pace) : IDLE_FPS;
       sprite.setFrame(DIRECTIONS.indexOf(facing), frames[Math.floor(clock * fps) % frames.length]);
       place();
     },

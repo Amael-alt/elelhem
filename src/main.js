@@ -51,7 +51,7 @@ const MAX_FRAME_SECONDS = 0.1; // au retour d'un onglet en veille, pas de saut
 const NARROW_SCREEN = 600; // en dessous (en pixels CSS), ombres moins définies
 const STANDING = { x: 0, z: 0 }; // direction du héros pendant une conversation
 const PIGEON_HEAR_RADIUS = 3.2; // les pigeons parlent quand on passe sous leur vol
-const INTERIOR_FRAMING = 0.55; // dans une pièce, la caméra se rapproche
+const INTERIOR_FRAMING = 0.62; // dans une pièce, la caméra se rapproche (pièces agrandies en 1.2)
 const FIRST_TALK_DELAY_MS = 700; // au réveil, Claudette parle après un instant
 const CHEST_REACH = 1.0; // un coffre s'ouvre quand on arrive à cette distance
 

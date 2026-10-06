@@ -605,14 +605,16 @@ Avant de publier, Jordan a demandé deux choses de plus : un flou « réduit de 
 
 **Les meubles** (`world/furniture.js`), tous en boîtes fusionnées par matière comme avant, dix-sept de plus : applique murale (patte de fer, coupelle, bougie, flamme, sur le mur de son choix), rideaux à tringle, bibliothèque à rangées de livres de six couleurs avec une place vide de temps en temps, pupitre à parchemins roulés, livre ouvert et encrier, armoire à portes en panneaux, tabouret, lustre (chaîne, anneau, quatre bougies dont les flammes se voient, une seule lumière au centre), tonnelet couché à robinet, chaudron à crémaillère dans la cheminée, bottes d'herbes séchées, panier à linge, tapisserie encadrée, établi à étau, meule sur bâti, baquet de trempe, fers à cheval au mur, tas de charbon. Un meuble peut rendre plusieurs flammes (`flames`), des flammes qui n'éclairent pas (`noLight`) et des lumières à part (`lights`) : les pièces restent à quatre ou cinq lumières ponctuelles, pour le téléphone.
 
-**Les pièces** (`world/rooms.js`) : chez le héros, le lit, la cheminée et sa marmite, des herbes qui sèchent, une fenêtre à rideaux, la bibliothèque des grimoires, le pupitre où l'on apprend avec son tabouret et sa bougie, le coffre, un panier, deux appliques. À l'auberge, le tonnelet derrière le comptoir, la marmite au feu, des rideaux, deux tabourets au comptoir, un panier, le lustre au-dessus du tapis, deux appliques qui n'éclairent pas (le feu, trois bougies et le lustre suffisent). À la forge, les fers au mur au-dessus du baquet de trempe, la meule, le tas de charbon, deux appliques ; le râtelier a reculé pour leur faire place.
+**Des murs minces et des pièces plus grandes.** À la première relecture, Jordan a trouvé les pièces « trop petites et étriquées », les murs « trop épais, grossiers ». Les cases de mur de la grille mesurent une unité : elles servent toujours aux collisions, mais le sol ne les dessine plus (`hidden` dans `world/map.js`, sauté par `world/terrain.js`) et `buildWalls` pose à leur bord intérieur une **cloison de 22 cm** (plâtre ou pierre), coiffée par la sablière de bois des boiseries ; le reste de la case est du vide, comme une maquette ouverte. Les trois pièces ont été **agrandies** : la maison passe de 5 × 4 à 8 × 6 cases de plancher, l'auberge de 8 × 5 à 11 × 7, la forge de 6 × 4 à 9 × 6, et la caméra recule un peu dedans (cadrage 0,62 au lieu de 0,55). Berthe et le point de départ de Claudette ont suivi (`data/characters.js`).
+
+**Les pièces** (`world/rooms.js`) : chez le héros, le lit, une armoire à deux portes, une fenêtre à rideaux, la cheminée et sa marmite, des herbes qui sèchent, la bibliothèque des grimoires, le pupitre où l'on apprend avec son tabouret et sa bougie, une table et ses bancs, le coffre, un panier, trois appliques. À l'auberge, un long comptoir et le tonnelet derrière, trois tabourets, trois tables, la marmite au feu, des rideaux, deux tonneaux, un panier, le lustre au-dessus du tapis, trois appliques qui n'éclairent pas (le feu, trois bougies et le lustre suffisent). À la forge, le four et son soufflet, le râtelier, l'établi à étau, les fers au mur au-dessus du baquet de trempe, l'enclume, la meule, le tas de charbon, une caisse et un tonneau, deux appliques.
 
 ### Mesures
 
 | Pièce | Avant | Après |
 |---|---|---|
-| Ta maison | 37 appels, 1 190 triangles, 2 lumières | 43 appels, 2 710 triangles, 4 lumières |
-| L'auberge | 40 appels, 2 340 triangles, 4 lumières | 41 appels, 3 510 triangles, 5 lumières |
-| La forge | 33 appels, 1 370 triangles, 3 lumières | 38 appels, 2 000 triangles, 5 lumières |
+| Ta maison | 5 × 4 cases, 37 appels, 1 190 triangles, 2 lumières | 8 × 6, 41 appels, 2 980 triangles, 5 lumières |
+| L'auberge | 8 × 5, 40 appels, 2 340 triangles, 4 lumières | 11 × 7, 39 appels, 4 070 triangles, 5 lumières |
+| La forge | 6 × 4, 33 appels, 1 370 triangles, 3 lumières | 9 × 6, 36 appels, 2 120 triangles, 4 lumières |
 
-Dehors, rien n'a bougé (90 à 101 appels). Console sans erreur ; départ de la partie inchangé (Claudette près du lit, le héros sur le tapis).
+Dehors, rien n'a bougé (89 à 101 appels). Partie neuve : réveil sur le tapis face à Claudette, sortie par le seuil, retour par la porte (la pièce s'ouvre sur son entrée), les trois pièces visitées ; console sans erreur dans un onglet neuf.

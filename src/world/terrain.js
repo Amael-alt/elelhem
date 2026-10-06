@@ -50,6 +50,7 @@ export function createTerrain(map, materials) {
     for (let x = 0; x < map.width; x += 1) {
       const cell = map.cellAt(x, z);
       const h = cell.height;
+      if (cell.hidden) continue; // mur d'intérieur : la cloison est bâtie à part
 
       // Dessus, la texture suit les coordonnées du monde : aucune couture
       // d'une cellule à l'autre.

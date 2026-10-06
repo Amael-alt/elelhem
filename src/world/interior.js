@@ -16,7 +16,7 @@ import { buildAnvil, buildBarrel, buildBench, buildCrate, buildTable, buildWoodp
 import {
   buildBasket, buildBed, buildBookshelf, buildCandle, buildCauldron, buildChandelier, buildChest, buildCoal, buildCounter, buildCurtain,
   buildDesk, buildFireplace, buildFurnace, buildGrindstone, buildHerbs, buildHorseshoes, buildKeg, buildRug, buildSconce, buildShelf,
-  buildStool, buildTapestry, buildToolRack, buildTrim, buildTrough, buildWardrobe, buildWindow, buildWorkbench,
+  buildStool, buildTapestry, buildToolRack, buildTrim, buildTrough, buildWalls, buildWardrobe, buildWindow, buildWorkbench,
 } from './furniture.js';
 import { createFlames } from '../gfx/fx/flame.js';
 import { createLightPools } from '../gfx/lightpools.js';
@@ -112,10 +112,12 @@ export function createInterior(room, { materials, sunDirection }) {
   room.props.forEach((item, index) => {
     if (item.type === 'chest' && item.tokens) chests.push({ id: `${room.lieu}:${index}`, x: item.x, z: item.z, tokens: item.tokens });
   });
-  // Les boiseries des murs d'abord, d'après la grille et ce qui est posé contre
-  // le mur nord.
+  // Les cloisons et leurs boiseries d'abord, d'après la grille et ce qui est
+  // posé contre le mur nord.
   const doorX = room.rows[room.rows.length - 1].indexOf('P');
-  buildTrim(map, { stone: room.rows[0][0] === 'S', avoid: northWallRanges(room.props), doorX }, builders);
+  const stone = room.rows[0][0] === 'S';
+  buildWalls(map, { stone, doorX }, builders);
+  buildTrim(map, { stone, avoid: northWallRanges(room.props), doorX }, builders);
   for (const item of room.props) {
     const build = FURNITURE[item.type];
     if (!build) throw new Error(`Intérieur : meuble inconnu « ${item.type} ».`);

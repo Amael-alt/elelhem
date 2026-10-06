@@ -17,6 +17,7 @@ const FULL_UV = [[0, 0], [1, 0], [1, 1], [0, 1]];
 const WALL_DEPTH = 0.02; // fenêtres et râteliers, juste devant le mur
 const WALL_TOP = 2.6; // hauteur des murs pleins (world/map.js)
 const LOW_WALL = 0.45; // le muret de façade
+export const WALL_THICKNESS = 0.22; // la cloison visible, au bord intérieur des cases de mur
 const TRIM_DEPTH = 0.07; // saillie des poutres et plinthes devant le mur
 const PLINTH_HEIGHT = 0.16;
 const GIRT_Y = 1.95; // lisse à mi-hauteur, au-dessus des fenêtres
@@ -159,22 +160,44 @@ export function buildCandle({ x, z, y = 1.05 }, builders) {
 
 // --- Version 1.2 : la pièce habitée -----------------------------------------
 
-// Boiseries d'une pièce, d'après sa grille : plinthe au pied des trois murs
-// pleins, corniche à leur sommet, et sur l'enduit une lisse à mi-hauteur et
-// des poteaux (sauf devant ce qui est déjà posé contre le mur nord : avoid,
-// liste de [x0, x1]). Sur le muret de façade, une main courante de part et
-// d'autre du seuil (doorX : colonne du seuil).
+// Les murs eux-mêmes : la grille garde des cases pleines d'une unité pour les
+// collisions, mais ce qu'on voit est une cloison mince posée au bord intérieur
+// de ces cases, le reste de la case est du vide, comme une maquette ouverte.
+// Trois murs hauts (nord, ouest, est) et un muret de façade ouvert au seuil.
+export function buildWalls(map, { stone = false, doorX }, builders) {
+  const wall = createFrame(builders[stone ? 'stonewall' : 'plaster'], [0, 0, 0]);
+  const [x0, x1, z0, z1] = [1, map.width - 1, 1, map.depth - 1];
+  const t = WALL_THICKNESS;
+  pushBox(wall, [x0 - t, 0, z0 - t], [x1 + t, WALL_TOP, z0]);
+  pushBox(wall, [x0 - t, 0, z0], [x0, WALL_TOP, z1 + t]);
+  pushBox(wall, [x1, 0, z0], [x1 + t, WALL_TOP, z1 + t]);
+  pushBox(wall, [x0 - t, 0, z1], [doorX, LOW_WALL, z1 + t]);
+  pushBox(wall, [doorX + 1, 0, z1], [x1 + t, LOW_WALL, z1 + t]);
+  return { posts: [] };
+}
+
+// Boiseries d'une pièce, d'après sa grille : plinthe au pied des trois murs,
+// sablière de bois qui coiffe leur sommet, et sur l'enduit une lisse à
+// mi-hauteur et des poteaux (sauf devant ce qui est déjà posé contre le mur
+// nord : avoid, liste de [x0, x1]). Sur le muret de façade, une main courante
+// de part et d'autre du seuil (doorX : colonne du seuil).
 export function buildTrim(map, { stone = false, avoid = [], doorX }, builders) {
   const wood = createFrame(builders.wood, [0, 0, 0]);
   const [x0, x1, z0, z1] = [1, map.width - 1, 1, map.depth - 1];
   const d = TRIM_DEPTH;
+  const t = WALL_THICKNESS;
   pushBox(wood, [x0, 0, z0], [x1, PLINTH_HEIGHT, z0 + d]);
   pushBox(wood, [x0, 0, z0], [x0 + d, PLINTH_HEIGHT, z1]);
   pushBox(wood, [x1 - d, 0, z0], [x1, PLINTH_HEIGHT, z1]);
-  for (const y of stone ? [WALL_TOP - BEAM] : [GIRT_Y, WALL_TOP - BEAM]) {
-    pushBox(wood, [x0 - 0.01, y, z0 - 0.01], [x1 + 0.01, y + BEAM, z0 + d]);
-    pushBox(wood, [x0 - 0.01, y, z0], [x0 + d, y + BEAM, z1]);
-    pushBox(wood, [x1 - d, y, z0], [x1 + 0.01, y + BEAM, z1]);
+  // La sablière : un chapeau de bois sur toute l'épaisseur de la cloison.
+  const cap = WALL_TOP - 0.06;
+  pushBox(wood, [x0 - t - 0.03, cap, z0 - t - 0.03], [x1 + t + 0.03, cap + 0.14, z0 + d]);
+  pushBox(wood, [x0 - t - 0.03, cap, z0], [x0 + d, cap + 0.14, z1 + t + 0.03]);
+  pushBox(wood, [x1 - d, cap, z0], [x1 + t + 0.03, cap + 0.14, z1 + t + 0.03]);
+  if (!stone) {
+    pushBox(wood, [x0 - 0.01, GIRT_Y, z0 - 0.01], [x1 + 0.01, GIRT_Y + BEAM, z0 + d]);
+    pushBox(wood, [x0 - 0.01, GIRT_Y, z0], [x0 + d, GIRT_Y + BEAM, z1]);
+    pushBox(wood, [x1 - d, GIRT_Y, z0], [x1 + 0.01, GIRT_Y + BEAM, z1]);
   }
   if (!stone) {
     const free = (x) => avoid.every(([a, b]) => x + POST_WIDTH < a || x - POST_WIDTH > b);
@@ -187,11 +210,11 @@ export function buildTrim(map, { stone = false, avoid = [], doorX }, builders) {
     }
   }
   // Main courante du muret, et ses poteaux aux coins et au seuil.
-  const [railA, railB] = [z1 + 0.34, z1 + 0.66];
-  if (doorX > x0) pushBox(wood, [x0, LOW_WALL, railA], [doorX - 0.02, LOW_WALL + 0.1, railB]);
-  if (doorX + 1 < x1) pushBox(wood, [doorX + 1.02, LOW_WALL, railA], [x1, LOW_WALL + 0.1, railB]);
-  for (const px of [x0 + 0.08, doorX - 0.08, doorX + 1.08, x1 - 0.08]) {
-    pushBox(wood, [px - 0.06, LOW_WALL, z1 + 0.42], [px + 0.06, LOW_WALL + 0.32, z1 + 0.58]);
+  const [railA, railB] = [z1 - 0.03, z1 + t + 0.03];
+  if (doorX > x0) pushBox(wood, [x0 - t - 0.03, LOW_WALL, railA], [doorX - 0.02, LOW_WALL + 0.1, railB]);
+  if (doorX + 1 < x1) pushBox(wood, [doorX + 1.02, LOW_WALL, railA], [x1 + t + 0.03, LOW_WALL + 0.1, railB]);
+  for (const px of [x0 - t / 2, doorX - 0.08, doorX + 1.08, x1 + t / 2]) {
+    pushBox(wood, [px - 0.06, LOW_WALL, z1 + t / 2 - 0.08], [px + 0.06, LOW_WALL + 0.32, z1 + t / 2 + 0.08]);
   }
   return { posts: [] };
 }

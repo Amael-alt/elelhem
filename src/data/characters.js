@@ -164,7 +164,7 @@ export const claudette = {
   },
   position: { x: 17.4, z: 15.0 },
   direction: 'down',
-  depart: { lieu: 'maison', x: 4.3, z: 2.4, direction: 'left' },
+  depart: { lieu: 'maison', x: 5.0, z: 3.5, direction: 'left' },
   coiffure: 'queue',
   tenue: 'robe',
   dialogue: 'claudette',
@@ -678,7 +678,7 @@ export const berthe = {
   },
   // Derrière son comptoir, dans l'auberge (coordonnées de la pièce, world/rooms.js).
   lieu: 'auberge',
-  position: { x: 7.0, z: 1.7 },
+  position: { x: 8.6, z: 1.7 },
   direction: 'down',
   coiffure: 'court',
   tenue: 'robe',

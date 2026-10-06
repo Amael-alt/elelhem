@@ -57,17 +57,17 @@ export const CELL_TYPES = {
   W: { name: 'muraille', matter: 'cobble', side: 'cobble', height: 2.6, solid: true },
   h: { name: 'haie', matter: 'leaves', side: 'leaves', height: 0.45, solid: true }, // basse : ses grappes la couvrent
   r: { name: 'rivière haute', matter: 'water', side: 'rock', height: 1.55, solid: true },
-  // Les intérieurs (world/rooms.js) : plancher, murs pleins au nord et sur les
-  // côtés, muret bas au sud (la façade est coupée, comme une maquette ouverte),
-  // seuil par où l'on ressort.
+  // Les intérieurs (world/rooms.js) : plancher, murs au nord et sur les côtés,
+  // muret bas au sud (la façade est coupée, comme une maquette ouverte), seuil
+  // par où l'on ressort. Les cases de mur sont pleines pour les collisions
+  // mais cachées (hidden) : le sol ne les dessine pas, world/furniture.js pose
+  // à leur bord intérieur une cloison mince, celle qu'on voit.
   f: { name: 'plancher', matter: 'wood', side: 'wood', height: 0, solid: false },
   P: { name: 'seuil', matter: 'wood', side: 'wood', height: 0, solid: false },
-  // Le dessus du mur d'enduit est une sablière de bois : vu d'en haut, le mur
-  // se lit comme une poutre, pas comme une dalle.
-  M: { name: 'mur', matter: 'wood', side: 'plaster', height: 2.6, solid: true },
-  S: { name: 'mur de pierre', matter: 'stonewall', side: 'stonewall', height: 2.6, solid: true },
-  m: { name: 'muret de façade', matter: 'wood', side: 'plaster', height: 0.45, solid: true },
-  s: { name: 'muret de pierre', matter: 'stonewall', side: 'stonewall', height: 0.45, solid: true },
+  M: { name: 'mur', matter: 'plaster', side: 'plaster', height: 2.6, solid: true, hidden: true },
+  S: { name: 'mur de pierre', matter: 'stonewall', side: 'stonewall', height: 2.6, solid: true, hidden: true },
+  m: { name: 'muret de façade', matter: 'plaster', side: 'plaster', height: 0.45, solid: true, hidden: true },
+  s: { name: 'muret de pierre', matter: 'stonewall', side: 'stonewall', height: 0.45, solid: true, hidden: true },
 };
 
 // Hauteur du dessous du socle : les flancs descendent jusque-là.

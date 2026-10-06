@@ -1,17 +1,14 @@
-// Les personnages du village. Chacun a une palette de quatre rampes (peau,
-// vêtement, accent, cheveux, du plus sombre au plus clair) et un accessoire
-// distinctif dessiné en grilles de caractères, une par vue.
+// Les personnages du village : que de la donnée. Chacun nomme sa planche de
+// sprite (data/sprites/, grilles transcrites d'après une fiche dessinée) et
+// garde une palette de quatre rampes (peau, vêtement, accent, cheveux, du plus
+// sombre au plus clair), qui ne sert plus qu'aux échantillons de la boutique.
 //
-// FORMAT GELÉ (étape 1e) : un personnage est un objet
+// FORMAT GELÉ (étape 1e, allégé en version 1.4) : un personnage est un objet
 //   {
 //     id,          identifiant unique
 //     nom,         nom affiché dans la boîte de dialogue
-//     palette,     { peau, vetement, accent, cheveux } et, si l'accessoire émet
-//                  de la lumière, lumiere : quatre tons chacune, du sombre au clair
-//     coiffure,    'court' (par défaut) | 'long' | 'chignon' | 'queue' | 'herisse'
-//                  | 'chauve' | 'aucun' (facultatif, ajouté avec les nouveaux sprites)
-//     tenue,       'tunique' (par défaut) | 'robe' (facultatif, idem)
-//     accessoire,  { nom, ancre, face, dos, profil } : le seul signe distinctif
+//     sprite,      nom de sa planche dans data/sprites/index.js (version 1.4)
+//     palette,     { peau, vetement, accent, cheveux } et parfois lumiere
 //     position,    { x, z } dans le village, ou null pour le héros (point de départ)
 //     direction,   'down' | 'left' | 'right' | 'up' : où il regarde au repos
 //     dialogue,    clé de son texte dans data/dialogues.js, ou null
@@ -20,32 +17,20 @@
 //     depart,      facultatif (étape 3c) : { lieu, x, z, direction }, où il
 //                  attend au tout début, avant la première conversation
 //   }
-// Le moteur ne lit que ces champs : un nouvel habitant n'est que de la donnée.
-//
-// Légende des grilles (voir gfx/sprites.js) :
-//   p peau   v vêtement   a accent   c cheveux   b cuir
-//   l lumière (émissive, brille même à l'ombre)
-//   en minuscule, ton calculé d'après la forme ; en majuscule, ton le plus sombre
-//   e œil (couleur du contour)   x efface   . laisse voir le corps dessous
-// L'ancre place le coin haut gauche de la grille dans le cadre de 32 × 48
-// (version 1.1 ; 32 × 32 auparavant). Repères de la silhouette au repos : tête
-// de x 11 à 21 et de y 7 à 18 (cheveux jusqu'à y 5), yeux en y 13 et 14, buste
-// de x 11 à 20 et de y 20 à 33, bras en x 9 et 10 et en x 21 et 22, mains en
-// y 32 et 33, jambes de y 32 à 45. La même ancre sert aux trois vues.
+// Le moteur ne lit que ces champs : un nouvel habitant n'est que de la donnée,
+// plus une planche. Les portraits de dialogue (assets/portraits/) portent l'id.
 
 // Le héros, dans l'esprit d'Elliot (The Adventures of Elliot, de l'équipe
 // d'Octopath Traveler) : chapeau rouge à large bord et plume dorée, cheveux
 // blond pâle, écharpe rouge jetée sur l'épaule, veste claire barrée d'une
-// sangle de cuir, bottes brunes. Pas d'épée : on ne se bat pas à Elelhem.
-// Aucun trait de genre.
+// sangle de cuir, bottes brunes, sacoche. Sans épée dans le village : elle
+// viendra avec la lande, hors les murs. Aucun trait de genre.
 export const hero = {
   id: 'heros',
   sprite: 'heros',
   nom: 'Voyageur',
   position: null,
   direction: 'down',
-  coiffure: 'court',
-  tenue: 'tunique',
   dialogue: null,
   palette: {
     peau: ['#8a5a44', '#b67c5d', '#d9a07c', '#efc29b'],
@@ -56,99 +41,6 @@ export const hero = {
   // Le chapeau (accent) et sa plume (la rampe des cheveux, blond doré),
   // l'écharpe (accent) nouée au cou dont le pan tombe sur l'épaule gauche du
   // héros, la sangle (cuir) en travers de la veste.
-  accessoire: {
-    nom: 'chapeau à plume et écharpe',
-    ancre: [6, 2],
-    face: [
-      '..c.................',
-      '..cc...aaaaaaa......',
-      '...cc.aaaaaaaaa.....',
-      '....caaaaaaaaaaa....',
-      '.....aaaaaaaaaaa....',
-      '.....aaaaaaaaaaa....',
-      '.....AAAAAAAAAAA....',
-      '.aaaaaaaaaaaaaaaaaa.',
-      '..AAAAAAAAAAAAAAAA..',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '......aaaaaaaaa.....',
-      '.....aaaaaaaaaaa....',
-      '......aaaaaaaaaaa...',
-      '......b.......aaaa..',
-      '.......b.......aaa..',
-      '........b......aaaa.',
-      '.........b......aaa.',
-      '..........b.....aaa.',
-      '...........b....aa..',
-      '............b...A...',
-    ],
-    dos: [
-      '.................c..',
-      '.......aaaaaaa..cc..',
-      '.....aaaaaaaaa.cc...',
-      '....aaaaaaaaaaac....',
-      '.....aaaaaaaaaaa....',
-      '.....aaaaaaaaaaa....',
-      '.....AAAAAAAAAAA....',
-      '.aaaaaaaaaaaaaaaaaa.',
-      '..AAAAAAAAAAAAAAAA..',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '......aaaaaaaaa.....',
-      '.....aaaaaaaaaaa....',
-      '...aaaaaaaaaaa......',
-      '..aaaa.......b......',
-      '..aaa.......b.......',
-      '.aaaa......b........',
-      '.aaa......b.........',
-      '.aaa.....b..........',
-      '..aa....b...........',
-      '..A....b............',
-    ],
-    // Profil tourné vers la gauche ; la vue de droite en est le miroir. La
-    // plume pointe vers l'arrière, le pan de l'écharpe flotte derrière.
-    profil: [
-      '..................c.',
-      '......aaaaaaa....cc.',
-      '......aaaaaaaaa.cc..',
-      '......aaaaaaaaaac...',
-      '......aaaaaaaaaaa...',
-      '......aaaaaaaaaaa...',
-      '......AAAAAAAAAAA...',
-      '.aaaaaaaaaaaaaaaaaa.',
-      '..AAAAAAAAAAAAAAAA..',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '....................',
-      '......aaaaaaaaa.....',
-      '.....aaaaaaaaaaa....',
-      '.......aaaaaaaaaa...',
-      '........b.....aaaa..',
-      '........b.....aaaa..',
-      '.........b.....aaaa.',
-      '.........b.....aaa..',
-      '..........b....aaa..',
-      '..........b....aa...',
-      '...........b...A....',
-    ],
-  },
 };
 
 // Claudette, notre sœur (un clin d'œil à Claude) : la guide. Elle nous donne
@@ -167,72 +59,13 @@ export const claudette = {
   position: { x: 17.4, z: 15.0 },
   direction: 'down',
   depart: { lieu: 'maison', x: 5.0, z: 3.5, direction: 'left' },
-  coiffure: 'queue',
-  tenue: 'robe',
   dialogue: 'claudette',
-  accessoire: {
-    nom: 'sacoche en bandoulière',
-    ancre: [8, 20],
-    face: [
-      '............b.',
-      '...........b..',
-      '..........b...',
-      '.........b....',
-      '........b.....',
-      '.......b......',
-      '......b.......',
-      '.....b........',
-      '....b.........',
-      '...b..........',
-      '.BBBBBB.......',
-      '.bbabbb.......',
-      '.bbbbbb.......',
-      '.bbbbbb.......',
-      '.BBBBBB.......',
-    ],
-    dos: [
-      '...b..........',
-      '....b.........',
-      '.....b........',
-      '......b.......',
-      '.......b......',
-      '........b.....',
-      '.........b....',
-      '..........b...',
-      '...........b..',
-      '............b.',
-      '...........BBB',
-      '...........bbb',
-      '...........bbb',
-      '...........BBB',
-    ],
-    profil: [
-      '.......b......',
-      '.......b......',
-      '.......b......',
-      '.......b......',
-      '.......b......',
-      '......b.......',
-      '......b.......',
-      '.....b........',
-      '.....b........',
-      '....b.........',
-      '..BBBBBB......',
-      '..bbabbb......',
-      '..bbbbbb......',
-      '..bbbbbb......',
-      '..BBBBBB......',
-    ],
-  },
 };
 
 // L'Oracle Gépété : un vieux magicien qui sait plein de choses, et qui se
 // trompe parfois avec aplomb. Il se sert de la magie LIA. Chapeau pointu à
 // large bord, longue barbe blanche, robe bleue, et un bâton qui porte la
 // lumière de la magie (lettre l : elle brille, même à l'ombre).
-const batonFace = '...................b....';
-const batonDos = '.....b..................';
-const batonProfil = '..b.....................';
 export const gepeto = {
   id: 'gepeto',
   sprite: 'gepeto',
@@ -245,71 +78,7 @@ export const gepeto = {
   },
   position: { x: 21.4, z: 15.7 },
   direction: 'down',
-  coiffure: 'long',
-  tenue: 'robe',
   dialogue: 'gepeto',
-  accessoire: {
-    nom: 'chapeau pointu, barbe et bâton de lumière',
-    ancre: [6, 0],
-    face: [
-      '.........aa.............',
-      '.........aaa............',
-      '........aaaa......lll...',
-      '........aaaaa....lllll..',
-      '.......aaaaaa....lllll..',
-      '.......aaaaaaa...lllll..',
-      '......aaaaaaaaa...lll...',
-      '.....aaaaaaaaaaa...b....',
-      '....AAAAAAAAAAAAA..b....',
-      '..aaaaaaaaaaaaaaaaab....',
-      ...Array(7).fill(batonFace),
-      '.......cccccc......b....',
-      '......cccccccc.....b....',
-      '......cccccccc.....b....',
-      '.......cccccc......b....',
-      '.......cccccc......b....',
-      '........cccc.......b....',
-      '........cccc.......b....',
-      '.........cc........b....',
-      '.........cc........b....',
-      ...Array(20).fill(batonFace),
-    ],
-    dos: [
-      '.............aa.........',
-      '.............aaa........',
-      '....lll.....aaaa........',
-      '...lllll....aaaaa.......',
-      '...lllll...aaaaaa.......',
-      '...lllll...aaaaaaa......',
-      '....lll...aaaaaaaaa.....',
-      '.....b...aaaaaaaaaaa....',
-      '.....b..AAAAAAAAAAAAA...',
-      '.....baaaaaaaaaaaaaaaaa.',
-      ...Array(36).fill(batonDos),
-    ],
-    profil: [
-      '..............aa........',
-      '.............aaa........',
-      '.lll........aaaa........',
-      'lllll.......aaaaa.......',
-      'lllll......aaaaaa.......',
-      'lllll.....aaaaaaaa......',
-      '.lll....aaaaaaaaaa......',
-      '..b....aaaaaaaaaaaa.....',
-      '..b....AAAAAAAAAAAA.....',
-      '..b.aaaaaaaaaaaaaaaaa...',
-      ...Array(7).fill(batonProfil),
-      '..b...cccc..............',
-      '..b...ccccc.............',
-      '..b...ccccc.............',
-      '..b....cccc.............',
-      '..b....cccc.............',
-      '..b.....ccc.............',
-      '..b.....cc..............',
-      '..b......c..............',
-      ...Array(21).fill(batonProfil),
-    ],
-  },
 };
 
 // Maître Ferrand, le forgeron, devant son enclume : barbe courte, tablier de
@@ -326,87 +95,11 @@ export const ferrand = {
   },
   position: { x: 7.4, z: 12.7 },
   direction: 'up',
-  coiffure: 'court',
-  tenue: 'tunique',
   dialogue: 'ferrand',
-  accessoire: {
-    nom: 'marteau et tablier',
-    ancre: [4, 16],
-    face: [
-      '.........cccccc..........',
-      '........cccccccc.........',
-      '........cccccccc.........',
-      '........cccccccc.........',
-      '.........cccccc..aaaaa...',
-      '.........BccccB..aaaaa...',
-      '..........bbbb...aaaaa...',
-      '..........bbbb.....b.....',
-      '..........bbbb.....b.....',
-      '.........bbbbbb....b.....',
-      '.........bbbbbb....b.....',
-      '.........bbbbbb....b.....',
-      '.........bbbbbb....b.....',
-      '.........bbbbbb....b.....',
-      '.........bbbbbb....b.....',
-      '.........bbbbbb....b.....',
-      '.........bbbbbb....b.....',
-      '.........bbbbbb....b.....',
-      '.........bbbbbb..........',
-      '.........bbbbbb..........',
-      '.........BBBBBB..........',
-    ],
-    dos: [
-      '.........................',
-      '.........................',
-      '.........................',
-      '.........................',
-      '..aaaaa..................',
-      '..aaaaa..B....B..........',
-      '..aaaaa..B....B..........',
-      '....b....B....B..........',
-      '....b....B....B..........',
-      '....b....B....B..........',
-      '....b....B....B..........',
-      '....b....B....B..........',
-      '....b....B....B..........',
-      '....b....B....B..........',
-      '....b....BBBBBB..........',
-      '....b....................',
-      '....b....................',
-      '....b....................',
-      '.........................',
-      '.........................',
-      '.........................',
-    ],
-    profil: [
-      '.......cccc..............',
-      '......ccccc..............',
-      '......ccccc..............',
-      '......ccccc..............',
-      '....aaaaa.ccc............',
-      '....aaaaa.cc.B...........',
-      '....aaaaa.bbbb...........',
-      '......b...bbbb...........',
-      '......b...bbbb...........',
-      '......b..bbbbb...........',
-      '......b..bbbbb...........',
-      '......b..bbbbb...........',
-      '......b..bbbbb...........',
-      '......b..bbbbb...........',
-      '......b..bbbbb...........',
-      '......b..bbbbb...........',
-      '......b..bbbbb...........',
-      '......b..bbbbb...........',
-      '.........bbbbb...........',
-      '.........bbbbb...........',
-      '.........BBBBB...........',
-    ],
-  },
 };
 
 // Dame Marjolaine, la bibliothécaire, devant sa porte : lunettes rondes et un
 // livre tenu à deux mains.
-const sansLunettes = '................';
 export const marjolaine = {
   id: 'marjolaine',
   sprite: 'marjolaine',
@@ -419,46 +112,7 @@ export const marjolaine = {
   },
   position: { x: 12.2, z: 10.3 },
   direction: 'down',
-  coiffure: 'chignon',
-  tenue: 'robe',
   dialogue: 'marjolaine',
-  accessoire: {
-    nom: 'lunettes et livre',
-    ancre: [8, 12],
-    face: [
-      '....AAAAAAAA....',
-      '...AA..AA..AA...',
-      '....A..AA..A....',
-      '....A..A.A..A...',
-      ...Array(15).fill(sansLunettes),
-      '....Aaaaaaaa....',
-      '....Aaaaaaaa....',
-      '....Aaaaaaaa....',
-      '....Aaaaaaaa....',
-      '....Aaaaaaaa....',
-      '....Aaaaaaaa....',
-      '....Appppppp....',
-    ],
-    dos: [
-      sansLunettes,
-      '..A...........A.',
-      ...Array(24).fill(sansLunettes),
-    ],
-    profil: [
-      '...AAAA.........',
-      '...A..AAAAAAA...',
-      '...A..A.........',
-      '...A..A.........',
-      ...Array(15).fill(sansLunettes),
-      'Aaaaa...........',
-      'Aaaaa...........',
-      'Aaaaa...........',
-      'Aaaaa...........',
-      'Aaaaa...........',
-      'Aaaaa...........',
-      'Apppp...........',
-    ],
-  },
 };
 
 // Basile, l'apothicaire, à l'entrée de son jardin : une fiole levée, dont le
@@ -475,49 +129,7 @@ export const basile = {
   },
   position: { x: 26.6, z: 10.5 },
   direction: 'down',
-  coiffure: 'chauve',
-  tenue: 'robe',
   dialogue: 'basile',
-  accessoire: {
-    nom: 'fiole',
-    ancre: [7, 23],
-    face: [
-      '...............bb.',
-      '...............AA.',
-      '...............AA.',
-      '..............aaaa',
-      '..............aaaa',
-      '..............aaaa',
-      '..............llll',
-      '..............llll',
-      '..............llll',
-      '..............aaaa',
-    ],
-    dos: [
-      '.bb...............',
-      '.AA...............',
-      '.AA...............',
-      'aaaa..............',
-      'aaaa..............',
-      'aaaa..............',
-      'llll..............',
-      'llll..............',
-      'llll..............',
-      'aaaa..............',
-    ],
-    profil: [
-      '..bb..............',
-      '..AA..............',
-      '..AA..............',
-      '.aaaa.............',
-      '.aaaa.............',
-      '.aaaa.............',
-      '.llll.............',
-      '.llll.............',
-      '.llll.............',
-      '.aaaa.............',
-    ],
-  },
 };
 
 // Pépin, le messager, au pied du colombier : un pigeon perché sur l'épaule et
@@ -534,68 +146,11 @@ export const pepin = {
   },
   position: { x: 25.4, z: 20.3 },
   direction: 'up',
-  coiffure: 'herisse',
-  tenue: 'tunique',
   dialogue: 'pepin',
-  accessoire: {
-    nom: "pigeon sur l'épaule",
-    ancre: [6, 15],
-    face: [
-      '..................ae.',
-      '..................aab',
-      '..............aaaaa..',
-      '..............aaaaa..',
-      '...............Aaaa..',
-      '................AA...',
-      '......b..............',
-      '.......b.............',
-      '........b............',
-      '.........b...........',
-      '..........b..........',
-      '...........b.........',
-      '............b........',
-      '.............b.......',
-    ],
-    dos: [
-      'aa...................',
-      'aa...................',
-      '.aaaaa...............',
-      '.aaaaa...............',
-      '.aaaA................',
-      '...AA................',
-      '.............b.......',
-      '............b........',
-      '...........b.........',
-      '..........b..........',
-      '.........b...........',
-      '........b............',
-      '.......b.............',
-      '......b..............',
-    ],
-    profil: [
-      '..ea.................',
-      '.baa.................',
-      '...aaaaa.............',
-      '...aaaaa.............',
-      '...aaaA..............',
-      '....AA...............',
-      '.........b...........',
-      '.........b...........',
-      '.........b...........',
-      '.........b...........',
-      '.........b...........',
-      '.........b...........',
-      '.........b...........',
-      '.........b...........',
-    ],
-  },
 };
 
 // Capitaine Rocard, le garde, à la porte de la muraille : casque à plumet
 // rouge et à joues, hallebarde tenue droite.
-const hampeFace = '........................b...';
-const hampeDos = '......b.....................';
-const hampeProfil = '....b.......................';
 export const rocard = {
   id: 'rocard',
   sprite: 'rocard',
@@ -608,73 +163,11 @@ export const rocard = {
   },
   position: { x: 4.3, z: 12.7 },
   direction: 'down',
-  coiffure: 'court',
-  tenue: 'tunique',
   dialogue: 'rocard',
-  accessoire: {
-    nom: 'hallebarde et casque',
-    ancre: [2, 0],
-    face: [
-      '........................a...',
-      '........................a...',
-      '..............vv........b...',
-      '.............vvv......aab...',
-      '..............vv.....aaab...',
-      '...........aaaaaa...aaaaba..',
-      '.........aaaaaaaaaa.aaaaba..',
-      '........aaaaaaaaaaaa.aaab...',
-      '........aaaaaaaaaaaa..aab...',
-      '........aaaaaaaaaaaa....b...',
-      '........aaaaaaaaaaaa....b...',
-      '........AAAAAAAAAAAA....b...',
-      '........a..........a....b...',
-      '........a..........a....b...',
-      '........a..........a....b...',
-      '........a..........a....b...',
-      ...Array(30).fill(hampeFace),
-    ],
-    dos: [
-      '......a.....................',
-      '......a.....................',
-      '......b.......vv............',
-      '......baa....vvv............',
-      '......baaa....vv............',
-      '.....abaaaa.aaaaaa..........',
-      '.....abaaaaaaaaaaaaa........',
-      '......baaaaaaaaaaaaaa.......',
-      '......baaaaaaaaaaaaa........',
-      '......b.aaaaaaaaaaaa........',
-      '......b.aaaaaaaaaaaa........',
-      '......b.AAAAAAAAAAAA........',
-      '......b....aaaaaa...........',
-      '......b....aaaaaa...........',
-      ...Array(32).fill(hampeDos),
-    ],
-    profil: [
-      '....a.......................',
-      '....a.......................',
-      '....b.........vv............',
-      '....baa......vvv............',
-      '....baaa......vv............',
-      '....baaaa..aaaaaa...........',
-      '....baaaa.aaaaaaaaaa........',
-      '....baaa.aaaaaaaaaaaa.......',
-      '....baa..aaaaaaaaaaaa.......',
-      '....b....aaaaaaaaaaaa.......',
-      '....b....aaaaaaaaaaaa.......',
-      '....b....AAAAAAAAAAAA.......',
-      '....b....a.........aa.......',
-      '....b....a.........aa.......',
-      '....b....a..................',
-      '....b....a..................',
-      ...Array(30).fill(hampeProfil),
-    ],
-  },
 };
 
 // Berthe, l'aubergiste, derrière son comptoir : un foulard crème noué sur les
 // cheveux et une cruche à la main.
-const sansCruche = '......................';
 export const berthe = {
   id: 'berthe',
   sprite: 'berthe',
@@ -689,73 +182,7 @@ export const berthe = {
   lieu: 'auberge',
   position: { x: 8.6, z: 1.7 },
   direction: 'down',
-  coiffure: 'court',
-  tenue: 'robe',
   dialogue: 'berthe',
-  accessoire: {
-    nom: 'cruche',
-    ancre: [6, 5],
-    face: [
-      '......aaaaaaaa........',
-      '.....aaaaaaaaaa.......',
-      '....aaaaaaaaaaaa......',
-      '....aaaaaaaaaaaa......',
-      '....aaaaaaaaaaaa......',
-      '....aaaaaaaaaaaa......',
-      '....a..........a......',
-      '....a..........a......',
-      '....a..........a......',
-      ...Array(12).fill(sansCruche),
-      '................BBB...',
-      '................bbb...',
-      '...............bbbbbB.',
-      '...............bbbbbB.',
-      '...............bbbbbB.',
-      '...............bbbbb..',
-      '...............bbbbb..',
-      '................bbb...',
-    ],
-    dos: [
-      '......aaaaaaaa........',
-      '.....aaaaaaaaaa.......',
-      '....aaaaaaaaaaaa......',
-      '....aaaaaaaaaaaa......',
-      '....aaaaaaaaaaaa......',
-      '....aaaaaaaaaaaa......',
-      '....aaaaaaaaaaaa......',
-      '.....aaaaAAaaaa.......',
-      '......aaaAAaaa........',
-      ...Array(12).fill(sansCruche),
-      '..BBB.................',
-      '..bbb.................',
-      'Bbbbbb................',
-      'Bbbbbb................',
-      'Bbbbbb................',
-      '.bbbbb................',
-      '.bbbbb................',
-      '..bbb.................',
-    ],
-    profil: [
-      '......aaaaaaaa........',
-      '.....aaaaaaaaaa.......',
-      '....aaaaaaaaaaaaa.....',
-      '....aaaaaaaaaaaaa.....',
-      '....aaaaaaaaaaaaa.....',
-      '....aaaaaaaaaaaaa.....',
-      '..............aaa.....',
-      '..............aaa.....',
-      '...............aa.....',
-      ...Array(12).fill(sansCruche),
-      '..BBB.................',
-      '..bbb.................',
-      '.bbbbbB...............',
-      '.bbbbbB...............',
-      '.bbbbbB...............',
-      '.bbbbb................',
-      '.bbbbb................',
-      '..bbb.................',
-    ],
-  },
 };
 
 // Maître Gaspard, le chef de chantier, face à son échafaudage : une règle
@@ -775,55 +202,11 @@ export const gaspard = {
   },
   position: { x: 24.4, z: 23.8 },
   direction: 'right',
-  coiffure: 'court',
-  tenue: 'tunique',
   dialogue: 'gaspard',
-  accessoire: {
-    nom: 'règle et rouleau',
-    ancre: [4, 14],
-    face: [
-      regleFace[0], regleFace[1], regleFace[0], regleFace[1], regleFace[0], regleFace[1], regleFace[0], regleFace[1],
-      '....b..............AAAA.',
-      '....bB.............aaaa.',
-      '....b..............aaaa.',
-      '....bB.............aaaa.',
-      '....b..............aAaa.',
-      '....bB.............aaaa.',
-      '....b..............aaaa.',
-      '....bB.............aaaa.',
-      '....b..............aaaa.',
-      '....bB.............AAAA.',
-      regleFace[0], regleFace[1], regleFace[0], regleFace[1],
-    ],
-    dos: [
-      regleDos[0], regleDos[1], regleDos[0], regleDos[1], regleDos[0], regleDos[1], regleDos[0], regleDos[1],
-      '.AAAA..............b....',
-      '.aaaa.............Bb....',
-      '.aaaa..............b....',
-      '.aaaa.............Bb....',
-      '.aAaa..............b....',
-      '.aaaa.............Bb....',
-      '.aaaa..............b....',
-      '.aaaa.............Bb....',
-      '.aaaa..............b....',
-      '.AAAA.............Bb....',
-      regleDos[0], regleDos[1], regleDos[0], regleDos[1],
-    ],
-    profil: [
-      regleProfil[0], regleProfil[1], regleProfil[0], regleProfil[1], regleProfil[0], regleProfil[1], regleProfil[0], regleProfil[1],
-      regleProfil[0], regleProfil[1],
-      '...b...........AAAA.....',
-      '...bB..........AaaA.....',
-      '...b...........AaaA.....',
-      '...bB..........AAAA.....',
-      regleProfil[0], regleProfil[1], regleProfil[0], regleProfil[1], regleProfil[0], regleProfil[1], regleProfil[0], regleProfil[1],
-    ],
-  },
 };
 
 // Clodomir, l'architecte, devant sa tour : barbe blanche taillée court et un
 // grand compas d'or ouvert dans la main.
-const sansCompas = '...........................';
 export const clodomir = {
   id: 'clodomir',
   sprite: 'clodomir',
@@ -836,86 +219,20 @@ export const clodomir = {
   },
   position: { x: 19.5, z: 6.4 },
   direction: 'down',
-  coiffure: 'court',
-  tenue: 'robe',
   dialogue: 'clodomir',
-  accessoire: {
-    nom: 'compas',
-    ancre: [3, 17],
-    face: [
-      '..........cccccc...........',
-      '.........cccccccc..........',
-      '.........cccccccc..........',
-      '..........cccccc...........',
-      '...........cccc.......A....',
-      '............cc........a.a..',
-      '......................a.a..',
-      '......................a.a..',
-      '....................aaaaa..',
-      '....................a...a..',
-      '....................a...a..',
-      '....................a...a..',
-      '...................a.....a.',
-      '...................a.....a.',
-      '...................a.....a.',
-      '...................a.....a.',
-      '...................A.....A.',
-    ],
-    dos: [
-      sansCompas,
-      sansCompas,
-      sansCompas,
-      sansCompas,
-      '....A......................',
-      '...a.a.....................',
-      '...a.a.....................',
-      '...a.a.....................',
-      '..aaaaa....................',
-      '..a...a....................',
-      '..a...a....................',
-      '..a...a....................',
-      '.a.....a...................',
-      '.a.....a...................',
-      '.a.....a...................',
-      '.a.....a...................',
-      '.A.....A...................',
-    ],
-    profil: [
-      '........cccc...............',
-      '.......ccccc...............',
-      '.......ccccc...............',
-      '........cccc...............',
-      '......A..ccc...............',
-      '.....a.a.cc................',
-      '.....a.a...................',
-      '.....a.a...................',
-      '....aaaaa..................',
-      '....a...a..................',
-      '....a...a..................',
-      '....a...a..................',
-      '...a.....a.................',
-      '...a.....a.................',
-      '...a.....a.................',
-      '...a.....a.................',
-      '...A.....A.................',
-    ],
-  },
 };
 
 // Les apprentis du chantier : figurants qui font des allers-retours le long de
 // leur trajet (points { x, z }, parcourus puis repris à l'envers). Pas
 // d'accessoire, pas de dialogue, pas d'étiquette de nom.
-const apprenti = (id, palette, trajet, coiffure) => ({
+const apprenti = (id, palette, trajet) => ({
   id,
   nom: 'Apprenti',
   sprite: 'apprenti',
   palette,
-  coiffure,
-  tenue: 'tunique',
   position: { x: trajet[0][0], z: trajet[0][1] },
   direction: 'down',
   dialogue: null,
-  accessoire: null,
   trajet,
 });
 
@@ -925,19 +242,19 @@ export const figurants = [
     vetement: ['#3b3a2a', '#575540', '#7a7758', '#a09c72'],
     accent: ['#4a2a28', '#6e3b31', '#93533f', '#b56f4f'],
     cheveux: ['#2a1d18', '#3f2b22', '#58402f', '#73563f'],
-  }, [[23.4, 21.6], [23.4, 26.2]], 'herisse'),
+  }, [[23.4, 21.6], [23.4, 26.2]]),
   apprenti('apprenti-2', {
     peau: ['#a9755c', '#cf9a7c', '#ebb999', '#f8d3b8'],
     vetement: ['#4a2f2a', '#6e4439', '#966252', '#bd8570'],
     accent: ['#1f2944', '#2d3d60', '#3f557d', '#5a7199'],
     cheveux: ['#7a5a2a', '#a07c3a', '#c7a352', '#e3c677'],
-  }, [[24.6, 26.8], [29.4, 26.8]], 'queue'),
+  }, [[24.6, 26.8], [29.4, 26.8]]),
   apprenti('apprenti-3', {
     peau: ['#7c4f3a', '#a56f52', '#c99172', '#e3b190'],
     vetement: ['#233a44', '#35566a', '#4d7a93', '#6ea0ba'],
     accent: ['#4a2a28', '#6e3b31', '#93533f', '#b56f4f'],
     cheveux: ['#1b1411', '#2a1d17', '#3a2a20', '#4d382a'],
-  }, [[6.5, 14.6], [12.0, 14.6]], 'court'),
+  }, [[6.5, 14.6], [12.0, 14.6]]),
 ];
 
 // Les habitants du village, dans l'ordre où ils sont posés.

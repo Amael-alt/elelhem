@@ -151,6 +151,10 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
     get hasSword() {
       return hasSword();
     },
+    // Pour les tests : l'épée est-elle dessinée en ce moment ?
+    get swordVisible() {
+      return sword.visible;
+    },
     // Le héros reprend toutes ses clartés (au réveil à la porte).
     restore() {
       clartes = HERO_COMBAT.clartes;

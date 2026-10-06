@@ -2944,3 +2944,23 @@ body {
     height: 64px;
   }
 }
+
+/* Téléphone : le HUD tient sur deux lignes (la rangée des parchemins et le
+   bouton livre, puis les Tokens et les clartés), le bandeau de lieu dessous. */
+@media (max-width: 640px) {
+  .parchemins-ligne {
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 6px 8px;
+    max-width: calc(100vw - 80px - env(safe-area-inset-left) - env(safe-area-inset-right));
+  }
+
+  #tokens,
+  #clartes {
+    height: 36px;
+  }
+
+  #lieu {
+    top: calc(120px + env(safe-area-inset-top));
+  }
+}

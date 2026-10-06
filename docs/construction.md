@@ -710,3 +710,36 @@ Ce qui a résisté :
 | Mobile 375 × 812 | HUD sur deux lignes, minimap à 150 px, boîte centrée avec le portrait posé dessus, texte à 1,14 rem |
 | Paysage 812 × 375 | boîte sans coins ni portrait, minimap à 118 px, cartouche du nom dégagé |
 | Console | aucune erreur |
+
+## Version 2.0 : la lande, le combat, la forge et la feuille de personnage (6 octobre 2026)
+
+Le dernier volet de la refonte : « qu'on ne reste pas sur le petit projet vibe codé », des mécaniques de RPG. Jordan a tranché par trois choix : un **enchaînement à trois coups** (touche J ou X, clic de souris, bouton épée sur écran tactile ; le troisième coup plus fort, avec une fente), cinq « clartés » en guise de points de vie et deux ennemis, le Mirage qui erre et le Fantôme qui poursuit ; une **épée en trois niveaux payée en Tokens** chez Ferrand (bois 15, fer 35, acier 70), les Hallucinations dissipées rapportant des Tokens ; une **fiche d'apprenti complète**. Le village reste paisible : on se bat sur la lande, hors les murs.
+
+**La lande** (`world/moor.js`) est un monde comme le village ou une pièce : sa carte en lettres est peinte par zones (falaises boisées tout autour, la muraille d'Elelhem sur le bord est, percée de la porte, un chemin de terre qui part de la porte et se divise, un étang, les murets d'une ruine), avec les matériaux du village, une lumière plus basse et plus froide (`moorColors`), une brume dense et des grains qui traînent au ras du sol. Arbres morts (un tronc nu), arbres roux, rochers, barrières rompues, lucioles. On y entre par la porte ouest de la muraille et on en revient par là : `doors.js` connaît maintenant des **portails** entre deux mondes de plein air (`gates`), déclenchés par le geste qui pousse dans la zone de la porte, et refusables (`onRefused`) : sans épée, Rocard barre le passage ; la première fois avec, il laisse un conseil, puis le fondu part. La minimap s'efface sur la lande, le bandeau dit son nom, les sons du village se taisent.
+
+**Les Hallucinations** (`data/enemies.js`, `game/enemies.js`) : le Mirage (3 points de vie, erre autour de chez lui, 3 Tokens) et le Fantôme (6, poursuit à 6,5 unités et rentre s'il s'éloigne trop, 8 Tokens), dessinés comme les habitants (un dessin, une fiche pixel art, une transcription), avec un drapeau `flottant` dans leurs planches : pas de jambes à animer, tout le corps ondule. Elles se frottent aux murs comme le héros, s'écartent les unes des autres, reculent et blanchissent sous un coup (la couleur du matériau pousse au-dessus de 1), et se dissipent en s'élevant. Neuf sur la lande, toutes de retour quand on y revient.
+
+**Le combat** (`game/combat.js`) : trois coups de 0,3 s, 0,3 s et 0,44 s ; un appui pendant le coup en cours prépare le suivant ; la lame porte pendant une fenêtre de chaque coup, à 1,5 unité (1,9 pour le troisième) dans un cône de 75° devant le héros ; dégâts de l'épée (1, 2 ou 3) doublés au troisième. Le héros s'arrête pendant un coup et fait une fente au troisième. Touché, il perd une clarté, recule, clignote une seconde pendant laquelle rien ne le touche, et son coup en cours s'interrompt. À zéro, fondu au noir et réveil à la porte du village, clartés pleines, un mot dans l'annonce du HUD. **L'épée** (`gfx/weapon.js`) est un sprite de 16 × 24 pixels dessiné par le code (acier, garde d'or, poignée de cuir), du même matériau que les personnages, tourné autour de sa poignée en réécrivant les quatre sommets de son quad à chaque image ; au repos elle pend à la main, devant ou derrière le corps selon la vue. **La lame de lumière** est un croissant additif (un `Sprite` de three.js, intensité 2,6) qui s'étire et s'éteint en un sixième de seconde : le bloom s'en empare. La planche du héros a une dixième colonne, la pose du coup (le buste penche en avant de profil, s'abaisse de face).
+
+**La forge** (`game/forge.js`) : après les pages de Ferrand, son offre (comme la boutique de Berthe), ou devant son enclume, où le point d'action affiche « Forger » (`interaction.js` connaît maintenant des points d'action sans habitant). Trois épées dans l'ordre, l'épée forgée est sauvegardée (`epee` dans l'état). **La feuille** (`game/sheet.js`, touche F ou le bouton livre du HUD) : le portrait du héros dans le cadre rond doré, le prénom, la tenue, les huit notions et leur état (à apprendre, apprise, apprise du premier coup), Tokens, clartés, épée, lieux découverts.
+
+**Textes nouveaux, à relire par Jordan** : le nom de la lande, les deux répliques de Rocard à la porte, l'offre de Ferrand, les noms et descriptions des trois épées, les libellés de la feuille et du combat (`textesInterface.forge`, `combat`, `feuille`, `lieux.lande`, `dialogues.rocard.porte`).
+
+Ce qui a résisté :
+
+- **Un onglet de fond ne joue pas** : les tests dans un second onglet du navigateur intégré, pour laisser le premier à Jordan, échouaient tous (coups qui ne portent pas, Fantôme immobile) parce que la boucle d'images d'un onglet caché tourne au ralenti. Les tests se font dans l'onglet au premier plan, puis l'onglet de Jordan reprend sa place.
+- **Le dialogue de Claudette** s'ouvre une seconde après le réveil : un test qui ferme la boîte trop tôt la retrouve ouverte, et le combat gelé.
+- **Le recul des Hallucinations** les sortait de portée du coup suivant : réduit de 2,2 à 1,3, et la portée de la lame portée de 1,35 à 1,5.
+- **Les quatre rampes** de l'ancienne palette n'auraient rien dit d'un Mirage mauve : la palette par sprite de la version 1.4 a servi telle quelle.
+- **Le HUD du téléphone** a gagné un bouton et une pastille : il tient maintenant sur deux lignes, le bandeau de lieu est descendu.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Lande au repos | 47 appels de dessin, 9 400 triangles, 31 programmes ; 54 appels et 9 400 triangles avec les neuf Hallucinations en vue |
+| Village après la lande | 91 appels, 49 500 triangles, 70 programmes (les matériaux de la lande et de l'épée compilés une fois) |
+| Combat | Mirage touché en trois coups, Tokens gagnés ; Fantôme qui poursuit, une clarté par seconde au contact ; réveil à la porte (1,7 ; 14,5) avec les cinq clartés |
+| Forge et feuille | menu ouvert par l'offre de Ferrand et devant l'enclume, achat de l'épée de bois (bourse de 44 à 29 Tokens... puis l'épée de fer), fiche à jour ; Rocard refuse la lande sans épée |
+| Mobile 375 × 812 | bouton épée au-dessus du bouton d'action, HUD sur deux lignes, bandeau dessous |
+| Console | aucune erreur, village, maison, forge, lande |

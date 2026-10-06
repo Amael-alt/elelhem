@@ -10,10 +10,10 @@ Version 1.3, du 6 octobre 2026.
 
 ## Le jeu
 
-La partie commence dans la maison du héros, où Claudette, sa sœur, lui confie la quête. Le village se parcourt à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. On entre dans la maison, l'auberge et la forge. Huit maîtres enseignent chacun une notion, posent une question à trois choix et remettent un parchemin ; chaque leçon est facultative et se relit dans le grimoire. Les huit parchemins réunis, Clodomir, l'architecte, remet un diplôme d'apprenti mage, avec une mention selon les erreurs, à partager ou à télécharger, puis vient le générique. Une minimap montre qui attend encore, et les Tokens gagnés en chemin s'échangent contre des tenues chez Berthe.
+La partie commence dans la maison du héros, où Claudette, sa sœur, lui confie la quête. Le village se parcourt à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. On entre dans la maison, l'auberge et la forge. Huit maîtres enseignent chacun une notion, posent une question à trois choix et remettent un parchemin ; chaque leçon est facultative et se relit dans le grimoire. Les huit parchemins réunis, Clodomir, l'architecte, remet un diplôme d'apprenti mage, avec une mention selon les erreurs, à partager ou à télécharger, puis vient le générique. Une minimap montre qui attend encore, et les Tokens gagnés en chemin s'échangent contre des tenues chez Berthe ou une épée chez Ferrand. Hors les murs, la lande grouille d'Hallucinations : on les dissipe à l'épée, en temps réel, trois coups qui s'enchaînent, cinq clartés en jeu. La fiche d'apprenti (touche F) fait le point.
 
-- **Au clavier** : ZQSD, WASD ou flèches pour marcher, Maj pour courir, molette pour le zoom, E, Entrée ou Espace pour parler, flèches ou chiffres 1, 2, 3 pour répondre, G pour le grimoire, C pour la carte, M pour couper la musique.
-- **Au doigt** : un joystick apparaît sous le pouce dans le bas de l'écran (poussé à fond, on court), un bouton d'action parle à l'habitant à portée, deux doigts pincent pour zoomer. L'écran titre permet de passer le joystick à droite pour jouer de la main gauche.
+- **Au clavier** : ZQSD, WASD ou flèches pour marcher, Maj pour courir, molette pour le zoom, E, Entrée ou Espace pour parler, flèches ou chiffres 1, 2, 3 pour répondre, G pour le grimoire, C pour la carte, F pour la feuille de personnage, J ou X (ou un clic) pour frapper de l'épée sur la lande, M pour couper la musique.
+- **Au doigt** : un joystick apparaît sous le pouce dans le bas de l'écran (poussé à fond, on court), un bouton d'action parle à l'habitant à portée, un bouton épée frappe sur la lande, deux doigts pincent pour zoomer. L'écran titre permet de passer le joystick à droite pour jouer de la main gauche.
 
 ## Les coulisses
 
@@ -47,9 +47,9 @@ vendor/three/     three.js, avec sa licence
 src/main.js       démarrage, boucle, redimensionnement
 src/core/         rendu, caméra, entrées (clavier, joystick, pincement), garde-fous tactiles
 src/gfx/          pixels, textures, matériaux, sprites, post-traitement, effets
-src/world/        carte, implantation (layout), terrain, maisons, tours, chantier, collisions
-src/game/         joueur, habitants, dialogues, quête, interface, débogage
-src/data/         palette, habitants, textes des dialogues, planches de sprites transcrites (sprites/)
+src/world/        carte, implantation (layout), terrain, maisons, tours, chantier, collisions, la lande (moor.js)
+src/game/         joueur, habitants, dialogues, quête, interface, débogage, combat, Hallucinations, forge, feuille de personnage
+src/data/         palette, habitants, Hallucinations et épées (enemies.js), textes des dialogues, planches de sprites transcrites (sprites/)
 assets/portraits/ portraits de dialogue, un PNG à palette par habitant qui parle
 assets/ui/        ornements de l'interface : coins, filet, cadre rond, icônes, parchemin
 docs/             journal de construction
@@ -76,6 +76,7 @@ Tout le code de ce dépôt a été écrit par Claude Code, les 5 et 6 octobre 20
 | 1.3 | l'écran titre lisible sur le village ; les intérieurs façon HD-2D : plancher de lattes, dalles, lambris, tapis tissés, tableaux, rais de lumière aux fenêtres, poussière, soubassement de pierre, et plus de voile bleu |
 | 1.4 | les personnages redessinés d'après des fiches pixel art illustrées puis transcrites en grilles de code, quatre tenues comprises ; des portraits illustrés dans les dialogues ; les maisons à étage, tours, arbres et muraille aux proportions des références |
 | 1.5 | l'interface plus grande d'un cinquième et ornée de dessins générés puis découpés : coins de filigrane, filets, icônes, parchemin du grimoire |
+| 2.0 | la lande hors les murs et ses Hallucinations, le combat en temps réel à l'épée (trois coups qui s'enchaînent, cinq clartés), la forge de Ferrand (trois épées en Tokens), la fiche d'apprenti (touche F) |
 
 **Ce que le code fabrique** : les textures (des pixels posés dans des palettes de quelques tons, avec un tramage), les personnages (des planches transcrites en grilles de code d'après des fiches dessinées, que le code anime : respiration, marche à six images, quatre directions), le village (une grille de caractères), le ciel, la lumière et les effets (des shaders), les sons d'ambiance (Web Audio : rivière, cascade, oiseaux, feu, marteau, pas), le diplôme et la minimap (un canvas 2D), le favicon (un SVG écrit dans la page) et l'image de partage (`outils/vignette.mjs`).
 

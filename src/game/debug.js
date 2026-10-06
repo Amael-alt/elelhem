@@ -224,6 +224,9 @@ export function installDebugApi(game) {
       game.combat.request();
       return true;
     },
+    epeeVisible() {
+      return game.combat.swordVisible;
+    },
     forge(on = true) {
       if (on) game.forge.open();
       else game.forge.close();

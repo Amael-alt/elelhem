@@ -33,7 +33,9 @@ const TAKE_LESSON = 0;
 // (textesInterface.boutique.offre), pour l'habitant qui porte `boutique` ;
 // credits : le générique de fin (credits.js), joué quand on referme le
 // diplôme qui vient d'être remis.
-export function createQuest({ dialogue, state, texts, offer, scrolls, counter, overlays, diploma, wallet, gains, shop, shopOffer, credits }) {
+// forge : le menu Forger (forge.js) et forgeOffer, sa question
+// (textesInterface.forge.offre), pour l'habitant qui porte `forge`.
+export function createQuest({ dialogue, state, texts, offer, scrolls, counter, overlays, diploma, wallet, gains, shop, shopOffer, credits, forge = null, forgeOffer = null }) {
   const missing = () => scrolls.filter((id) => !state.parchemins.has(id)).length;
 
   // then : la suite quand on le referme (le générique, à la remise).
@@ -89,16 +91,22 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
     });
   }
 
-  // Après ses pages, la marchande propose sa boutique.
-  function offerShop(entry) {
-    const options = shopOffer.choix.map((texte) => ({ texte }));
-    dialogue.ask(entry.nom, shopOffer.texte, options, (index) => {
+  // Après ses pages, la marchande propose sa boutique, le forgeron sa forge.
+  function offerPanel(entry, question, panel, kind) {
+    const options = question.choix.map((texte) => ({ texte }));
+    dialogue.ask(entry.nom, question.texte, options, (index) => {
       dialogue.close();
-      if (index === 0) shop.open();
-    }, 'boutique');
+      if (index === 0) panel.open();
+    }, kind);
   }
+  const offerShop = (entry) => offerPanel(entry, shopOffer, shop, 'boutique');
+  const offerForge = (entry) => offerPanel(entry, forgeOffer, forge, 'forge');
+  // La suite des pages d'un habitant dont le parchemin est gagné : sa boutique, sa forge, ou rien.
+  const afterPages = (entry) => (entry.boutique ? () => offerShop(entry) : entry.forge && forge ? () => offerForge(entry) : null);
 
   return {
+    // Les écrans qui suspendent le jeu : main.js y ajoute les siens (la feuille).
+    overlays,
     // Ouvre la conversation avec npc.
     talk(npc) {
       const key = npc.character.dialogue;
@@ -114,7 +122,7 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
         else if (missing() > 0) dialogue.open(entry.nom, opening);
         else lessonOrQuestion(entry, key, opening);
       } else if (state.parchemins.has(key)) {
-        dialogue.open(entry.nom, opening, entry.boutique ? () => offerShop(entry) : null);
+        dialogue.open(entry.nom, opening, afterPages(entry));
       } else {
         lessonOrQuestion(entry, key, opening);
       }

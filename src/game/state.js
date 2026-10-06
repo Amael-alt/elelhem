@@ -16,6 +16,8 @@
 //   - tenue       : celle que le héros porte
 //   - decouvertes : lieux déjà découverts (quartiers et pièces), payés une fois
 //   - coffres     : coffres déjà ouverts
+// Ajouté en version 2.0 (le combat, data/enemies.js) :
+//   - epee        : niveau de l'épée forgée chez Ferrand (0 : aucune, 1 bois, 2 fer, 3 acier)
 //
 // Sauvegarde dans localStorage, entourée de try/catch : en navigation privée
 // ou avec les données de site bloquées, il peut être absent ou lancer. Le jeu
@@ -38,6 +40,7 @@ function emptyState() {
     tenue: FIRST_OUTFIT,
     decouvertes: new Set(),
     coffres: new Set(),
+    epee: 0,
   };
 }
 
@@ -63,6 +66,7 @@ function write(state) {
       tenue: state.tenue,
       decouvertes: [...state.decouvertes],
       coffres: [...state.coffres],
+      epee: state.epee,
     }));
   } catch {
     // Pas de sauvegarde possible : on joue quand même.
@@ -88,6 +92,7 @@ export function createGameState({ restore = true } = {}) {
     if (typeof saved.tenue === 'string' && state.tenues.has(saved.tenue)) state.tenue = saved.tenue;
     if (Array.isArray(saved.decouvertes)) state.decouvertes = new Set(strings(saved.decouvertes));
     if (Array.isArray(saved.coffres)) state.coffres = new Set(strings(saved.coffres));
+    if (Number.isInteger(saved.epee) && saved.epee >= 0 && saved.epee <= 3) state.epee = saved.epee;
   }
   if (!restore) {
     try {

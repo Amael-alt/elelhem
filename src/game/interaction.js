@@ -14,7 +14,11 @@ const LABEL_LIFT = 52; // pixels : l'étiquette passe au-dessus de la bulle
 // canvas servent à ancrer l'indicateur à l'écran ; talkLabel(nom) : le texte
 // de la bulle pour un lecteur d'écran ; button : le bouton d'action (ui.js),
 // et idleLabel son texte quand personne n'est à portée.
-export function createInteraction({ player, npcs, hint, label, dialogue, quest, talkLabel, camera, canvas, button, idleLabel }) {
+// hotspots : [{ world (le lieu, ou null pour partout), x, z, y (hauteur de
+// l'indicateur), radius, label, action() }] : des points où l'action fait
+// autre chose que parler (l'enclume de la forge ouvre le menu Forger).
+// currentWorld() : le lieu où l'on est.
+export function createInteraction({ player, npcs, hint, label, dialogue, quest, talkLabel, camera, canvas, button, idleLabel, hotspots = [], currentWorld = () => null }) {
   const head = new THREE.Vector3();
   const screen = { x: 0, y: 0 };
   let requested = false;
@@ -73,6 +77,25 @@ export function createInteraction({ player, npcs, hint, label, dialogue, quest, 
       target = quest.isBusy ? null : nearest(INTERACTION_RADIUS, true);
       if (wanted && target) {
         start(target);
+        return;
+      }
+      // Un point d'action à portée, s'il n'y a personne à qui parler.
+      const world = currentWorld();
+      const spot = quest.isBusy || target ? null : hotspots.find((h) => (h.world === null || h.world === world)
+        && Math.hypot(h.x - player.position.x, h.z - player.position.z) <= h.radius);
+      if (spot) {
+        if (wanted) {
+          hint.hide();
+          label.hide();
+          spot.action();
+          return;
+        }
+        button.show('parler', spot.label);
+        const spotAnchor = projectToScreen(head.set(spot.x, spot.y ?? 1.2, spot.z), camera, canvas, screen);
+        if (spotAnchor) {
+          hint.show(spotAnchor, spot.label);
+          label.show(spotAnchor, spot.label, LABEL_LIFT);
+        }
         return;
       }
       if (!quest.isBusy) button.show(target ? 'parler' : 'repos', target ? talkLabel(target.character.nom) : idleLabel);

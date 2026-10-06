@@ -203,6 +203,40 @@ export function installDebugApi(game) {
       const percent = (count) => Number(((count / (pixels.length / 4)) * 100).toFixed(2));
       return { saturatedPercent: percent(saturated), whitenedPercent: percent(whitened), ...info() };
     },
+    // Version 2.0 : la lande et le combat. lande(true) y va sans fondu, lande(false) en revient.
+    lande(on = true) {
+      const gate = game.doors.gates.find((g) => (on ? g.to : g.from) === game.moor);
+      if (on) game.gameState.decouvertes.add('lieu:lande');
+      game.doors.travel(gate, { instant: true });
+      tick(0);
+      return info();
+    },
+    // Forge l'épée de ce niveau (0 : aucune, 1 bois, 2 fer, 3 acier).
+    epee(n = 1) {
+      game.gameState.epee = n;
+      return game.gameState.epee;
+    },
+    clartes(n) {
+      if (n !== undefined) game.combat.setClartes(n);
+      return game.combat.clartes;
+    },
+    frapper() {
+      game.combat.request();
+      return true;
+    },
+    forge(on = true) {
+      if (on) game.forge.open();
+      else game.forge.close();
+      return game.forge.isOpen;
+    },
+    feuille(on = true) {
+      if (on) game.fiche.open();
+      else game.fiche.close();
+      return game.fiche.isOpen;
+    },
+    hallucinations() {
+      return game.hallucinations.list.map((e) => ({ id: e.id, hp: e.hp, state: e.state, x: Number(e.position.x.toFixed(2)), z: Number(e.position.z.toFixed(2)) }));
+    },
     teleport(x, z) {
       player.teleport(x, z);
       follow.snap(player.worldPosition(game.focusTarget));

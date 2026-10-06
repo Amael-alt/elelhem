@@ -81,6 +81,10 @@
     </svg>
   </button>
 
+  <!-- Bouton d'attaque des écrans tactiles, au-dessus du bouton d'action, sur la
+       lande seulement (src/game/combat.js). -->
+  <button id="attaque" type="button" tabindex="-1" hidden></button>
+
   <!-- Couper ou remettre la musique (touche M). Deux pictogrammes dessinés ici. -->
   <button id="son" type="button" tabindex="-1" hidden>
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -121,8 +125,12 @@
   <div id="parchemins" hidden>
     <div class="parchemins-ligne">
       <button class="parchemins-rangee" type="button" tabindex="-1"></button>
+    <!-- La feuille de personnage (touche F, src/game/sheet.js). -->
+    <button id="fiche" class="fiche-bouton" type="button" tabindex="-1" hidden></button>
       <!-- La bourse : les Tokens du héros (src/game/wallet.js). -->
       <div id="tokens" role="status"><span class="tokens-piece" aria-hidden="true"></span><span class="tokens-montant">0</span><span class="tokens-gain" aria-hidden="true"></span></div>
+    <!-- Les clartés : les points de vie du héros (src/game/combat.js). -->
+    <div id="clartes" role="status" hidden><span class="clarte"></span><span class="clarte"></span><span class="clarte"></span><span class="clarte"></span><span class="clarte"></span></div>
     </div>
     <p class="parchemins-annonce" role="status" hidden></p>
   </div>
@@ -192,6 +200,36 @@
 
   <!-- Nom de l'habitant qui approche, au-dessus de sa tête. -->
   <div id="nom" hidden></div>
+
+  <!-- La forge de Ferrand : le menu Forger (src/game/forge.js). -->
+  <div id="forge" role="dialog" aria-modal="true" aria-labelledby="forge-titre" hidden>
+    <div class="forge-cadre">
+      <div class="coins" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <h2 class="forge-titre" id="forge-titre"></h2>
+      <p class="forge-bourse"></p>
+      <ul class="forge-liste"></ul>
+      <button class="forge-fermer" type="button"></button>
+    </div>
+  </div>
+
+  <!-- La feuille de personnage (src/game/sheet.js). -->
+  <div id="feuille" role="dialog" aria-modal="true" aria-labelledby="feuille-titre" hidden>
+    <div class="feuille-cadre">
+      <div class="coins" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div class="feuille-tete">
+        <div class="feuille-portrait" aria-hidden="true"><img src="assets/portraits/heros.png" alt="" decoding="async" loading="lazy"></div>
+        <div class="feuille-identite">
+          <h2 class="feuille-titre" id="feuille-titre"></h2>
+          <p class="feuille-prenom"></p>
+          <p class="feuille-sous-titre"></p>
+        </div>
+      </div>
+      <dl class="feuille-stats"></dl>
+      <h3 class="feuille-notions-titre"></h3>
+      <ol class="feuille-notions"></ol>
+      <button class="feuille-fermer" type="button"></button>
+    </div>
+  </div>
 
   <!-- Boîte de dialogue : remplie par src/game/dialogue.js. -->
   <div id="dialogue" role="dialog" aria-labelledby="dialogue-nom" hidden>

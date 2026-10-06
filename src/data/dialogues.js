@@ -88,6 +88,7 @@ export const textesInterface = {
   },
   musique: { couper: 'Couper le son', remettre: 'Remettre le son' },
   lieux: {
+    lande: 'La Lande des Hallucinations',
     place: 'La place du puits',
     forge: 'La forge',
     bibliotheque: 'La bibliothèque',
@@ -141,6 +142,52 @@ export const textesInterface = {
     porter: 'Porter',
     portee: 'Portée',
     manque: (n) => `Il manque ${n} Token${n > 1 ? 's' : ''}`,
+    fermer: 'Fermer',
+  },
+  // La forge de Ferrand : le menu Forger (game/forge.js, data/enemies.js).
+  forge: {
+    offre: {
+      texte: 'Tu veux que je te forge quelque chose ? Une bonne lame, ça aide à y voir clair sur la lande.',
+      choix: ['Voir la forge', 'Pas maintenant'],
+    },
+    titre: 'La forge de Ferrand',
+    bourse: (n) => `Ta bourse : ${n} Token${n > 1 ? 's' : ''}`,
+    enclume: 'Forger',
+    epees: {
+      bois: { nom: 'Épée de bois', description: 'Pour apprendre le geste. Elle dissipe les Mirages en trois coups.' },
+      fer: { nom: 'Épée de fer', description: 'Trempée dans le baquet de Ferrand. Deux fois plus de mordant.' },
+      acier: { nom: "Épée d'acier", description: "Le chef-d'œuvre de Ferrand. Les Fantômes n'en reviennent pas." },
+    },
+    forger: (prix) => `Forger, ${prix} Tokens`,
+    forgee: 'Forgée',
+    avant: "D'abord la précédente",
+    manque: (n) => `Il manque ${n} Token${n > 1 ? 's' : ''}`,
+    fermer: 'Fermer',
+  },
+  // Le combat sur la lande (game/combat.js, game/enemies.js).
+  combat: {
+    clartes: 'Clartés',
+    frapper: 'Frapper',
+    ennemis: { mirage: 'Mirage', fantome: 'Fantôme' },
+    reveil: 'Tu reprends tes esprits',
+    reveilDetail: 'à la porte du village, les idées claires',
+    gain: (n) => `+${n}`,
+  },
+  // La feuille de personnage (game/sheet.js), touche F.
+  feuille: {
+    titre: "Fiche d'apprenti",
+    bouton: 'Feuille de personnage (F)',
+    anonyme: 'Voyageur sans nom',
+    sousTitre: (appris, total, tenue) => `${appris} notion${appris > 1 ? 's' : ''} sur ${total} · ${tenue}`,
+    notions: 'Les notions de la magie LIA',
+    tokens: 'Tokens',
+    clartes: 'Clartés',
+    epee: 'Épée',
+    sansEpee: 'Aucune, va voir Ferrand',
+    lieux: 'Lieux découverts',
+    aApprendre: 'à apprendre',
+    apprise: 'apprise',
+    appriseDuPremierCoup: 'apprise du premier coup',
     fermer: 'Fermer',
   },
   // La minimap et la carte en grand.
@@ -332,6 +379,7 @@ export const dialogues = {
 
   ferrand: {
     nom: 'Maître Ferrand',
+    forge: true,
     maxime: 'Un bon prompt se forge en plusieurs chauffes.',
 
     intro: () => [
@@ -631,6 +679,12 @@ export const dialogues = {
   rocard: {
     nom: 'Capitaine Rocard',
     maxime: 'Ce qui franchit la porte ne revient pas.',
+    // À la porte de la muraille : il barre la lande sans épée, et la laisse
+    // ouverte avec (game/doors.js, onRefused et gates).
+    porte: {
+      sansEpee: ['Halte ! Pas par là sans une lame. La lande grouille d\'Hallucinations. Va voir Ferrand à la forge, il t\'en forgera une.'],
+      avecEpee: ['La lande est à toi. Les Hallucinations se dissipent sous une bonne lame, mais ne te laisse pas toucher : elles brouillent les idées. Reviens entier.'],
+    },
 
     intro: () => [
       "Halte ! Qui va là ? Ah, c'est toi. Capitaine Rocard, garde de la porte. Rien ne sort d'Elelhem sans passer devant moi.",

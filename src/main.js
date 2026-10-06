@@ -4,7 +4,7 @@
 // neuve.
 
 import * as THREE from 'three';
-import { createKeyboard, createLoadGate, createTouchControls } from './core/input.js';
+import { createKeyboard, createLoadGate, createTouchControls, onTap } from './core/input.js';
 import { installTouchGuards, trackTouchScreen } from './core/guards.js';
 import { createRenderer, MAX_PIXEL_RATIO } from './core/renderer.js';
 import { createQualityGovernor } from './core/quality.js';
@@ -14,7 +14,7 @@ import { createAmbience } from './core/ambience.js';
 import { createPipeline, SPRITE_LAYER } from './gfx/post/pipeline.js';
 import { createFollowCamera } from './core/camera.js';
 import { createVillage } from './world/village.js';
-import { createCharacterSheet } from './gfx/sprites.js';
+import { createCharacterSheet, DIRECTIONS } from './gfx/sprites.js';
 import { createBlobShadow, createSprite } from './gfx/billboard.js';
 import { createPlayer } from './game/player.js';
 import { createNpc } from './game/npc.js';
@@ -31,6 +31,13 @@ import { createMinimap } from './game/minimap.js';
 import { createDoors } from './game/doors.js';
 import { createWallet } from './game/wallet.js';
 import { createShop } from './game/shop.js';
+import { createMoor, MOOR_GATE, MOOR_SPAWN } from './world/moor.js';
+import { createEnemies } from './game/enemies.js';
+import { createCombat } from './game/combat.js';
+import { createForge } from './game/forge.js';
+import { createSheet } from './game/sheet.js';
+import { createSlash, createSword } from './gfx/weapon.js';
+import { MOOR_ENEMIES, SWORDS } from './data/enemies.js';
 import { gains, habiller, tenues } from './data/tokens.js';
 import { createInterior } from './world/interior.js';
 import { ROOMS } from './world/rooms.js';
@@ -103,6 +110,8 @@ function start() {
   // Les intérieurs (world/rooms.js), bâtis avec les matériaux du village.
   const rooms = Object.fromEntries(Object.entries(ROOMS).map(([id, room]) => [id, createInterior(room, { materials: village.materials })]));
   const worldOf = (lieu) => (lieu ? rooms[lieu] : village);
+  // La lande hors les murs (world/moor.js) : la zone d'action, par la porte ouest.
+  const moor = createMoor({ materials: village.materials, narrowScreen });
   const follow = createFollowCamera();
   const keyboard = createKeyboard();
   const controls = createTouchControls(canvas, document.getElementById('stick'));
@@ -132,8 +141,12 @@ function start() {
   sprite.object.layers.set(SPRITE_LAYER);
   sprite.ghost.layers.set(SPRITE_LAYER);
   const shadow = createBlobShadow();
-  scene.add(sprite.object, shadow);
-  const player = createPlayer({ sprite, shadow, village });
+  // L'épée et la lame de lumière de ses coups (gfx/weapon.js) suivent le héros de lieu en lieu.
+  const sword = createSword(village.sunDirection, pipeline.spriteHooks);
+  sword.object.layers.set(SPRITE_LAYER);
+  const slash = createSlash();
+  scene.add(sprite.object, shadow, sword.object, slash.object);
+  const player = createPlayer({ sprite, shadow, village, extras: [sword.object, slash.object] });
 
   // Les habitants : de la donnée (data/characters.js), une planche chacun. Chacun
   // vit dans son lieu (le village ou une pièce) ; celui qui a un départ
@@ -176,7 +189,7 @@ function start() {
     renderer.getDrawingBufferSize(drawingBuffer);
     pipeline.setSize(drawingBuffer.x, drawingBuffer.y);
     const pointScale = drawingBuffer.y / (2 * Math.tan(THREE.MathUtils.degToRad(follow.camera.fov / 2)));
-    for (const world of [village, ...Object.values(rooms)]) world.setPointScale(pointScale);
+    for (const world of [village, moor, ...Object.values(rooms)]) world.setPointScale(pointScale);
     follow.setAspect(width / height);
   }
   // Suit la taille réelle du canvas (fenêtre redimensionnée, page affichée).
@@ -220,6 +233,16 @@ function start() {
   });
   // La bourse et la boutique de Berthe.
   const wallet = createWallet(document.getElementById('tokens'), { state: gameState, texts: textesInterface.tokens });
+  // Les Hallucinations de la lande, et le combat (data/enemies.js, game/enemies.js, game/combat.js).
+  const hallucinations = createEnemies(MOOR_ENEMIES, { world: moor, sunDirection: moor.sunDirection, post: pipeline.spriteHooks, wallet });
+  const combat = createCombat({
+    player, sword, slash, state: gameState, hud: document.getElementById('clartes'), texts: textesInterface.combat,
+    canFight: () => doors?.current === moor,
+    // Plus de clartés : retour à la porte du village (les clartés reviennent à l'arrivée, voir onChange).
+    onDeath: () => doors?.travel(doors.gates.find((gate) => gate.to === village)),
+  });
+  // La forge de Ferrand : le menu Forger (game/forge.js), ouvert après ses pages ou à l'enclume.
+  const forge = createForge(document.getElementById('forge'), { swords: SWORDS, texts: textesInterface.forge, state: gameState, wallet });
   const shop = createShop(document.getElementById('boutique'), {
     outfits: tenues, basePalette: hero.palette, texts: textesInterface.boutique, state: gameState, wallet, onWear: dressHero,
   });
@@ -248,8 +271,16 @@ function start() {
   });
   quest = createQuest({
     dialogue, state: gameState, texts: dialogues, offer: textesInterface.offreLecon, scrolls: counter.ids, counter,
-    overlays: [diploma, grimoire, minimap, shop, credits], diploma, wallet, gains, shop, shopOffer: textesInterface.boutique.offre, credits,
+    overlays: [diploma, grimoire, minimap, shop, credits, forge], diploma, wallet, gains, shop, shopOffer: textesInterface.boutique.offre, credits,
+    forge, forgeOffer: textesInterface.forge.offre,
   });
+  // La feuille de personnage (game/sheet.js) : touche F, ou le bouton livre du HUD.
+  const fiche = createSheet(document.getElementById('feuille'), {
+    button: document.getElementById('fiche'), texts: textesInterface.feuille, notions, ids: counter.ids, state: gameState,
+    outfits: tenues, outfitTexts: textesInterface.boutique.tenues, swords: SWORDS, swordTexts: textesInterface.forge.epees, combat,
+    places: REGIONS.length + Object.keys(ROOMS).length + 1, canOpen: canOpenOverlay,
+  });
+  quest.overlays.push(fiche);
 
   // L'exploration paie : un lieu découvert (quartier ou pièce), une fois ; un
   // coffre ouvert, une fois.
@@ -274,6 +305,19 @@ function start() {
   interaction = createInteraction({
     player, npcs: activeNpcs, hint, label, dialogue, quest, talkLabel: textesInterface.parlerA, camera: follow.camera, canvas,
     button: actionButton, idleLabel: textesInterface.action,
+    currentWorld: () => doors?.current,
+    // L'enclume de la forge : « Forger » ouvre le menu de Ferrand.
+    hotspots: [{
+      world: rooms.forge, x: ROOMS.forge.props.find((p) => p.type === 'anvil').x, z: ROOMS.forge.props.find((p) => p.type === 'anvil').z, y: 1.1, radius: 1.3,
+      label: textesInterface.forge.enclume, action: () => canOpenOverlay() && forge.open(),
+    }],
+  });
+  // Frapper : la touche J ou X, un clic de souris sur le village, le bouton épée sur écran tactile.
+  const attackButton = document.getElementById('attaque');
+  attackButton.setAttribute('aria-label', textesInterface.combat.frapper);
+  onTap(attackButton, () => combat.request());
+  canvas.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button === 0 && playing) combat.request();
   });
 
   // Musique de fond et sons d'ambiance : lancés par le geste qui ferme l'écran titre.
@@ -311,9 +355,34 @@ function start() {
 
   // Les portes des maisons : à chaque changement de lieu, les habitants
   // présents, la caméra, la minimap, les sons et le bandeau suivent.
+  // Les portes de la lande : la porte ouest de la muraille, dans les deux sens.
+  // Sans épée, Rocard barre le passage ; la première fois avec, il laisse un conseil.
+  let refusedAt = -Infinity;
+  const villageGateExit = { x: 1.7, z: 14.5, direction: 'right' };
+  const gates = [
+    {
+      from: village, to: moor, zone: { x0: 0, x1: 1.5, z0: 12.5, z1: 17 }, push: { x: -1, z: 0 }, at: MOOR_SPAWN,
+      allowed: () => (gameState.epee ?? 0) > 0 && gameState.decouvertes.has('lieu:lande'),
+    },
+    { from: moor, to: village, zone: MOOR_GATE, push: { x: 1, z: 0 }, at: villageGateExit },
+  ];
   doors = createDoors(document.getElementById('fondu'), {
-    village, rooms, houses: HOUSES, player,
+    village, rooms, houses: HOUSES, player, gates,
+    onRefused(gate) {
+      if (performance.now() - refusedAt < 3000 || dialogue.isOpen) return;
+      refusedAt = performance.now();
+      const rocard = dialogues.rocard;
+      if ((gameState.epee ?? 0) > 0) {
+        dialogue.open(rocard.nom, rocard.porte.avecEpee, () => {
+          discover('lieu:lande');
+          doors.travel(gate);
+        });
+      } else {
+        dialogue.open(rocard.nom, rocard.porte.sansEpee);
+      }
+    },
     onChange(world, room) {
+      const inMoor = world === moor;
       // En sortant, celui qui attendait au départ (Claudette) est déjà parti
       // à son poste, si on lui a parlé.
       if (!room) {
@@ -328,11 +397,24 @@ function start() {
       follow.setFraming(room ? INTERIOR_FRAMING : 1);
       pipeline.setInterior(Boolean(room)); // dedans, la pièce se voit nette
       follow.snap(player.worldPosition(focusTarget));
-      minimap.setVisible(playing && !room);
-      ambience.setIndoors(room ? { fires: world.fires } : null);
+      minimap.setVisible(playing && !room && !inMoor);
+      ambience.setIndoors(room || inMoor ? { fires: world.fires } : null);
       if (room) {
         banner.showRoom(world.room.lieu);
         discover(`piece:${room}`);
+      }
+      // Sur la lande : les Hallucinations reviennent toutes, le combat les connaît.
+      if (inMoor) {
+        banner.showRoom('lande');
+        hallucinations.reset();
+        combat.setEnemies(hallucinations);
+      } else {
+        combat.setEnemies(null);
+      }
+      // Revenu sans clartés : on reprend ses esprits à la porte.
+      if (!inMoor && combat.clartes === 0) {
+        combat.restore();
+        counter.say(textesInterface.combat.reveil, textesInterface.combat.reveilDetail);
       }
       hint.hide();
       label.hide();
@@ -359,6 +441,7 @@ function start() {
   if (playing) {
     music.showButton();
     counter.show();
+    fiche.showButton();
     wallet.show();
     minimap.setVisible(true);
     if (freshGame()) wakeUp();
@@ -389,6 +472,7 @@ function start() {
         }
         music.showButton();
         counter.show();
+        fiche.showButton();
         wallet.show();
         minimap.setVisible(!doors.room);
         if (freshGame()) wakeUp();
@@ -407,18 +491,26 @@ function start() {
     const pushed = controls.direction();
     // autoDirection : direction imposée par les tests scriptés (__lia.walk).
     const wanted = state.autoDirection ?? (pushed.x !== 0 || pushed.z !== 0 ? pushed : keyboard.direction());
-    player.update(step, interaction.isTalking || !playing || doors.isBusy ? STANDING : wanted);
+    const frozen = interaction.isTalking || !playing || doors.isBusy;
+    player.update(step, frozen || combat.isAttacking ? STANDING : wanted);
+    // Pendant un coup, la planche montre la pose du coup.
+    if (combat.frame !== null) sprite.setFrame(DIRECTIONS.indexOf(player.facing), combat.frame);
     for (const npc of activeNpcs) npc.update(step, state.time, player.position);
+    if (playing && keyboard.takeKey('KeyJ', 'KeyX')) combat.request();
+    combat.update(step, frozen);
+    if (doors.current === moor && !frozen) hallucinations.update(step, state.time, player.position, (enemy) => combat.takeHit(enemy));
+    attackButton.hidden = !(playing && doors.current === moor && combat.hasSword);
     follow.follow(player.worldPosition(focusTarget), step);
     // Après la caméra : la bulle se pose sur l'image qui va être dessinée.
     // Le temps de la conversation est réel : le gel du temps ne fige pas le texte.
     if (playing) {
       if (keyboard.takeCancel()) dialogue.close();
       interaction.update(dt, keyboard.takeAction());
-      if (!doors.room) {
+      if (keyboard.takeKey('KeyF')) fiche.toggle();
+      if (!doors.room && doors.current !== moor) {
         banner.update(player.position);
         discover(banner.current);
-      } else {
+      } else if (doors.room) {
         openChests(doors.current);
       }
       if (!interaction.isTalking) doors.update(wanted);
@@ -440,6 +532,7 @@ function start() {
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
     counter, diploma, quest, grimoire, chatter, minimap, doors, rooms, wallet, shop, controls, actionButton, setLeftHanded, credits, dressHero,
+    moor, combat, forge, fiche, hallucinations,
   });
 
   let last = performance.now();

@@ -1157,31 +1157,47 @@ body {
   text-transform: uppercase;
 }
 
-/* Les onglets : un petit parchemin par page, doré s'il est gagné. */
+/* Les onglets : un petit parchemin par page (28 × 34 px), doré s'il est
+   gagné. Le bouton autour fait 44 px de haut et se partage la largeur : une
+   cible pour le pouce, le dessin reste petit. */
 .grimoire-onglets {
   display: flex;
   justify-content: center;
-  gap: 6px;
+  margin-inline: -8px;
 }
 
 .grimoire-onglet {
-  width: 28px;
-  height: 34px;
+  position: relative;
+  flex: 0 1 44px;
+  min-width: 0;
+  height: 44px;
   padding: 0;
-  border: 1px solid rgb(168 128 62 / 0.6);
-  border-radius: 3px;
-  background: rgb(243 208 140 / 0.05);
+  border: 0;
+  background: none;
   cursor: pointer;
   touch-action: manipulation;
 }
 
-.grimoire-onglet.obtenu {
+.grimoire-onglet::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  width: 28px;
+  height: 34px;
+  margin-left: -14px;
+  border: 1px solid rgb(168 128 62 / 0.6);
+  border-radius: 3px;
+  background: rgb(243 208 140 / 0.05);
+}
+
+.grimoire-onglet.obtenu::before {
   background:
     linear-gradient(transparent 42%, #a83228 42% 58%, transparent 58%),
     linear-gradient(90deg, #d4b780, #f6e8c4 50%, #d4b780);
 }
 
-.grimoire-onglet[aria-current="page"] {
+.grimoire-onglet[aria-current="page"]::before {
   border-color: var(--or-vif);
   box-shadow: 0 0 0 2px var(--or-vif), 0 0 10px rgb(243 208 140 / 0.5);
 }
@@ -1589,6 +1605,9 @@ body {
 
 .boutique-cadre {
   display: grid;
+  /* Titre, bourse, liste, bouton : seule la liste rapetisse (et défile) quand
+     l'écran est court, le bouton Fermer reste visible. */
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 12px;
   width: min(560px, 100%);
   max-height: calc(var(--hauteur, 100vh) - 24px);

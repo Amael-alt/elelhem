@@ -54,7 +54,7 @@ export const CELL_TYPES = {
   '#': { name: 'muret', matter: 'cobble', side: 'cobble', height: 0.8, solid: true },
   b: { name: 'pont', matter: 'cobble', side: 'cobble', height: 0, solid: false },
   c: { name: 'falaise', matter: 'grass', side: 'rock', height: 1.8, solid: true },
-  W: { name: 'muraille', matter: 'cobble', side: 'cobble', height: 2.6, solid: true },
+  W: { name: 'muraille', matter: 'cobble', side: 'cobble', height: 3.4, solid: true }, // deux personnages de haut
   h: { name: 'haie', matter: 'leaves', side: 'leaves', height: 0.45, solid: true }, // basse : ses grappes la couvrent
   r: { name: 'rivière haute', matter: 'water', side: 'rock', height: 1.55, solid: true },
   // Les intérieurs (world/rooms.js) : plancher de lattes (ou dalles de pierre

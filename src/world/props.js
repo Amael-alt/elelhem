@@ -13,6 +13,7 @@ const FOUNDATION = 0.3; // soubassement de pierre
 const BEAM = 0.14; // section des poutres
 const BEAM_OUT = 0.04; // saillie des poutres hors du mur
 const GIRT_Y = 1.85; // lisse de mi-hauteur, au ras du haut des portes
+const TALL_WALL = 3.6; // au-delà, la maison a un étage : une lisse de plancher de plus
 const EAVE_OVERHANG = 0.32;
 const GABLE_OVERHANG = 0.22;
 const ROOF_THICKNESS = 0.12;
@@ -93,7 +94,11 @@ export function buildHouse(house, builders) {
     const [w0, w1] = cw === 0 ? [-BEAM_OUT, inner] : [S - inner, S + BEAM_OUT];
     pushBox(frames.wood, [u0, FOUNDATION, w0], [u1, wall, w1]);
   }
-  for (const y of [GIRT_Y, wall - BEAM]) {
+  // Lisse basse, sablière, et pour une maison à étage la lisse du plancher,
+  // à mi-chemin : les fenêtres hautes se placent juste au-dessus (layout.js).
+  const girts = [GIRT_Y, wall - BEAM];
+  if (wall > TALL_WALL) girts.splice(1, 0, GIRT_Y + (wall - BEAM - GIRT_Y) / 2);
+  for (const y of girts) {
     const y1 = y + BEAM * 0.85;
     pushBox(frames.wood, [0, y, S - 0.02], [L, y1, S + BEAM_OUT]);
     pushBox(frames.wood, [0, y, -BEAM_OUT], [L, y1, 0.02]);

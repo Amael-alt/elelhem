@@ -14,7 +14,7 @@ const ZOOM_MAX = 1.4;
 const ZOOM_STEP = 1.08;
 // En portrait, la caméra recule pour garder la largeur du village à l'écran.
 const PORTRAIT_REFERENCE = 1.25;
-const PORTRAIT_MAX = 1.9;
+const PORTRAIT_MAX = 1.65; // 1,9 avant la version 1.4 : les personnages plus petits demandent une caméra un peu plus proche sur téléphone
 
 export function createFollowCamera() {
   const camera = new THREE.PerspectiveCamera(FOV_DEG, 1, 1, 200);

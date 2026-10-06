@@ -16,56 +16,61 @@
 export const HOUSES = {
   // La forge : basse et large, une cheminée de brique très forte.
   forge: {
-    x: 4, z: 7, sizeX: 5, sizeZ: 3, wall: 2.5, rise: 1.4, ridge: 'x', walls: 'stonewall', roof: 'slate',
+    x: 4, z: 7, sizeX: 5, sizeZ: 3, wall: 3.3, rise: 1.8, ridge: 'x', walls: 'stonewall', roof: 'slate',
     door: { side: 'south', offset: -0.7 },
-    windows: [{ side: 'south', offset: 1.5 }],
+    windows: [{ side: 'south', offset: 1.5 }, { side: 'south', offset: 0.4, y: 2.3 }],
     chimney: [0.82, 0.4], chimneySize: 0.9, chimneyRise: 1.4,
   },
   // La bibliothèque : haute, deux rangées de fenêtres.
   bibliotheque: {
-    x: 11, z: 5, sizeX: 5, sizeZ: 4, wall: 3.4, rise: 1.8, ridge: 'x', roof: 'slate', planters: true,
+    x: 11, z: 5, sizeX: 5, sizeZ: 4, wall: 5.6, rise: 2.3, ridge: 'x', roof: 'slate', planters: true,
     door: { side: 'south', offset: 0 },
+    // Trois rangées de fenêtres : la plus haute maison du village.
     windows: [
       { side: 'south', offset: -1.7 }, { side: 'south', offset: 1.7 },
-      { side: 'south', offset: -1.7, y: 2.3 }, { side: 'south', offset: 1.7, y: 2.3 }, { side: 'south', offset: 0, y: 2.35 },
-      { side: 'west', offset: 0 }, { side: 'west', offset: 0, y: 2.3 },
+      { side: 'south', offset: -1.7, y: 2.4 }, { side: 'south', offset: 1.7, y: 2.4 }, { side: 'south', offset: 0, y: 2.45 },
+      { side: 'south', offset: -1.7, y: 4.15 }, { side: 'south', offset: 1.7, y: 4.15 }, { side: 'south', offset: 0, y: 4.2 },
+      { side: 'west', offset: 0 }, { side: 'west', offset: 0, y: 2.4 }, { side: 'west', offset: 0, y: 4.15 },
     ],
     chimney: [0.8, 0.3],
   },
   // L'apothicairerie : étroite, ouverte sur son jardin de simples à l'est.
   apothicairerie: {
-    x: 23, z: 6, sizeX: 3, sizeZ: 3, wall: 2.5, rise: 1.7, ridge: 'x', roof: 'thatch', planters: true,
+    x: 23, z: 6, sizeX: 3, sizeZ: 3, wall: 4.2, rise: 2.0, ridge: 'x', roof: 'thatch', planters: true,
     door: { side: 'south', offset: 0 },
-    windows: [{ side: 'east', offset: 0 }, { side: 'west', offset: 0 }],
+    windows: [{ side: 'east', offset: 0 }, { side: 'west', offset: 0 }, { side: 'south', offset: 0, y: 3.2 }, { side: 'east', offset: 0, y: 3.2 }],
     chimney: [0.25, 0.5],
   },
   // La guérite de la porte de la muraille.
   guerite: {
-    x: 3, z: 10, sizeX: 2, sizeZ: 2, wall: 2.2, rise: 1.0, ridge: 'x', walls: 'stonewall', roof: 'slate',
+    x: 3, z: 10, sizeX: 2, sizeZ: 2, wall: 2.9, rise: 1.3, ridge: 'x', walls: 'stonewall', roof: 'slate',
     door: { side: 'south', offset: 0 },
     windows: [{ side: 'east', offset: 0 }],
   },
   // La maison du héros, dans la prairie de l'est, de l'autre côté du pont :
   // petite, chaume et jardinières. La partie commence dedans.
   maison: {
-    x: 35, z: 4, sizeX: 3, sizeZ: 3, wall: 2.3, rise: 1.5, ridge: 'x', roof: 'thatch', planters: true,
+    x: 35, z: 4, sizeX: 3, sizeZ: 3, wall: 3.4, rise: 2.0, ridge: 'x', roof: 'thatch', planters: true,
     door: { side: 'south', offset: 0 },
-    windows: [{ side: 'south', offset: 1.0 }, { side: 'west', offset: 0 }],
+    windows: [{ side: 'south', offset: 1.0 }, { side: 'west', offset: 0 }, { side: 'south', offset: -0.6, y: 2.3 }],
     chimney: [0.5, 0.25],
   },
   // L'auberge : la plus grande maison, cheminée qui fume.
   auberge: {
-    x: 7, z: 19, sizeX: 6, sizeZ: 4, wall: 2.8, rise: 1.7, ridge: 'x', planters: true,
+    x: 7, z: 19, sizeX: 6, sizeZ: 4, wall: 4.8, rise: 2.2, ridge: 'x', planters: true,
     door: { side: 'south', offset: 0.5 },
-    windows: [{ side: 'south', offset: -1.7 }, { side: 'south', offset: 1.9 }, { side: 'west', offset: 0 }],
+    windows: [
+      { side: 'south', offset: -1.7 }, { side: 'south', offset: 1.9 }, { side: 'west', offset: 0 },
+      { side: 'south', offset: -1.9, y: 3.5 }, { side: 'south', offset: 0.3, y: 3.5 }, { side: 'south', offset: 2.1, y: 3.5 }, { side: 'west', offset: 0, y: 3.5 },
+    ],
     chimney: [0.8, 0.4],
   },
 };
 
 // Tours à toit en pyramide.
 export const TOWERS = {
-  architecte: { x: 18, z: 2, size: 3, wall: 5.6, rise: 2.6, windowHeights: [2.6, 4.2], roof: 'slate' },
-  colombier: { x: 26, z: 18, size: 2, wall: 3.6, rise: 1.6, holes: true, roof: 'thatch' },
+  architecte: { x: 18, z: 2, size: 3, wall: 7.4, rise: 3.2, windowHeights: [2.6, 4.3, 6.0], roof: 'slate' },
+  colombier: { x: 26, z: 18, size: 2, wall: 4.6, rise: 2.0, holes: true, roof: 'thatch' },
 };
 
 // Le chantier : bâtiment à moitié monté, échafaudage sur ses faces sud et ouest.
@@ -137,13 +142,14 @@ export const DECOR_LANTERNS = [
   [12.2, 9.7], [26.3, 10.7], [17.6, 5.7], [4.9, 12.4], [13.2, 24.4], [29.4, 13.3], [33.6, 16.6], [23.6, 21.6],
 ];
 
-// Arbres : position du tronc, taille (1 : moyen), feuillage ('vert' par défaut,
+// Arbres : position du tronc, taille (1 : moyen, soit deux personnages de haut ; les
+// tailles valent 1,3 à 1,7 depuis la version 1.4, pour des arbres de trois personnages), feuillage ('vert' par défaut,
 // 'automne' pour les roux de la prairie de l'est et du sud).
 export const TREES = [
-  [5.2, 4.8, 1.1], [8.6, 4.0, 1.0], [9.7, 5.8, 0.9], [17.3, 7.6, 0.95], [22.0, 4.0, 1.1],
-  [25.5, 3.5, 1.0], [33.4, 8.8, 1.1, 'automne'], [35.5, 10.0, 1.0, 'automne'], [36.2, 20.5, 1.2, 'automne'],
-  [34.5, 24.0, 1.05, 'automne'], [4.5, 17.5, 1.1], [5.0, 22.0, 1.0, 'automne'], [16.5, 27.0, 1.0],
-  [24.5, 28.0, 1.15, 'automne'], [9.0, 27.5, 0.9], [28.5, 12.0, 0.9], [12.0, 14.0, 0.8], [3.8, 27.0, 1.05],
+  [5.2, 4.8, 1.6], [8.6, 4.0, 1.45], [9.7, 5.8, 1.31], [17.3, 7.6, 1.38], [22.0, 4.0, 1.6],
+  [25.5, 3.5, 1.45], [33.4, 8.8, 1.6, 'automne'], [35.5, 10.0, 1.45, 'automne'], [36.2, 20.5, 1.74, 'automne'],
+  [34.5, 24.0, 1.52, 'automne'], [4.5, 17.5, 1.6], [5.0, 22.0, 1.45, 'automne'], [16.5, 27.0, 1.45],
+  [24.5, 28.0, 1.67, 'automne'], [9.0, 27.5, 1.31], [28.5, 12.0, 1.31], [12.0, 14.0, 1.16], [3.8, 27.0, 1.52],
 ];
 
 // Buissons : position, taille (1 : à hauteur de genou).

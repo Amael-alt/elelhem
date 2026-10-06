@@ -534,3 +534,41 @@ Ce qui a résisté :
 - **Étiquette `v1.0`** posée sur cette version.
 
 Reste à mesurer sur de vrais téléphones, ce que le navigateur intégré ne sait pas faire : images par seconde, deux pouces en même temps, pincement, partage du diplôme. Les corrections qui en sortiront iront dans une version 1.0.1.
+
+## Version 1.1 : les personnages en 32 × 48 (6 octobre 2026)
+
+**État des lieux de la version 1.0**, après une partie complète dans le navigateur intégré (bureau 1889 × 1199, mobile 375 × 812, paysage 812 × 375), pour décider par quoi commencer la phase d'amélioration :
+
+- Le rendu du décor est le point fort (lumière, flou, herbe, intérieurs). Trois faiblesses : les arbres en grappes de boules, le héros qui disparaît derrière les bâtiments et les arbres, les surfaces « bloc » (tour, murs intérieurs, cheminées).
+- Les personnages étaient le maillon faible : cadres de 32 × 32, silhouette de deux têtes, yeux en blocs, bras de deux pixels, marche raide. La cape écarlate de la boutique rendait le héros gris sombre.
+- Jouabilité : un quartier ne compte comme découvert que si l'on entre dans son rectangle, alors qu'on parle à Basile, Ferrand ou Clodomir depuis le chemin (7 quartiers sur 12 découverts en voyant tout le monde) ; des impasses derrière et à côté de l'auberge ; une économie molle (107 Tokens gagnés pour 95 de tenues).
+- Textes : rien d'inexact. Les nombres en chiffres dans les répliques (« il te reste 4 parchemins ») et la fin de Clodomir, dense, à relire.
+- Interface : les étiquettes de la carte se chevauchent sur 375 px, et son dessin en aplats détonne.
+- Performance : 95 à 103 appels de dessin, 0 % de pixels saturés, aucune erreur ; le vrai téléphone reste non mesuré.
+
+Jordan a choisi de commencer par les personnages, en s'inspirant des sprites d'Octopath Traveler : trois têtes, visage dessiné, marche vivante.
+
+**Le nouveau générateur** (`gfx/sprites.js`) : cadres de 32 × 48 pixels à 24 pixels par unité, le personnage fait 40 pixels de haut (27 avant) pour 1,67 unité. Silhouette de trois têtes (tête 14 pixels, buste 14, jambes 12). Visage : sourcils, yeux de 2 × 2 avec un reflet, ombre du nez, bouche, joues, nez qui dépasse du profil, menton et cou ombrés. Cheveux : un volume, une frange dentelée, des mèches, une bande de reflet comme une laque ; les six coiffures sont reportées. Tunique : col en V, ceinture et boucle, plis, manches de la couleur du buste séparées par un trait, poignets, mains ; pantalon plus sombre et bottes à reflet et talon, les deux jambes jointes et séparées par un trait. Robe évasée, ourlet et ceinture en accent, plis. **Marche à six images** (contact, réception, passage, puis l'autre jambe) : le corps descend d'un pixel à la réception et remonte d'un pixel au passage, les jambes s'allongent ou se plient d'autant, la jambe libre se lève et sa botte avance, les bras balancent ; dix images par seconde, sept avant pour quatre images. **Repos** : deux temps de respiration et un clignement d'un tiers de seconde toutes les quatre secondes (la liste `IDLE_FRAMES` répète les colonnes, le moteur n'a pas changé). Les figurants marchent à 70 % de la cadence. La planche fait 288 × 192 pixels (192 × 128 avant).
+
+**Les accessoires** (`data/characters.js`) : toutes les grilles redessinées, même format, une seule ancre par personnage pour les trois vues ; les grilles sont donc larges, pour que l'objet tenu dans la main droite passe à gauche quand on voit le personnage de dos. Les repères de la silhouette sont notés en tête du fichier.
+
+**Les tenues** (`data/tokens.js`) : une tenue change maintenant la silhouette (`look` : accessoire, tenue, coiffure) en plus de la palette, par `habiller(hero, tenue)`. Cape écarlate longue, rouge vif ; cape des bois à bord dentelé et courroie ; cape de nuit à capuche baissée, les cheveux à l'air, semée de lucioles émissives ; habit d'apprenti mage, robe violette à liserés d'or et chapeau pointu à ruban d'or et étoile.
+
+Outils de QA : `__lia.galerie(lignes, échelle)` montre des poses choisies à l'échelle (`heros:nuit` pour une tenue, dernier paramètre pour nu-tête), `__lia.tenue(id)` habille le héros comme un achat.
+
+Ce qui a résisté :
+
+- **Des bâtons.** La première version, à bras et jambes séparés et manches plus sombres, faisait des personnages filiformes. Les manches ont pris la couleur du buste avec un trait sur le bord intérieur, les jambes se touchent, l'ourlet descend sur les hanches.
+- **Un trou entre l'ourlet et les jambes** quand le corps remontait d'un pixel au passage : les hanches suivent le rebond, la jambe posée s'allonge d'autant.
+- **La galerie invisible** : un panneau ouvert et capturé dans la même seconde n'était pas encore peint. Attendre.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Galerie | onze habitants, trois apprentis et quatre tenues lisibles à l'échelle 4 dans leurs quatre directions ; en jeu, l'étiquette et la bulle restent au-dessus des chapeaux |
+| Grilles | contrôle des largeurs, des lettres et du cadre : valides (un pixel de pointe de chapeau rogné sur les images de passage, sans effet sur des habitants immobiles) |
+| Coût d'une image (`__lia.bench`) | 1,6 à 2,1 ms, la même valeur avec ou sans les quatorze personnages : ils pèsent 18 appels et 36 triangles sur 97 et 50 000 |
+| Pixels saturés | 0 % |
+| Mobile 375 × 812 | héros d'environ 50 px de haut, visage lisible |
+| Console | aucune erreur |

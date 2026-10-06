@@ -1,6 +1,6 @@
 // Planches de personnages à partir des sprites transcrits (data/sprites/) :
 // trois vues dessinées (face, profil tourné vers la gauche, dos) deviennent
-// une planche de 9 colonnes × 4 lignes (bas, gauche, droite, haut). Le
+// une planche de 24 colonnes × 4 lignes (bas, gauche, droite, haut). Le
 // mouvement est fabriqué ici : respiration au repos, marche à six images (le
 // corps rebondit d'un pixel, les jambes se lèvent de face et se croisent de
 // profil, les bras balancent). La droite est le miroir de la gauche.
@@ -11,18 +11,27 @@
 // caractère est dans lumiere sont recopiés dans une seconde planche, lue comme
 // carte d'émission : ils brillent même à l'ombre (le bâton de l'Oracle).
 //
+// Le héros porte en plus ses poses de combat, transcrites de fiches à part
+// (version 2.1) : `arme`, le même personnage l'épée à la main (repos et marche
+// se fabriquent dessus comme sur les vues nues), et `coups`, trois paires de
+// vues figées, l'élan puis la frappe de chaque coup. Chaque grille apporte sa
+// palette ; une grille plus étroite que le cadre est centrée dedans.
+//
 // Repères trouvés dans le dessin de face : la ligne des hanches est la plus
 // haute ligne où un vide sépare les deux jambes ; sous une robe, seules les
-// bottes bougent. Les objets tenus loin du corps (bâton, hallebarde) restent
-// immobiles.
+// bottes bougent. Les objets tenus loin du corps (bâton, hallebarde, épée au
+// repos) restent immobiles.
 
 import { sprites } from '../data/sprites/index.js';
 import { createPixelBuffer, hexToRgb, setPixel, toDataTexture } from './pixels.js';
 
-export const FRAME_WIDTH = 48;
-export const FRAME_HEIGHT = 72;
+// Le cadre est assez large pour une épée tendue et assez haut pour une épée
+// levée (version 2.1) ; les grilles de 48 × 72 des habitants sont centrées
+// dedans et alignées par le bas.
+export const FRAME_WIDTH = 80;
+export const FRAME_HEIGHT = 88;
 export const PIXELS_PER_UNIT = 36; // le héros fait 56 pixels de haut, chapeau compris : 1,55 unité
-export const FEET_ROW = 69; // dernière ligne des bottes ; le pivot est sous elle
+export const FEET_ROW = 85; // dernière ligne des bottes ; le pivot est sous elle
 export const DIRECTIONS = ['down', 'left', 'right', 'up'];
 // Repos : deux temps de respiration (colonnes 0 et 1), la colonne 2 répète le
 // premier (place gardée pour un clignement).
@@ -30,9 +39,14 @@ export const IDLE_FRAMES = [0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 2];
 export const IDLE_FPS = 3;
 export const WALK_FRAMES = [3, 4, 5, 6, 7, 8];
 export const WALK_FPS = 10; // six images par cycle : une foulée toutes les 0,3 s
-// La dixième colonne : la pose du coup d'épée (le corps se penche en avant).
-export const ATTACK_FRAME = 9;
-export const COLUMNS = 10;
+// Les mêmes, l'épée à la main (colonnes 9 à 17) : sur la lande, le héros la
+// porte au repos comme en marchant.
+const ARMED_OFFSET = 9;
+export const ARMED_IDLE_FRAMES = IDLE_FRAMES.map((column) => column + ARMED_OFFSET);
+export const ARMED_WALK_FRAMES = WALK_FRAMES.map((column) => column + ARMED_OFFSET);
+// Les trois coups (colonnes 18 à 23) : pour chacun, l'élan puis la frappe.
+export const STRIKE_FRAMES = [[18, 19], [20, 21], [22, 23]];
+export const COLUMNS = 24;
 
 const DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
 const EMPTY = -1;
@@ -54,7 +68,6 @@ const FRONT_POSES = [
   { bob: 0, liftL: 1, swing: -1 },
   { bob: 1, liftL: 2, swing: -1 },
   { bob: -1, liftL: 1 },
-  { bob: 1, swing: 1 }, // le coup, de face ou de dos : le corps s'abaisse
 ];
 const SIDE_POSES = [
   { bob: 0 }, { bob: 1 }, { bob: 0 },
@@ -64,19 +77,27 @@ const SIDE_POSES = [
   { bob: 0, stride: -3 },
   { bob: 1, stride: -2, lift: 1 },
   { bob: -1, stride: 0 },
-  { bob: 1, stride: 2, lean: 3 }, // le coup, de profil : le buste penche en avant
 ];
+// Un personnage sans fiche de combat frappe quand même : le corps s'abaisse de
+// face ou de dos, le buste penche en avant de profil (l'épée est dessinée à part).
+const FRONT_STRIKE = { bob: 1, swing: 1 };
+const SIDE_STRIKE = { bob: 1, stride: 2, lean: 3 };
 // Ce qui flotte (les Hallucinations) ne marche pas : tout le corps ondule.
-const FLOAT_POSES = [0, 1, 0, -1, 0, 1, 1, 0, -1, 0].map((bob) => ({ bob }));
+const FLOAT_POSES = [0, 1, 0, -1, 0, 1, 1, 0, -1].map((bob) => ({ bob }));
 
 // --- Lecture des grilles ----------------------------------------------------
 
-function parseGrid(rows) {
+// Une grille plus petite que le cadre (48 × 72 pour les habitants) est
+// centrée en largeur et alignée par le bas : ses pieds tombent sur FEET_ROW.
+function parseGrid(rows, gridWidth = FRAME_WIDTH, gridHeight = FRAME_HEIGHT) {
   const cells = new Int8Array(FRAME_WIDTH * FRAME_HEIGHT).fill(EMPTY);
+  const offsetX = Math.floor((FRAME_WIDTH - gridWidth) / 2);
+  const offsetY = FRAME_HEIGHT - gridHeight;
   rows.forEach((row, y) => {
-    if (y >= FRAME_HEIGHT) return;
-    for (let x = 0; x < row.length && x < FRAME_WIDTH; x += 1) {
-      if (row[x] !== '.') cells[y * FRAME_WIDTH + x] = DIGITS.indexOf(row[x]);
+    const ty = y + offsetY;
+    if (ty < 0 || ty >= FRAME_HEIGHT) return;
+    for (let x = 0; x < row.length && x + offsetX < FRAME_WIDTH; x += 1) {
+      if (row[x] !== '.') cells[ty * FRAME_WIDTH + x + offsetX] = DIGITS.indexOf(row[x]);
     }
   });
   return cells;
@@ -244,21 +265,21 @@ function floatFrame(cells, pose) {
   return frame;
 }
 
+// Une pose figée (les coups d'épée dessinés) : la grille telle quelle.
+function stillFrame(cells) {
+  return floatFrame(cells, { bob: 0 });
+}
+
 // --- Planche complète -------------------------------------------------------
 
 const VIEW_OF = { down: 'face', up: 'dos', left: 'profil', right: 'profil' };
 
-export function createCharacterSheet(character) {
-  const data = sprites[character.sprite];
-  if (!data) throw new Error(`Sprite inconnu : « ${character.sprite} » (fiche ${character.id}).`);
-  if (data.cadre[0] !== FRAME_WIDTH || data.cadre[1] !== FRAME_HEIGHT || data.pieds !== FEET_ROW) {
-    throw new Error(`Sprite ${character.sprite} : cadre ${data.cadre.join('×')}, pieds ${data.pieds} ; attendu ${FRAME_WIDTH}×${FRAME_HEIGHT}, pieds ${FEET_ROW}.`);
-  }
+// Un jeu de trois vues avec sa palette : les grilles lues, les repères de la
+// face, la palette normale et sa version assombrie (jambe arrière).
+function readViews(data) {
   const colors = data.couleurs.map(hexToRgb);
-  const darker = colors.map(([r, g, b]) => [r, g, b].map((c) => Math.round(c * BACK_LEG_SHADE)));
-  const glowing = new Set(data.lumiere.map((ch) => DIGITS.indexOf(ch)));
-
-  const grids = { face: parseGrid(data.face), profil: parseGrid(data.profil), dos: parseGrid(data.dos) };
+  const [gridWidth, gridHeight] = data.cadre;
+  const grids = { face: parseGrid(data.face, gridWidth, gridHeight), profil: parseGrid(data.profil, gridWidth, gridHeight), dos: parseGrid(data.dos, gridWidth, gridHeight) };
   const front = analyzeFront(grids.face);
   // Les autres vues reçoivent la même longueur de jambes que la face.
   const infoOf = (view) => {
@@ -266,33 +287,85 @@ export function createCharacterSheet(character) {
     const b = bounds(grids[view]);
     return { ...b, hips: b.bottom - front.legLength, robe: front.robe };
   };
+  return {
+    grids, front, infoOf, colors,
+    darker: colors.map(([r, g, b]) => [r, g, b].map((c) => Math.round(c * BACK_LEG_SHADE))),
+  };
+}
+
+// Une grille tient dans le cadre et ses pieds ont le même nombre de lignes
+// sous eux que le cadre (alignée par le bas, elle pose sur FEET_ROW).
+function checkFrame(data, name) {
+  const belowFeet = FRAME_HEIGHT - 1 - FEET_ROW;
+  if (data.cadre[0] > FRAME_WIDTH || data.cadre[1] > FRAME_HEIGHT || data.cadre[1] - 1 - data.pieds !== belowFeet) {
+    throw new Error(`Sprite ${name} : cadre ${data.cadre.join('×')}, pieds ${data.pieds} ; attendu au plus ${FRAME_WIDTH}×${FRAME_HEIGHT}, pieds à ${belowFeet} lignes du bas.`);
+  }
+}
+
+export function createCharacterSheet(character) {
+  const data = sprites[character.sprite];
+  if (!data) throw new Error(`Sprite inconnu : « ${character.sprite} » (fiche ${character.id}).`);
+  checkFrame(data, character.sprite);
+  const glowing = new Set(data.lumiere.map((ch) => DIGITS.indexOf(ch)));
+  const base = readViews(data);
+  // Les poses de combat du héros, si sa fiche les porte (version 2.1).
+  const armed = data.arme ? readViews(data.arme) : null;
+  const strikes = data.coups ? data.coups.map((pair) => pair.map((pose) => readViews(pose))) : null;
+  if (armed) checkFrame(data.arme, `${character.sprite}.arme`);
+  for (const pair of data.coups ?? []) for (const pose of pair) checkFrame(pose, `${character.sprite}.coups`);
 
   const buffer = createPixelBuffer(FRAME_WIDTH * COLUMNS, FRAME_HEIGHT * DIRECTIONS.length);
   const glow = createPixelBuffer(buffer.width, buffer.height);
   let hasGlow = false;
 
-  DIRECTIONS.forEach((direction, row) => {
-    const view = VIEW_OF[direction];
-    const cells = grids[view];
-    const info = infoOf(view);
-    const poses = data.flottant ? FLOAT_POSES : view === 'profil' ? SIDE_POSES : FRONT_POSES;
-    const mirror = direction === 'right';
-    poses.forEach((pose, column) => {
-      const frame = data.flottant ? floatFrame(cells, pose) : view === 'profil' ? sideFrame(cells, info, pose) : frontFrame(cells, info, pose);
-      for (let y = 0; y < FRAME_HEIGHT; y += 1) {
-        for (let x = 0; x < FRAME_WIDTH; x += 1) {
-          const i = y * FRAME_WIDTH + x;
-          const index = frame.index[i];
-          if (index === EMPTY) continue;
-          const rgb = (frame.shade[i] ? darker : colors)[index];
-          const px = column * FRAME_WIDTH + (mirror ? FRAME_WIDTH - 1 - x : x);
-          setPixel(buffer, px, row * FRAME_HEIGHT + y, rgb);
-          if (glowing.has(index)) {
-            setPixel(glow, px, row * FRAME_HEIGHT + y, colors[index]);
-            hasGlow = true;
-          }
+  // Pose une image dans la planche, avec la palette de son jeu de vues.
+  const paint = (frame, views, column, row, mirror) => {
+    for (let y = 0; y < FRAME_HEIGHT; y += 1) {
+      for (let x = 0; x < FRAME_WIDTH; x += 1) {
+        const i = y * FRAME_WIDTH + x;
+        const index = frame.index[i];
+        if (index === EMPTY) continue;
+        const rgb = (frame.shade[i] ? views.darker : views.colors)[index];
+        const px = column * FRAME_WIDTH + (mirror ? FRAME_WIDTH - 1 - x : x);
+        setPixel(buffer, px, row * FRAME_HEIGHT + y, rgb);
+        if (views === base && glowing.has(index)) {
+          setPixel(glow, px, row * FRAME_HEIGHT + y, views.colors[index]);
+          hasGlow = true;
         }
       }
+    }
+  };
+
+  // Les neuf images de repos et de marche d'un jeu de vues, à partir de column.
+  const animate = (views, view, column, row, mirror) => {
+    const cells = views.grids[view];
+    const info = views.infoOf(view);
+    const poses = data.flottant ? FLOAT_POSES : view === 'profil' ? SIDE_POSES : FRONT_POSES;
+    poses.forEach((pose, i) => {
+      const frame = data.flottant ? floatFrame(cells, pose) : view === 'profil' ? sideFrame(cells, info, pose) : frontFrame(cells, info, pose);
+      paint(frame, views, column + i, row, mirror);
+    });
+  };
+
+  DIRECTIONS.forEach((direction, row) => {
+    const view = VIEW_OF[direction];
+    const mirror = direction === 'right';
+    animate(base, view, 0, row, mirror);
+    // L'épée à la main : les vues armées, sinon les mêmes images (l'épée est
+    // alors dessinée à part, gfx/weapon.js).
+    animate(armed ?? base, view, ARMED_OFFSET, row, mirror);
+    STRIKE_FRAMES.forEach((pair, hit) => {
+      pair.forEach((column, phase) => {
+        if (strikes) {
+          const views = strikes[hit][phase];
+          paint(stillFrame(views.grids[view]), views, column, row, mirror);
+        } else {
+          const cells = base.grids[view];
+          const info = base.infoOf(view);
+          const frame = data.flottant ? floatFrame(cells, { bob: 1 }) : view === 'profil' ? sideFrame(cells, info, SIDE_STRIKE) : frontFrame(cells, info, FRONT_STRIKE);
+          paint(frame, base, column, row, mirror);
+        }
+      });
     });
   });
 
@@ -306,6 +379,8 @@ export function createCharacterSheet(character) {
     frameWidth: FRAME_WIDTH,
     frameHeight: FRAME_HEIGHT,
     // Repères utiles à l'interface (étiquette au-dessus de la tête).
-    top: front.top,
+    top: base.front.top,
+    // Le personnage a ses propres vues l'épée à la main et ses coups dessinés.
+    armed: Boolean(armed && strikes),
   };
 }

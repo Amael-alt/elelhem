@@ -3,6 +3,17 @@
 // « couleurs » (0 à 9 puis a à z, du plus sombre au plus clair), « . » un
 // pixel vide. « lumiere » : les index qui brillent même dans le noir.
 
+// Les poses de combat (version 2.1), transcrites de fiches à part : l'épée à la
+// main (repos et marche se fabriquent dessus), puis l'élan et la frappe de
+// chacun des trois coups. Chaque module porte sa palette.
+import { heros_arme } from './heros_arme.js';
+import { heros_coup1_elan } from './heros_coup1_elan.js';
+import { heros_coup1_frappe } from './heros_coup1_frappe.js';
+import { heros_coup2_elan } from './heros_coup2_elan.js';
+import { heros_coup2_frappe } from './heros_coup2_frappe.js';
+import { heros_coup3_elan } from './heros_coup3_elan.js';
+import { heros_coup3_frappe } from './heros_coup3_frappe.js';
+
 export const heros = {
   cadre: [48, 72],
   pieds: 69,
@@ -249,4 +260,6 @@ export const heros = {
     '................................................',
     '................................................',
   ],
+  arme: heros_arme,
+  coups: [[heros_coup1_elan, heros_coup1_frappe], [heros_coup2_elan, heros_coup2_frappe], [heros_coup3_elan, heros_coup3_frappe]],
 };

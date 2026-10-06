@@ -5,19 +5,22 @@
 // recule, clignote et reste intouchable une seconde. À zéro, il reprend ses
 // esprits à la porte du village (onDeath, main.js).
 //
-// Ce qui se voit : la pose du coup sur la planche du héros (ATTACK_FRAME),
-// l'épée qui tourne autour de sa poignée (gfx/weapon.js) et la lame de lumière.
+// Ce qui se voit : sur la planche du héros, l'élan puis la frappe de chaque
+// coup (STRIKE_FRAMES, dessinés d'après des fiches depuis la version 2.1), la
+// lame de lumière, et, pour une tenue qui n'a pas ses poses dessinées, l'épée
+// qui tourne autour de sa poignée (gfx/weapon.js).
 
 import * as THREE from 'three';
-import { ATTACK_FRAME } from '../gfx/sprites.js';
+import { STRIKE_FRAMES } from '../gfx/sprites.js';
 import { HERO_COMBAT, SWORDS } from '../data/enemies.js';
 
 // Les trois coups : durée, fenêtre où la lame porte (de... à...), fente en
-// avant, portée, facteur de dégâts, taille de la lame de lumière.
+// avant, portée, facteur de dégâts, taille de la lame de lumière. Jusqu'à
+// `from`, la planche montre l'élan ; ensuite, la frappe.
 const HITS = [
-  { duration: 0.3, from: 0.06, to: 0.17, lunge: 0.15, reach: 1.5, factor: 1, scale: 1.5 },
-  { duration: 0.3, from: 0.06, to: 0.17, lunge: 0.15, reach: 1.5, factor: 1, scale: 1.5 },
-  { duration: 0.44, from: 0.1, to: 0.26, lunge: 0.55, reach: 1.9, factor: 2, scale: 2.1 },
+  { duration: 0.32, from: 0.09, to: 0.2, lunge: 0.15, reach: 1.5, factor: 1, scale: 1.5 },
+  { duration: 0.32, from: 0.09, to: 0.2, lunge: 0.15, reach: 1.5, factor: 1, scale: 1.5 },
+  { duration: 0.5, from: 0.14, to: 0.3, lunge: 0.55, reach: 1.9, factor: 2, scale: 2.1 },
 ];
 const QUEUE_FROM = 0.1; // à partir de quand un appui prépare le coup suivant
 const COOLDOWN = 0.28; // après le troisième coup
@@ -50,6 +53,7 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
   let cooldown = 0;
   let enemies = null; // le groupe d'Hallucinations du lieu, ou null
   let requested = false;
+  let drawnSword = false; // la planche du héros dessine déjà l'épée : pas de sprite à part
   const point = new THREE.Vector3();
   const hearts = [...hud.querySelectorAll('.clarte')];
   hud.setAttribute('aria-label', texts.clartes);
@@ -68,24 +72,28 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
     attack = { hit: index, t: 0, queued: false, struck: new Set(), slashed: false };
   }
 
-  // Place l'épée et, au bon moment, lance la lame et porte le coup.
+  // Place l'épée (si la planche ne la dessine pas) et, au bon moment, lance
+  // la lame et porte le coup.
   function animate(dt) {
     const view = VIEWS[player.facing];
     const base = player.worldPosition(point);
     const dz = view.front ? SWORD_LAYER : -SWORD_LAYER;
     if (!attack) {
-      if (hasSword() && canFight()) {
+      if (hasSword() && canFight() && !drawnSword) {
         sword.setPose({ x: base.x + view.hand[0], y: base.y + HAND_HEIGHT, z: base.z + dz, angle: view.rest, mirror: false });
       } else sword.hide();
       return;
     }
     const spec = HITS[attack.hit];
     attack.t += dt;
-    const progress = Math.min(1, attack.t / spec.duration);
-    const mirror = attack.hit === 1; // le deuxième coup revient de l'autre côté
-    const [a0, a1] = view.swing;
-    const angle = (mirror ? a1 : a0) + ((mirror ? a0 : a1) - (mirror ? a1 : a0)) * easeOut(progress);
-    sword.setPose({ x: base.x + view.hand[0], y: base.y + HAND_HEIGHT, z: base.z + dz, angle, mirror: false });
+    if (drawnSword) sword.hide();
+    else {
+      const progress = Math.min(1, attack.t / spec.duration);
+      const mirror = attack.hit === 1; // le deuxième coup revient de l'autre côté
+      const [a0, a1] = view.swing;
+      const angle = (mirror ? a1 : a0) + ((mirror ? a0 : a1) - (mirror ? a1 : a0)) * easeOut(progress);
+      sword.setPose({ x: base.x + view.hand[0], y: base.y + HAND_HEIGHT, z: base.z + dz, angle, mirror: false });
+    }
 
     // La fente : une avance vers l'avant pendant la fenêtre active.
     if (attack.t >= spec.from && attack.t <= spec.to) {
@@ -151,9 +159,19 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
     get hasSword() {
       return hasSword();
     },
-    // Pour les tests : l'épée est-elle dessinée en ce moment ?
+    // Pour les tests : l'épée est-elle dessinée en ce moment (à part, ou sur la planche) ?
     get swordVisible() {
-      return sword.visible;
+      return sword.visible || (drawnSword && hasSword() && canFight());
+    },
+    // La planche du héros porte ses propres vues l'épée à la main (gfx/sprites.js,
+    // `armed`) : le sprite d'épée à part ne sert plus.
+    setDrawnSword(on) {
+      drawnSword = Boolean(on);
+      if (drawnSword) sword.hide();
+    },
+    // Le héros tient-il son épée en ce moment : sur la lande, armé.
+    get armed() {
+      return hasSword() && canFight();
     },
     // Le héros reprend toutes ses clartés (au réveil à la porte).
     restore() {
@@ -208,9 +226,11 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
       }
       animate(dt);
     },
-    // La colonne de la planche à montrer : la pose du coup pendant un coup.
+    // La colonne de la planche à montrer pendant un coup : l'élan, puis la
+    // frappe dès que la lame porte.
     get frame() {
-      return attack ? ATTACK_FRAME : null;
+      if (!attack) return null;
+      return STRIKE_FRAMES[attack.hit][attack.t < HITS[attack.hit].from ? 0 : 1];
     },
   };
 }

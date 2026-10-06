@@ -79,6 +79,7 @@ export function createPipeline(renderer, { enabled = true, view = 'final', narro
     uNear: { value: 1 },
     uFar: { value: 100 },
     uTime: time,
+    uInterior: { value: 0 }, // 1 dans une pièce : l'étalonnage change (composite.js)
   };
   let blurScale = 1;
   const prefilter = createDofPrefilterMaterial(shared);
@@ -105,13 +106,17 @@ export function createPipeline(renderer, { enabled = true, view = 'final', narro
     enabled,
     // Ce dont les sprites ont besoin pour se dessiner après la composition.
     spriteHooks: {
-      uniforms: { uSceneDepth: { value: depthTexture }, uInvResolution: invResolution, uTime: time, uNear: shared.uNear, uFar: shared.uFar },
+      uniforms: {
+        uSceneDepth: { value: depthTexture }, uInvResolution: invResolution, uTime: time, uNear: shared.uNear, uFar: shared.uFar,
+        uInterior: shared.uInterior,
+      },
       grading: GRADE_GLSL,
     },
-    // Dedans ou dehors : règle la bande nette et la force du flou.
+    // Dedans ou dehors : règle la bande nette, la force du flou et l'étalonnage.
     setInterior(on) {
       shared.uBandHalfWidth.value = on ? INTERIOR_BAND_HALF_WIDTH : BAND_HALF_WIDTH;
       blurScale = on ? INTERIOR_BLUR_SCALE : 1;
+      shared.uInterior.value = on ? 1 : 0;
     },
     // width, height : taille réelle du tampon de dessin, en pixels.
     setSize(width, height) {

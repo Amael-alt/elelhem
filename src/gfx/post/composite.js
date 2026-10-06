@@ -8,6 +8,13 @@
 //
 // L'étalonnage est une fonction GLSL partagée : les sprites, dessinés après
 // la composition pour rester nets, l'appliquent eux-mêmes à leurs pixels.
+//
+// Dedans (uInterior = 1, version 1.3) : l'étalonnage change de caractère. Le
+// bleu des ombres est fait pour l'heure dorée du dehors, où le ciel éclaire ce
+// que le soleil ne touche pas ; dans une pièce, il n'y a pas de ciel, et ce
+// même bleu posait un voile froid sur le feu, le bois et le noir autour de la
+// pièce. Dedans, les ombres tirent sur le brun, la vignette se resserre et le
+// bloom se calme, comme dans les intérieurs des RPG en HD-2D.
 
 import * as THREE from 'three';
 import { COC_GLSL } from './dof.js';
@@ -19,14 +26,17 @@ const SHADOW_LIFT = 0.035; // les ombres remontent vers le bleu-vert au lieu de 
 const SATURATION = 1.12;
 const CONTRAST = 1.07;
 const VIGNETTE = 0.45;
+const INTERIOR_VIGNETTE = 0.62; // dedans : les coins s'enfoncent dans le noir
 const GRAIN = 0.02;
 const BLOOM_STRENGTH = 0.62;
+const INTERIOR_BLOOM = 0.55; // part du bloom gardée dedans : halos sur les flammes, pas sur les murs
 const SHOULDER = 0.85;
 
 const f = (value) => value.toFixed(4);
 
 export const GRADE_GLSL = /* glsl */`
 uniform float uTime;
+uniform float uInterior;
 
 // Courbe ACES ajustée (Stephen Hill), même convention que three.js : le mode
 // ?nofx et le rendu final partent de la même image.
@@ -56,8 +66,10 @@ float gradeHash( vec2 p ) {
 vec3 gradeToDisplay( vec3 hdr, vec2 uv ) {
   vec3 color = gradeAces( hdr );
   float luma = dot( color, vec3( 0.2126, 0.7152, 0.0722 ) );
-  color += mix( vec3( -0.6, -0.1, 0.7 ), vec3( 0.7, 0.25, -0.6 ), smoothstep( 0.1, 0.7, luma ) ) * ${f(SPLIT_TONE)};
-  color += vec3( 0.25, 0.75, 1.0 ) * ${f(SHADOW_LIFT)} * ( 1.0 - smoothstep( 0.0, 0.3, luma ) );
+  // Ombres bleues dehors, brunes dedans ; hautes lumières ambrées partout.
+  vec3 shadowTint = mix( vec3( -0.6, -0.1, 0.7 ), vec3( 0.35, -0.05, -0.5 ), uInterior );
+  color += mix( shadowTint, vec3( 0.7, 0.25, -0.6 ), smoothstep( 0.1, 0.7, luma ) ) * ${f(SPLIT_TONE)};
+  color += vec3( 0.25, 0.75, 1.0 ) * ${f(SHADOW_LIFT)} * ( 1.0 - uInterior ) * ( 1.0 - smoothstep( 0.0, 0.3, luma ) );
   color = gradeToSrgb( clamp( color, 0.0, 1.0 ) );
   float l = dot( color, vec3( 0.2126, 0.7152, 0.0722 ) );
   color = mix( vec3( l ), color, ${f(SATURATION)} );
@@ -69,7 +81,8 @@ vec3 gradeToDisplay( vec3 hdr, vec2 uv ) {
   if ( peak > ${f(SHOULDER)} ) {
     color *= ( ${f(SHOULDER)} + ${f(1 - SHOULDER)} * ( 1.0 - exp( - ( peak - ${f(SHOULDER)} ) / ${f(1 - SHOULDER)} ) ) ) / peak;
   }
-  color *= 1.0 - ${f(VIGNETTE)} * smoothstep( 0.35, 0.95, length( uv - 0.5 ) );
+  float vignette = mix( ${f(VIGNETTE)}, ${f(INTERIOR_VIGNETTE)}, uInterior );
+  color *= 1.0 - vignette * smoothstep( mix( 0.35, 0.3, uInterior ), 0.95, length( uv - 0.5 ) );
   color += ( gradeHash( gl_FragCoord.xy + fract( uTime ) * 61.0 ) - 0.5 ) * ${f(GRAIN)};
   return clamp( color, 0.0, 1.0 );
 }
@@ -109,7 +122,7 @@ export function createCompositeMaterial(shared, view) {
           return;
         #endif
 
-        vec3 bloom = texture2D( uBloom, vUv ).rgb * ${f(BLOOM_STRENGTH)};
+        vec3 bloom = texture2D( uBloom, vUv ).rgb * ${f(BLOOM_STRENGTH)} * mix( 1.0, ${f(INTERIOR_BLOOM)}, uInterior );
 
         #if VIEW == VIEW_BLOOM
           gl_FragColor = vec4( gradeToSrgb( gradeAces( bloom ) ), 1.0 );

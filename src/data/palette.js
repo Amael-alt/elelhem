@@ -126,10 +126,11 @@ export const mapColors = {
   fait: '#9a9488',
 };
 
-// Les intérieurs : le noir autour de la pièce, le jour qui entre par les
+// Les intérieurs : le noir autour de la pièce (chaud, presque noir : la
+// pièce flotte dans l'obscurité, comme dans les RPG en HD-2D), le jour qui entre par les
 // fenêtres, une lumière d'ambiance chaude venue du plafond et du plancher.
 export const interiorColors = {
-  fond: '#17121d',
+  fond: '#0d0908',
   jour: '#ffd9a8',
   ciel: '#ffe2bd',
   sol: '#3a2a20',

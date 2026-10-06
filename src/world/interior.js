@@ -145,7 +145,7 @@ export function createInterior(room, { materials, sunDirection }) {
   if (fires.length) flameMeshes.push(createFlames(fires, FIRE_FLAME));
   if (candles.length) flameMeshes.push(createFlames(candles, CANDLE_FLAME));
   for (const flame of flameMeshes) scene.add(flame.mesh);
-  if (fires.length) scene.add(createLightPools(fires.map((f) => ({ x: f.x, y: 0, z: f.z + 0.6, radius: 2.2, strength: 1.1 }))));
+  if (fires.length) scene.add(createLightPools(fires.map((f) => ({ x: f.x, y: 0, z: f.z + 0.6, radius: 2.2, strength: 0.7 }))));
   // Une lumière par flamme (sauf celles qui n'éclairent pas), plus celles
   // des meubles qui en demandent une à part (le lustre).
   const fireLights = [...flames.filter((flame) => !flame.noLight), ...extraLights].map((flame, i) => {

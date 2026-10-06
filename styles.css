@@ -2298,3 +2298,236 @@ body {
     animation: none;
   }
 }
+
+/* ==== Version 1.5 : interface plus grande, ornements illustrés ===========
+   Les ornements (assets/ui/) sont des dessins générés puis découpés par
+   outils/decouper.mjs : coins de filigrane d'or, filet à losange, icônes du
+   parchemin et du Token, parchemin du grimoire. Ils habillent la boîte de
+   dialogue, les panneaux et le HUD, et tout est un peu plus grand qu'avant :
+   lisible sur téléphone sans zoom. Ces règles viennent en dernier et
+   l'emportent sur celles du dessus, à spécificité égale. */
+
+:root {
+  --coin: 68px; /* taille d'un coin d'ornement */
+  --coin-debord: 12px; /* de combien il déborde du cadre */
+}
+
+/* Coins de filigrane : quatre copies du même dessin, retournées. Le dessin
+   est fait pour l'angle haut gauche, ses deux bras partent vers la droite et
+   vers le bas. */
+.coins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.coins span {
+  position: absolute;
+  width: var(--coin);
+  height: var(--coin);
+  background: url("assets/ui/coin.png") no-repeat center / contain;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.6));
+}
+
+.coins span:nth-child(1) {
+  top: calc(-1 * var(--coin-debord));
+  left: calc(-1 * var(--coin-debord));
+}
+
+.coins span:nth-child(2) {
+  top: calc(-1 * var(--coin-debord));
+  right: calc(-1 * var(--coin-debord));
+  scale: -1 1;
+}
+
+.coins span:nth-child(3) {
+  bottom: calc(-1 * var(--coin-debord));
+  left: calc(-1 * var(--coin-debord));
+  scale: 1 -1;
+}
+
+.coins span:nth-child(4) {
+  right: calc(-1 * var(--coin-debord));
+  bottom: calc(-1 * var(--coin-debord));
+  scale: -1 -1;
+}
+
+/* Les panneaux portent les coins : il leur faut un repère. */
+.carte-cadre,
+.boutique-cadre,
+.grimoire-livre {
+  position: relative;
+}
+
+/* Boîte de dialogue : plus large, texte plus grand ; les losanges d'angle
+   d'avant laissent la place aux coins. */
+#dialogue {
+  width: min(780px, calc(100% - 28px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+  padding: 26px 30px 24px;
+}
+
+#dialogue::before,
+#dialogue::after {
+  display: none;
+}
+
+#dialogue .coins {
+  --coin: 60px;
+  --coin-debord: 11px;
+}
+
+.dialogue-nom {
+  top: -17px;
+  left: 30px;
+  padding: 5px 16px 6px 30px;
+  font-size: clamp(0.95rem, 0.6rem + 1.4vw, 1.1rem);
+}
+
+.dialogue-texte {
+  min-height: 4.4em;
+  font-size: clamp(1.14rem, 0.76rem + 1.6vw, 1.5rem);
+}
+
+.dialogue-choix button {
+  min-height: 52px;
+  font-size: clamp(1.02rem, 0.7rem + 1.3vw, 1.2rem);
+}
+
+/* Sur grand écran seulement : en dessous, le portrait est posé sur la boîte
+   (règle plus haut) et la boîte reste centrée. */
+@media (min-width: 1101px) {
+  #dialogue.avec-portrait {
+    transform: translateX(calc(-50% + 140px));
+  }
+}
+
+/* Filet d'or à losange : sous le nom du lieu, sous le titre du jeu, sous les
+   titres de panneaux. */
+.lieu-filet {
+  height: 16px;
+  background: url("assets/ui/filet.png") no-repeat center / contain;
+}
+
+.titre-orne {
+  height: 24px;
+  background: url("assets/ui/filet.png") no-repeat center / contain;
+}
+
+.titre-orne span,
+.titre-orne i {
+  display: none;
+}
+
+.carte-titre,
+.boutique-titre,
+.grimoire-titre {
+  padding-bottom: 20px;
+  background: url("assets/ui/filet.png") no-repeat center bottom / auto 14px;
+  font-size: clamp(1.1rem, 0.85rem + 1.1vw, 1.35rem);
+}
+
+/* Le grimoire s'écrit sur du vrai parchemin. */
+.grimoire-page {
+  background: url("assets/ui/parchemin.png") center / 512px repeat, #e6d3aa;
+  box-shadow: inset 0 0 40px rgb(110 82 54 / 0.45);
+}
+
+/* HUD : pastilles plus hautes, icônes dessinées. */
+.parchemins-rangee {
+  gap: 8px;
+  height: 52px;
+  padding: 0 16px 0 12px;
+  border-radius: 26px;
+}
+
+.parchemins-rangee::before {
+  content: "";
+  width: 38px;
+  height: 30px;
+  margin-right: 2px;
+  background: url("assets/ui/icone-parchemin.png") no-repeat center / contain;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.6));
+}
+
+.parchemin {
+  width: 17px;
+  height: 23px;
+}
+
+#tokens {
+  height: 52px;
+  padding: 0 16px 0 10px;
+  border-radius: 26px;
+  font-size: 1.2rem;
+}
+
+.tokens-piece {
+  width: 28px;
+  height: 28px;
+  border-radius: 0;
+  background: url("assets/ui/icone-token.png") no-repeat center / contain;
+  box-shadow: none;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.6));
+}
+
+.tokens-piece::after {
+  content: none;
+}
+
+#son {
+  width: 50px;
+  height: 50px;
+}
+
+#minimap {
+  top: calc(74px + env(safe-area-inset-top));
+  width: 204px;
+}
+
+#action {
+  width: 86px;
+  height: 86px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --coin: 48px;
+    --coin-debord: 9px;
+  }
+
+  #dialogue .coins {
+    --coin: 44px;
+    --coin-debord: 8px;
+  }
+
+  .parchemins-rangee {
+    height: 48px;
+  }
+
+  #tokens {
+    height: 46px;
+    font-size: 1.1rem;
+  }
+
+  #minimap {
+    width: 150px;
+  }
+}
+
+/* Paysage bas : les coins prendraient la place du texte. */
+@media (max-height: 480px) {
+  .coins {
+    display: none;
+  }
+
+  #dialogue {
+    padding: 16px 20px 12px;
+  }
+}
+
+/* Paysage bas : la minimap reste petite, le cartouche du nom ne la touche pas. */
+@media (max-height: 480px) {
+  #minimap {
+    width: 118px;
+  }
+}

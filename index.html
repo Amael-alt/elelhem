@@ -147,6 +147,7 @@
   <button id="minimap" type="button" tabindex="-1" hidden><canvas></canvas></button>
   <div id="carte" role="dialog" aria-modal="true" aria-labelledby="carte-titre" hidden>
     <div class="carte-cadre">
+      <div class="coins" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       <p class="carte-titre" id="carte-titre"></p>
       <canvas class="carte-toile" role="img"></canvas>
       <ul class="carte-legende"></ul>
@@ -157,6 +158,7 @@
   <!-- La boutique de Berthe : les tenues du héros (src/game/shop.js). -->
   <div id="boutique" role="dialog" aria-modal="true" aria-labelledby="boutique-titre" hidden>
     <div class="boutique-cadre">
+      <div class="coins" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       <p class="boutique-titre" id="boutique-titre"></p>
       <p class="boutique-bourse"></p>
       <ul class="boutique-liste"></ul>
@@ -167,6 +169,7 @@
   <!-- Le grimoire : les parchemins gagnés, à relire (src/game/grimoire.js). -->
   <div id="grimoire" role="dialog" aria-modal="true" aria-labelledby="grimoire-titre" hidden>
     <div class="grimoire-livre">
+      <div class="coins" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       <p class="grimoire-titre" id="grimoire-titre"></p>
       <nav class="grimoire-onglets"></nav>
       <article class="grimoire-page">
@@ -192,6 +195,7 @@
 
   <!-- Boîte de dialogue : remplie par src/game/dialogue.js. -->
   <div id="dialogue" role="dialog" aria-labelledby="dialogue-nom" hidden>
+    <div class="coins" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     <div class="dialogue-portrait" aria-hidden="true" hidden><img alt="" decoding="async"></div>
     <p class="dialogue-nom" id="dialogue-nom"></p>
     <p class="dialogue-texte"><span class="vu"></span><span class="reste"></span></p>

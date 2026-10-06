@@ -1,10 +1,9 @@
 // Le héros : déplacement, collisions, direction du regard et animation.
 
-import { DIRECTIONS, IDLE_FPS, IDLE_FRAMES, WALK_FRAMES } from '../gfx/sprites.js';
+import { DIRECTIONS, IDLE_FPS, IDLE_FRAMES, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
 
 const SPEED = 3.4; // unités par seconde
 const RADIUS = 0.3;
-const WALK_FPS = 7;
 
 // En diagonale, on garde la direction en cours si elle fait partie du
 // mouvement : le personnage ne tremble pas entre deux vues.

@@ -6,7 +6,7 @@
 // connaît aucun habitant par son nom.
 
 import { createBlobShadow, createSprite } from '../gfx/billboard.js';
-import { DIRECTIONS, IDLE_FPS, IDLE_FRAMES, WALK_FRAMES } from '../gfx/sprites.js';
+import { DIRECTIONS, IDLE_FPS, IDLE_FRAMES, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
 import { SPRITE_LAYER } from '../gfx/post/pipeline.js';
 
 export const INTERACTION_RADIUS = 2.2; // en dessous, on peut lui parler
@@ -17,7 +17,7 @@ const TURN_BIAS = 1.25; // garde son regard sur la diagonale, pas de tremblement
 const GLOW_PULSE = 0.16; // respiration de la lumière, en part de l'émission
 const GLOW_RATE = 2.2; // radians par seconde
 const WALK_SPEED = 1.1; // figurants : unités par seconde
-const WALK_FPS = 7;
+const EXTRA_WALK_FPS = WALK_FPS * 0.7; // les figurants flânent : foulée plus lente
 const PAUSE_SECONDS = 1.8; // arrêt à chaque bout du trajet
 
 // Direction du regard pour un écart (dx, dz) vers le héros. Sud = +z = bas de
@@ -107,7 +107,7 @@ export function createNpc({ character, sheet, village, sunDirection, post, at = 
       if (route) {
         const walking = walk(dt);
         const frames = walking ? WALK_FRAMES : IDLE_FRAMES;
-        const fps = walking ? WALK_FPS : IDLE_FPS;
+        const fps = walking ? EXTRA_WALK_FPS : IDLE_FPS;
         sprite.setFrame(DIRECTIONS.indexOf(facing), frames[Math.floor(clock * fps) % frames.length]);
         const y = world.groundHeight(position.x, position.z);
         sprite.object.position.set(position.x, y, position.z);

@@ -25,7 +25,7 @@
 //   s'étalonne avec la même fonction que l'image (voir gfx/post/).
 
 import * as THREE from 'three';
-import { FRAME, FEET_ROW, PIXELS_PER_UNIT } from './sprites.js';
+import { FRAME_WIDTH, FRAME_HEIGHT, FEET_ROW, PIXELS_PER_UNIT } from './sprites.js';
 import { createNoPointShadowMaterial, injectSharpSampling } from './materials.js';
 import { createPixelBuffer, hexToRgb, setPixel, toDataTexture } from './pixels.js';
 import { outlineColor } from '../data/palette.js';
@@ -39,10 +39,11 @@ const GLOW_INTENSITY = 1.5; // émission des pixels de lumière, avant étalonna
 
 // Quad de la taille d'un cadre, pivot sous les bottes.
 function createSpriteGeometry() {
-  const size = FRAME / PIXELS_PER_UNIT;
-  const belowFeet = (FRAME - FEET_ROW - 1) / PIXELS_PER_UNIT;
-  const geometry = new THREE.PlaneGeometry(size, size);
-  geometry.translate(0, size / 2 - belowFeet, 0);
+  const width = FRAME_WIDTH / PIXELS_PER_UNIT;
+  const height = FRAME_HEIGHT / PIXELS_PER_UNIT;
+  const belowFeet = (FRAME_HEIGHT - FEET_ROW - 1) / PIXELS_PER_UNIT;
+  const geometry = new THREE.PlaneGeometry(width, height);
+  geometry.translate(0, height / 2 - belowFeet, 0);
   return geometry;
 }
 
@@ -152,7 +153,7 @@ export function createSprite(sheet, sunDirection, post = null) {
   texture.repeat.set(1 / sheet.columns, 1 / sheet.rows);
   const glowTexture = sheet.emissive?.clone() ?? null;
   glowTexture?.repeat.copy(texture.repeat);
-  const texSize = new THREE.Vector2(sheet.columns * FRAME, sheet.rows * FRAME);
+  const texSize = new THREE.Vector2(sheet.columns * FRAME_WIDTH, sheet.rows * FRAME_HEIGHT);
 
   const mesh = new THREE.Mesh(createSpriteGeometry(), createVisibleMaterial(texture, glowTexture, texSize, sunDirection, post));
   mesh.castShadow = true;

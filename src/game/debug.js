@@ -7,6 +7,8 @@
 
 import * as THREE from 'three';
 import { repliques } from '../data/dialogues.js';
+import { createCharacterSheet, FRAME_HEIGHT, FRAME_WIDTH } from '../gfx/sprites.js';
+import { figurants, hero, villagers } from '../data/characters.js';
 
 const REFRESH_SECONDS = 0.5;
 
@@ -245,13 +247,13 @@ export function installDebugApi(game) {
     portraits(on = true, ids = Object.keys(sheets), scale = 5) {
       document.getElementById('lia-portraits')?.remove();
       if (!on) return false;
-      const frame = 32;
       const canvas = document.createElement('canvas');
       canvas.id = 'lia-portraits';
       const perRow = 4;
-      const cell = frame * 4 * scale + 16;
+      const cell = FRAME_WIDTH * 4 * scale + 16;
+      const rowHeight = FRAME_HEIGHT * scale + 16;
       canvas.width = Math.min(ids.length, perRow) * cell;
-      canvas.height = Math.ceil(ids.length / perRow) * (frame * scale + 16);
+      canvas.height = Math.ceil(ids.length / perRow) * rowHeight;
       canvas.style.cssText = 'position:fixed;inset:0;z-index:40;background:#7d7a8c;image-rendering:pixelated;max-width:100%;max-height:100%;pointer-events:none';
       const context = canvas.getContext('2d');
       context.imageSmoothingEnabled = false;
@@ -262,11 +264,48 @@ export function installDebugApi(game) {
         source.height = buffer.height;
         source.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buffer.data), buffer.width, buffer.height), 0, 0);
         const ox = (n % perRow) * cell + 8;
-        const oy = Math.floor(n / perRow) * (frame * scale + 16) + 8;
+        const oy = Math.floor(n / perRow) * rowHeight + 8;
         for (let row = 0; row < 4; row += 1) {
-          context.drawImage(source, 0, row * frame, frame, frame, ox + row * frame * scale, oy, frame * scale, frame * scale);
+          context.drawImage(source, 0, row * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT, ox + row * FRAME_WIDTH * scale, oy, FRAME_WIDTH * scale, FRAME_HEIGHT * scale);
         }
       });
+      document.body.append(canvas);
+      return true;
+    },
+    // Galerie d'images choisies, pour juger une pose pixel par pixel : rows est
+    // une liste de lignes, chaque ligne une liste de [id, direction (0 bas,
+    // 1 gauche, 2 droite, 3 haut), colonne de la planche, sansAccessoire].
+    // Les planches sont refaites depuis les fiches, sans toucher au jeu.
+    galerie(rows, scale = 4) {
+      document.getElementById('lia-galerie')?.remove();
+      if (!rows) return false;
+      const fiches = [hero, ...villagers, ...figurants];
+      const cache = new Map();
+      const sheetOf = (id, bare) => {
+        const key = `${id}:${bare ? 'nu' : 'habille'}`;
+        if (!cache.has(key)) {
+          const fiche = fiches.find((c) => c.id === id);
+          cache.set(key, createCharacterSheet(bare ? { ...fiche, accessoire: null } : fiche));
+        }
+        return cache.get(key);
+      };
+      const columns = Math.max(...rows.map((row) => row.length));
+      const canvas = document.createElement('canvas');
+      canvas.id = 'lia-galerie';
+      canvas.width = columns * (FRAME_WIDTH * scale + 4) + 12;
+      canvas.height = rows.length * (FRAME_HEIGHT * scale + 8) + 8;
+      canvas.style.cssText = 'position:fixed;left:0;top:0;z-index:40;background:#6f6c7e;image-rendering:pixelated;pointer-events:none';
+      const context = canvas.getContext('2d');
+      context.imageSmoothingEnabled = false;
+      rows.forEach((row, r) => row.forEach(([id, direction, column, bare], i) => {
+        const { buffer } = sheetOf(id, bare);
+        const source = document.createElement('canvas');
+        source.width = buffer.width;
+        source.height = buffer.height;
+        source.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buffer.data), buffer.width, buffer.height), 0, 0);
+        context.drawImage(source, column * FRAME_WIDTH, direction * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT,
+          8 + i * (FRAME_WIDTH * scale + 4), 8 + r * (FRAME_HEIGHT * scale + 8), FRAME_WIDTH * scale, FRAME_HEIGHT * scale);
+      }));
       document.body.append(canvas);
       return true;
     },

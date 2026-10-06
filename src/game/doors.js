@@ -83,18 +83,23 @@ export function createDoors(fade, { village, rooms, houses, player, onChange }) 
     enter,
     exit,
     // À chaque image : le héros pousse-t-il une porte, ou franchit-il un seuil ?
-    // move : la direction demandée par le joueur ({ x, z }, de longueur 1 au
-    // plus) ; c'est elle qui compte, pas le regard du sprite.
+    // move : la direction demandée par le joueur ({ x, z }) ; c'est elle qui
+    // compte, pas le regard du sprite.
     update(move) {
       if (busy || !player.moving) return;
       const { x, z } = player.position;
+      // Seule l'orientation du geste compte, pas sa force : au joystick, une
+      // poussée douce vers la porte l'ouvre aussi.
+      const length = Math.hypot(move.x, move.z);
+      if (length === 0) return;
+      const towardNorth = -move.z / length;
       if (current === village) {
-        if (move.z > -PUSH) return;
+        if (towardNorth < PUSH) return;
         const door = doors.find((d) => Math.abs(x - d.x) < DOOR_HALF_WIDTH && z > d.z && z - d.z < DOOR_REACH);
         if (door) enter(door.id);
         return;
       }
-      if (move.z < PUSH) return;
+      if (-towardNorth < PUSH) return;
       const threshold = current.door;
       if (Math.abs(x - threshold.x) < DOOR_HALF_WIDTH && z > threshold.z - THRESHOLD_REACH) exit();
     },

@@ -4,7 +4,7 @@ Règles de ce dépôt pour Claude Code, valables dans chaque session ouverte ici
 
 ## Ce qu'est ce dépôt
 
-« Le Village de LIA » : un petit RPG HD-2D jouable dans le navigateur, dans la contrée d'Ellelhem. Chaque habitant transpose une notion d'IA en univers médiéval fantastique. C'est une ressource de formation et une démonstration de ce que Claude Code sait construire, partagée surtout sur téléphone.
+« The Legend of Elelhem : La Magie de Lia » (titre d'origine : « Le Village de LIA ») : un petit RPG HD-2D jouable dans le navigateur, dans le village d'Elelhem, où la magie LIA (l'IA) s'apprend auprès des maîtres du village. Chaque maître transpose une notion d'IA en univers médiéval fantastique. C'est une ressource de formation et une démonstration de ce que Claude Code sait construire, partagée surtout sur téléphone.
 
 - Dépôt **public** : https://github.com/Amael-alt/village-de-lia
 - Jeu en ligne (GitHub Pages, branche `main`, racine) : https://amael-alt.github.io/village-de-lia/

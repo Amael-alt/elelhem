@@ -1858,6 +1858,27 @@ body {
   }
 }
 
+/* Téléphone court en portrait (petit écran, ou barres du navigateur
+   affichées) : flamme et espacements resserrés, pour que le bas de l'écran
+   titre reste visible avec « Nouvelle partie » et le côté du joystick. */
+@media (max-height: 720px) and (min-height: 481px) {
+  .titre-cadre {
+    gap: 6px;
+  }
+
+  .titre-flamme {
+    height: clamp(120px, 24vh, 250px);
+  }
+
+  .titre-commencer {
+    margin-top: 4px;
+  }
+
+  .titre-credits {
+    margin-top: 2px;
+  }
+}
+
 /* Écran court (téléphone en paysage) : le HUD tient sur une ligne en haut,
    la minimap rapetisse à côté du son, le bandeau de lieu passe dessous, et la
    boîte de dialogue se compacte : deux lignes réservées au lieu de trois,
@@ -1909,7 +1930,61 @@ body {
     margin-top: -11px;
   }
 
+  /* L'écran titre sur deux colonnes : la flamme, grande, à gauche ; le
+     titre et le reste à droite. En une seule colonne, il débordait en bas. */
+  .titre-cadre {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: repeat(9, auto);
+    align-content: center;
+    column-gap: clamp(20px, 4vw, 44px);
+    row-gap: 0;
+    width: min(760px, 100%);
+  }
+
+  .titre-cadre > * {
+    grid-column: 2;
+    margin-block: 3px;
+  }
+
+  .titre-cadre > .titre-flamme {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+    height: min(64vh, 230px);
+  }
+
+  .titre-commencer {
+    margin-top: 8px;
+  }
+
+  .titre-credits {
+    margin-top: 6px;
+  }
+
   .titre-commandes {
     padding: 4px 14px;
+  }
+
+  /* Le diplôme à gauche, aussi grand que la hauteur le permet ; le prénom
+     et les boutons à droite, empilés. Dessous, il ne faisait que 260 px. */
+  .diplome-cadre {
+    grid-template-columns: auto minmax(190px, 250px);
+    justify-content: center;
+    align-items: center;
+    column-gap: 16px;
+  }
+
+  .diplome-toile {
+    width: min(calc(100vw - 300px), calc((var(--hauteur, 100vh) - 24px) * 1.416));
+  }
+
+  .diplome-actions,
+  .diplome-boutons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .diplome-prenom input {
+    width: 100%;
   }
 }

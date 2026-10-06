@@ -16,7 +16,7 @@
 
 import * as THREE from 'three';
 import { createFullscreenTriangle } from './fullscreen.js';
-import { createDofGatherMaterial, createDofPrefilterMaterial, MAX_BLUR } from './dof.js';
+import { BAND_HALF_WIDTH, createDofGatherMaterial, createDofPrefilterMaterial, MAX_BLUR } from './dof.js';
 import { createBloomMaterials } from './bloom.js';
 import { createCompositeMaterial, GRADE_GLSL } from './composite.js';
 
@@ -26,6 +26,10 @@ export const SPRITE_LAYER = 1;
 const HALF_MAX_HEIGHT = 540;
 const BLOOM_MIPS = 5;
 const BAND_LIMITS = [0.2, 0.8];
+// Dans une pièce : la bande nette couvre presque tout l'écran et le flou qui
+// reste (par la profondeur) est atténué. La maquette, c'est dehors.
+const INTERIOR_BAND_HALF_WIDTH = 0.45;
+const INTERIOR_BLUR_SCALE = 0.6;
 
 function createTarget(options = {}) {
   return new THREE.WebGLRenderTarget(1, 1, {
@@ -49,6 +53,7 @@ export function createPipeline(renderer, { enabled = true, view = 'final', narro
       enabled,
       spriteHooks: null,
       setSize() {},
+      setInterior() {},
       render(scene, camera) {
         renderer.info.reset();
         renderer.shadowMap.needsUpdate = true;
@@ -70,10 +75,12 @@ export function createPipeline(renderer, { enabled = true, view = 'final', narro
   const shared = {
     uFocusDistance: { value: 10 },
     uBandCenter: { value: 0.5 },
+    uBandHalfWidth: { value: BAND_HALF_WIDTH },
     uNear: { value: 1 },
     uFar: { value: 100 },
     uTime: time,
   };
+  let blurScale = 1;
   const prefilter = createDofPrefilterMaterial(shared);
   const gather = createDofGatherMaterial(shared, narrowScreen ? 16 : 24);
   const bloom = createBloomMaterials();
@@ -100,6 +107,11 @@ export function createPipeline(renderer, { enabled = true, view = 'final', narro
     spriteHooks: {
       uniforms: { uSceneDepth: { value: depthTexture }, uInvResolution: invResolution, uTime: time, uNear: shared.uNear, uFar: shared.uFar },
       grading: GRADE_GLSL,
+    },
+    // Dedans ou dehors : règle la bande nette et la force du flou.
+    setInterior(on) {
+      shared.uBandHalfWidth.value = on ? INTERIOR_BAND_HALF_WIDTH : BAND_HALF_WIDTH;
+      blurScale = on ? INTERIOR_BLUR_SCALE : 1;
     },
     // width, height : taille réelle du tampon de dessin, en pixels.
     setSize(width, height) {
@@ -142,7 +154,7 @@ export function createPipeline(renderer, { enabled = true, view = 'final', narro
       draw(prefilter, halfTarget);
       gather.uniforms.uHalf.value = halfTarget.texture;
       gather.uniforms.uHalfTexel.value.set(1 / halfTarget.width, 1 / halfTarget.height);
-      gather.uniforms.uMaxBlurPixels.value = MAX_BLUR * halfHeight;
+      gather.uniforms.uMaxBlurPixels.value = MAX_BLUR * halfHeight * blurScale;
       draw(gather, dofTarget);
 
       // 4. Bloom.
@@ -166,7 +178,7 @@ export function createPipeline(renderer, { enabled = true, view = 'final', narro
       composite.uniforms.uDepth.value = depthTexture;
       composite.uniforms.uDof.value = dofTarget.texture;
       composite.uniforms.uBloom.value = bloomTargets[0].texture;
-      composite.uniforms.uMaxBlurPixels.value = MAX_BLUR * fullHeight;
+      composite.uniforms.uMaxBlurPixels.value = MAX_BLUR * fullHeight * blurScale;
       draw(composite, null);
 
       // 6. Sprites par-dessus, nets. Pas dans les vues de débogage du flou

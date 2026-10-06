@@ -14,7 +14,9 @@ import { createCollider } from './collision.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
 import { buildAnvil, buildBarrel, buildBench, buildCrate, buildTable, buildWoodpile } from './landmarks.js';
 import {
-  buildBed, buildCandle, buildChest, buildCounter, buildFireplace, buildFurnace, buildRug, buildShelf, buildToolRack, buildWindow,
+  buildBasket, buildBed, buildBookshelf, buildCandle, buildCauldron, buildChandelier, buildChest, buildCoal, buildCounter, buildCurtain,
+  buildDesk, buildFireplace, buildFurnace, buildGrindstone, buildHerbs, buildHorseshoes, buildKeg, buildRug, buildSconce, buildShelf,
+  buildStool, buildTapestry, buildToolRack, buildTrim, buildTrough, buildWardrobe, buildWindow, buildWorkbench,
 } from './furniture.js';
 import { createFlames } from '../gfx/fx/flame.js';
 import { createLightPools } from '../gfx/lightpools.js';
@@ -33,30 +35,58 @@ const CANDLE_RANGE = 4.5;
 const FURNITURE = {
   anvil: buildAnvil,
   barrel: buildBarrel,
+  basket: buildBasket,
   bed: buildBed,
+  bookshelf: buildBookshelf,
   candle: buildCandle,
+  cauldron: buildCauldron,
+  chandelier: buildChandelier,
   bench: buildBench,
   chest: buildChest,
+  coal: buildCoal,
   counter: buildCounter,
   crate: buildCrate,
+  curtain: buildCurtain,
+  desk: buildDesk,
   fireplace: buildFireplace,
   furnace: buildFurnace,
+  grindstone: buildGrindstone,
+  herbs: buildHerbs,
+  horseshoes: buildHorseshoes,
+  keg: buildKeg,
   rug: buildRug,
+  sconce: buildSconce,
   shelf: buildShelf,
+  stool: buildStool,
   table: buildTable,
+  tapestry: buildTapestry,
   toolrack: buildToolRack,
+  trough: buildTrough,
+  wardrobe: buildWardrobe,
   window: buildWindow,
   woodpile: buildWoodpile,
+  workbench: buildWorkbench,
 };
 
 // Les meubles du village renvoient un obstacle, une liste, ou { obstacle,
-// flame } ; ceux de furniture.js { posts, flame }. On ramène tout à la même forme.
+// flame } ; ceux de furniture.js { posts, flame | flames, lights }. On ramène
+// tout à la même forme : { posts, flames, lights }.
 function normalize(result) {
-  if (!result) return { posts: [] };
-  if (Array.isArray(result)) return { posts: result };
-  if (result.posts) return result;
-  if (result.obstacle) return { posts: [result.obstacle], flame: result.flame };
-  return { posts: [result] };
+  if (!result) return { posts: [], flames: [], lights: [] };
+  if (Array.isArray(result)) return { posts: result, flames: [], lights: [] };
+  if (result.posts) {
+    return { posts: result.posts, flames: result.flames ?? (result.flame ? [result.flame] : []), lights: result.lights ?? [] };
+  }
+  if (result.obstacle) return { posts: [result.obstacle], flames: result.flame ? [result.flame] : [], lights: [] };
+  return { posts: [result], flames: [], lights: [] };
+}
+
+// Ce qui est déjà posé contre le mur nord (fenêtre, cheminée, étagère...) :
+// les poteaux des boiseries l'évitent.
+function northWallRanges(props) {
+  return props
+    .filter((item) => item.z === 1 && (item.x0 !== undefined || item.x !== undefined))
+    .map((item) => (item.x0 !== undefined ? [item.x0 - 0.1, item.x1 + 0.1] : [item.x - 1.0, item.x + 1.0]));
 }
 
 // room : une entrée de world/rooms.js ; materials : ceux du village (mêmes
@@ -72,21 +102,27 @@ export function createInterior(room, { materials, sunDirection }) {
   for (const [x, z, sizeX, sizeZ] of room.reserve ?? []) map.build(x, z, sizeX, sizeZ);
 
   // Le mobilier, fusionné par matière.
-  const keys = ['wood', 'plaster', 'stonewall', 'brick', 'iron', 'bark', 'awning', 'window', 'stone'];
+  const keys = ['wood', 'plaster', 'stonewall', 'brick', 'iron', 'bark', 'awning', 'window', 'stone', 'leaves', 'door'];
   const builders = Object.fromEntries(keys.map((key) => [key, createMeshBuilder()]));
   const posts = [];
   const flames = [];
+  const extraLights = [];
   // Les coffres qui contiennent des Tokens : on les ouvre en s'en approchant.
   const chests = [];
   room.props.forEach((item, index) => {
     if (item.type === 'chest' && item.tokens) chests.push({ id: `${room.lieu}:${index}`, x: item.x, z: item.z, tokens: item.tokens });
   });
+  // Les boiseries des murs d'abord, d'après la grille et ce qui est posé contre
+  // le mur nord.
+  const doorX = room.rows[room.rows.length - 1].indexOf('P');
+  buildTrim(map, { stone: room.rows[0][0] === 'S', avoid: northWallRanges(room.props), doorX }, builders);
   for (const item of room.props) {
     const build = FURNITURE[item.type];
     if (!build) throw new Error(`Intérieur : meuble inconnu « ${item.type} ».`);
-    const { posts: obstacles, flame } = normalize(build(item, builders));
-    posts.push(...obstacles);
-    if (flame) flames.push(flame);
+    const result = normalize(build(item, builders));
+    posts.push(...result.posts);
+    flames.push(...result.flames);
+    extraLights.push(...result.lights);
   }
 
   scene.add(createTerrain(map, materials));
@@ -108,7 +144,9 @@ export function createInterior(room, { materials, sunDirection }) {
   if (candles.length) flameMeshes.push(createFlames(candles, CANDLE_FLAME));
   for (const flame of flameMeshes) scene.add(flame.mesh);
   if (fires.length) scene.add(createLightPools(fires.map((f) => ({ x: f.x, y: 0, z: f.z + 0.6, radius: 2.2, strength: 1.1 }))));
-  const fireLights = flames.map((flame, i) => {
+  // Une lumière par flamme (sauf celles qui n'éclairent pas), plus celles
+  // des meubles qui en demandent une à part (le lustre).
+  const fireLights = [...flames.filter((flame) => !flame.noLight), ...extraLights].map((flame, i) => {
     const intensity = flame.small ? CANDLE_INTENSITY : FIRE_INTENSITY;
     const light = new THREE.PointLight(lanternColor, intensity, flame.small ? CANDLE_RANGE : FIRE_RANGE, 2);
     light.position.set(flame.x, flame.y + (flame.small ? 0.1 : 0.35), flame.z + (flame.small ? 0 : 0.45));
@@ -135,9 +173,6 @@ export function createInterior(room, { materials, sunDirection }) {
   const ambient = new THREE.HemisphereLight(interiorColors.ciel, interiorColors.sol, HEMI_INTENSITY);
   ambient.layers.enableAll();
   scene.add(day, day.target, ambient);
-
-  // La porte de sortie : la case du seuil, au bord sud.
-  const doorX = room.rows[room.rows.length - 1].indexOf('P');
 
   return {
     scene,

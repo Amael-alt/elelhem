@@ -129,7 +129,7 @@ export const mapColors = {
 // Les intérieurs : le noir autour de la pièce, le jour qui entre par les
 // fenêtres, une lumière d'ambiance chaude venue du plafond et du plancher.
 export const interiorColors = {
-  fond: '#0d0b14',
+  fond: '#17121d',
   jour: '#ffd9a8',
   ciel: '#ffe2bd',
   sol: '#3a2a20',

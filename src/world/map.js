@@ -62,7 +62,9 @@ export const CELL_TYPES = {
   // seuil par où l'on ressort.
   f: { name: 'plancher', matter: 'wood', side: 'wood', height: 0, solid: false },
   P: { name: 'seuil', matter: 'wood', side: 'wood', height: 0, solid: false },
-  M: { name: 'mur', matter: 'plaster', side: 'plaster', height: 2.6, solid: true },
+  // Le dessus du mur d'enduit est une sablière de bois : vu d'en haut, le mur
+  // se lit comme une poutre, pas comme une dalle.
+  M: { name: 'mur', matter: 'wood', side: 'plaster', height: 2.6, solid: true },
   S: { name: 'mur de pierre', matter: 'stonewall', side: 'stonewall', height: 2.6, solid: true },
   m: { name: 'muret de façade', matter: 'wood', side: 'plaster', height: 0.45, solid: true },
   s: { name: 'muret de pierre', matter: 'stonewall', side: 'stonewall', height: 0.45, solid: true },

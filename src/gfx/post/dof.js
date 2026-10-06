@@ -22,8 +22,9 @@ const NEAR_RAMP = 7;
 const FAR_RAMP = 11;
 // Version 1.2 : bande nette élargie de 20 % (0,10 à 0,12) et flou maximal
 // réduit de 20 % (0,024 à 0,019), à la demande de Jordan : l'image est plus
-// lisible, l'effet maquette reste.
-const BAND_HALF_WIDTH = 0.12;
+// lisible, l'effet maquette reste. Dans une pièce, la bande couvre presque
+// tout l'écran (uBandHalfWidth, réglé par le pipeline) : on voit la pièce nette.
+export const BAND_HALF_WIDTH = 0.12;
 const BAND_SOFTNESS = 0.4;
 const DEPTH_MIX = 0.3;
 export const MAX_BLUR = 0.019; // rayon maximal, en part de la hauteur d'écran
@@ -34,6 +35,7 @@ const f = (value) => value.toFixed(4);
 export const COC_GLSL = /* glsl */`
 uniform float uFocusDistance;
 uniform float uBandCenter;
+uniform float uBandHalfWidth;
 uniform float uNear;
 uniform float uFar;
 
@@ -45,7 +47,7 @@ float viewDistance( float depth ) {
 float circleOfConfusion( float distance, float screenY ) {
   float delta = distance - uFocusDistance;
   float depthCoc = clamp( ( abs( delta ) - ${f(SHARP_RANGE)} ) / ( delta > 0.0 ? ${f(FAR_RAMP)} : ${f(NEAR_RAMP)} ), 0.0, 1.0 );
-  float bandCoc = smoothstep( ${f(BAND_HALF_WIDTH)}, ${f(BAND_HALF_WIDTH + BAND_SOFTNESS)}, abs( screenY - uBandCenter ) );
+  float bandCoc = smoothstep( uBandHalfWidth, uBandHalfWidth + ${f(BAND_SOFTNESS)}, abs( screenY - uBandCenter ) );
   float coc = mix( bandCoc, depthCoc, ${f(DEPTH_MIX)} );
   return delta < 0.0 ? - coc : coc;
 }

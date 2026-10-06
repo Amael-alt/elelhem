@@ -594,3 +594,25 @@ Ce qui a résisté : la première version définissait sa fonction de linéarisa
 | Dans la prairie (35 ; 16), herbe haute | aucun fantôme parasite |
 | Coût | un appel de dessin de plus (89 à 90), 2 triangles |
 | Console | aucune erreur |
+
+### Le flou et les pièces habitées
+
+Avant de publier, Jordan a demandé deux choses de plus : un flou « réduit de 20 % pour que ce soit plus clair, sans perdre l'effet », et des maisons où l'on se sente bien, « comme dans les vrais RPG ». Ses choix : les intérieurs d'abord, les façades ensuite ; dedans, le flou presque coupé ; des pièces habitées.
+
+**Le flou** (`gfx/post/dof.js`) : bande nette élargie de 20 % (demi-largeur de 0,10 à 0,12 de la hauteur d'écran) et rayon maximal réduit de 20 % (0,024 à 0,019). Les toits en haut de l'image et l'herbe en bas redeviennent lisibles, la maquette reste. **Dans une pièce**, le pipeline reçoit `setInterior(true)` quand on passe une porte : la bande nette couvre presque tout l'écran (demi-largeur 0,45) et le flou qui reste, celui de la profondeur, est atténué (× 0,6). On voit la pièce nette du plancher à la corniche. Dehors, rien ne change.
+
+**Les boiseries** (`buildTrim` dans `world/furniture.js`, d'office pour chaque pièce d'après sa grille) : plinthe au pied des trois murs pleins, corniche à leur sommet, et sur l'enduit une lisse à mi-hauteur et des poteaux tous les 1,5 m, qui évitent ce qui est posé contre le mur nord (fenêtre, cheminée, étagère) ; sur le muret de façade, une main courante de part et d'autre du seuil, avec ses poteaux. Le dessus des murs d'enduit (`world/map.js`) est passé du plâtre au bois : vu d'en haut, le mur se lit comme une sablière, plus comme une dalle beige. Le fond derrière la pièce est un peu moins noir.
+
+**Les meubles** (`world/furniture.js`), tous en boîtes fusionnées par matière comme avant, dix-sept de plus : applique murale (patte de fer, coupelle, bougie, flamme, sur le mur de son choix), rideaux à tringle, bibliothèque à rangées de livres de six couleurs avec une place vide de temps en temps, pupitre à parchemins roulés, livre ouvert et encrier, armoire à portes en panneaux, tabouret, lustre (chaîne, anneau, quatre bougies dont les flammes se voient, une seule lumière au centre), tonnelet couché à robinet, chaudron à crémaillère dans la cheminée, bottes d'herbes séchées, panier à linge, tapisserie encadrée, établi à étau, meule sur bâti, baquet de trempe, fers à cheval au mur, tas de charbon. Un meuble peut rendre plusieurs flammes (`flames`), des flammes qui n'éclairent pas (`noLight`) et des lumières à part (`lights`) : les pièces restent à quatre ou cinq lumières ponctuelles, pour le téléphone.
+
+**Les pièces** (`world/rooms.js`) : chez le héros, le lit, la cheminée et sa marmite, des herbes qui sèchent, une fenêtre à rideaux, la bibliothèque des grimoires, le pupitre où l'on apprend avec son tabouret et sa bougie, le coffre, un panier, deux appliques. À l'auberge, le tonnelet derrière le comptoir, la marmite au feu, des rideaux, deux tabourets au comptoir, un panier, le lustre au-dessus du tapis, deux appliques qui n'éclairent pas (le feu, trois bougies et le lustre suffisent). À la forge, les fers au mur au-dessus du baquet de trempe, la meule, le tas de charbon, deux appliques ; le râtelier a reculé pour leur faire place.
+
+### Mesures
+
+| Pièce | Avant | Après |
+|---|---|---|
+| Ta maison | 37 appels, 1 190 triangles, 2 lumières | 43 appels, 2 710 triangles, 4 lumières |
+| L'auberge | 40 appels, 2 340 triangles, 4 lumières | 41 appels, 3 510 triangles, 5 lumières |
+| La forge | 33 appels, 1 370 triangles, 3 lumières | 38 appels, 2 000 triangles, 5 lumières |
+
+Dehors, rien n'a bougé (90 à 101 appels). Console sans erreur ; départ de la partie inchangé (Claudette près du lit, le héros sur le tapis).

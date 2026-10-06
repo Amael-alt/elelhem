@@ -321,6 +321,7 @@ function start() {
       }
       refreshActive(world);
       follow.setFraming(room ? INTERIOR_FRAMING : 1);
+      pipeline.setInterior(Boolean(room)); // dedans, la pièce se voit nette
       follow.snap(player.worldPosition(focusTarget));
       minimap.setVisible(playing && !room);
       ambience.setIndoors(room ? { fires: world.fires } : null);

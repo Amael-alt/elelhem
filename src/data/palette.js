@@ -176,3 +176,17 @@ export const swordColors = {
   cuir: ['#3a2418', '#6e4a2a'],
   eclair: '#fff3c4',
 };
+
+// Le butin de la lande (game/pickups.js) : la pièce d'or (du bord au reflet,
+// puis l'étincelle), la fiole de clarté (verre, liquide sombre et clair, bouchon).
+export const lootColors = {
+  piece: ['#8a6414', '#d9a935', '#ffe08a', '#fff6dc'],
+  fiole: { verre: '#c9dff0', liquide: ['#a1262a', '#ef6a58'], bouchon: '#6e4a2a' },
+};
+
+// Les barres de vie (gfx/healthbar.js) : celle des Hallucinations, rouge, et
+// celle des clartés du héros, dorée. Contour, fond, part pleine, liseré clair.
+export const barColors = {
+  hallucination: { cadre: '#1e0907', fond: '#3d1a13', plein: '#cf2726', clair: '#f07a63' },
+  clarte: { cadre: '#1e0907', fond: '#3a2a10', plein: '#f3d08c', clair: '#fff6dc' },
+};

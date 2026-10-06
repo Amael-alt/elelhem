@@ -6,7 +6,8 @@
 //
 // Un type : { sprite (planche de data/sprites/), pv, vitesse (unités par
 // seconde), portee (distance de contact), degats (clartés ôtées au héros),
-// tokens (gagnés quand il se dissipe), comportement :
+// tokens (lâchés en pièces quand il se dissipe), potion (chance, de 0 à 1,
+// de lâcher aussi une fiole de clarté), comportement :
 //   'erre'      il flotte au hasard autour de son point d'origine (rayon),
 //               change de cap toutes les une à deux secondes
 //   'poursuit'  il erre, mais dès que le héros entre dans son champ (vue), il
@@ -22,6 +23,7 @@ export const ENEMY_TYPES = {
     portee: 0.55,
     degats: 1,
     tokens: 3,
+    potion: 0.3,
     comportement: 'erre',
     rayon: 3.0,
     flotte: 0.35,
@@ -33,6 +35,7 @@ export const ENEMY_TYPES = {
     portee: 0.6,
     degats: 1,
     tokens: 8,
+    potion: 0.5,
     comportement: 'poursuit',
     rayon: 4.0,
     vue: 6.5,

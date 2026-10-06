@@ -37,6 +37,9 @@ import { createCombat } from './game/combat.js';
 import { createForge } from './game/forge.js';
 import { createSheet } from './game/sheet.js';
 import { createKeyGuide } from './game/keys.js';
+import { createPickups } from './game/pickups.js';
+import { createHealthBar } from './gfx/healthbar.js';
+import { barColors } from './data/palette.js';
 import { createSlash, createSword } from './gfx/weapon.js';
 import { MOOR_ENEMIES, SWORDS } from './data/enemies.js';
 import { gains, habiller, tenues } from './data/tokens.js';
@@ -148,8 +151,10 @@ function start() {
   const sword = createSword(village.sunDirection, pipeline.spriteHooks);
   sword.object.layers.set(SPRITE_LAYER);
   const slash = createSlash();
-  scene.add(sprite.object, shadow, sword.object, slash.object);
-  const player = createPlayer({ sprite, shadow, village, extras: [sword.object, slash.object] });
+  // La barre des clartés, à plat sous les pieds du héros, sur la lande (gfx/healthbar.js).
+  const heroBar = createHealthBar(barColors.clarte, { ground: true });
+  scene.add(sprite.object, shadow, sword.object, slash.object, heroBar.object);
+  const player = createPlayer({ sprite, shadow, village, extras: [sword.object, slash.object, heroBar.object] });
 
   // Les habitants : de la donnée (data/characters.js), une planche chacun. Chacun
   // vit dans son lieu (le village ou une pièce) ; celui qui a un départ
@@ -237,12 +242,23 @@ function start() {
   // La bourse et la boutique de Berthe.
   const wallet = createWallet(document.getElementById('tokens'), { state: gameState, texts: textesInterface.tokens });
   // Les Hallucinations de la lande, et le combat (data/enemies.js, game/enemies.js, game/combat.js).
-  const hallucinations = createEnemies(MOOR_ENEMIES, { world: moor, sunDirection: moor.sunDirection, post: pipeline.spriteHooks, wallet });
+  // Une Hallucination dissipée lâche son butin : des pièces, parfois une fiole (game/pickups.js).
+  const hallucinations = createEnemies(MOOR_ENEMIES, {
+    world: moor, sunDirection: moor.sunDirection, post: pipeline.spriteHooks,
+    onDeath: (enemy) => pickups.drop(enemy.position.x, enemy.position.z, enemy.type.tokens, enemy.type.potion ?? 0),
+  });
   const combat = createCombat({
     player, sword, slash, state: gameState, hud: document.getElementById('clartes'), texts: textesInterface.combat,
     canFight: () => doors?.current === moor,
     // Plus de clartés : retour à la porte du village (les clartés reviennent à l'arrivée, voir onChange).
     onDeath: () => doors?.travel(doors.gates.find((gate) => gate.to === village)),
+  });
+  const pickups = createPickups({
+    world: moor, sunDirection: moor.sunDirection, post: pipeline.spriteHooks, wallet,
+    onPotion: () => {
+      const healed = combat.heal(1);
+      counter.say(textesInterface.combat.potion, healed ? textesInterface.combat.potionDetail : textesInterface.combat.potionPleine);
+    },
   });
   // La forge de Ferrand : le menu Forger (game/forge.js), ouvert après ses pages ou à l'enclume.
   const forge = createForge(document.getElementById('forge'), { swords: SWORDS, texts: textesInterface.forge, state: gameState, wallet });
@@ -408,7 +424,9 @@ function start() {
         banner.showRoom(world.room.lieu);
         discover(`piece:${room}`);
       }
-      // Sur la lande : les Hallucinations reviennent toutes, le combat les connaît.
+      // Sur la lande : les Hallucinations reviennent toutes, le butin au sol
+      // disparaît, le combat les connaît.
+      pickups.clear();
       if (inMoor) {
         banner.showRoom('lande');
         hallucinations.reset();
@@ -509,7 +527,17 @@ function start() {
     for (const npc of activeNpcs) npc.update(step, state.time, player.position);
     if (playing && keyboard.takeKey('KeyJ', 'KeyX')) combat.request();
     combat.update(step, frozen);
-    if (doors.current === moor && !frozen) hallucinations.update(step, state.time, player.position, (enemy) => combat.takeHit(enemy));
+    if (doors.current === moor && !frozen) {
+      hallucinations.update(step, state.time, player.position, (enemy) => combat.takeHit(enemy));
+      pickups.update(step, state.time, player.position, !doors.isBusy);
+    }
+    // La barre des clartés sous les pieds, sur la lande seulement, un peu vers le bas de l'écran.
+    heroBar.setVisible(doors.current === moor && combat.hasSword);
+    if (heroBar.visible) {
+      heroBar.setRatio(combat.ratio);
+      player.worldPosition(focusTarget);
+      heroBar.object.position.set(focusTarget.x, focusTarget.y + 0.03, focusTarget.z + 0.5);
+    }
     attackButton.hidden = !(playing && doors.current === moor && combat.hasSword);
     keyGuide.setFighting(doors.current === moor && combat.hasSword);
     keyGuide.setFaded(interaction.isTalking || quest.isBusy);
@@ -545,7 +573,7 @@ function start() {
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
     counter, diploma, quest, grimoire, chatter, minimap, doors, rooms, wallet, shop, controls, actionButton, setLeftHanded, credits, dressHero,
-    moor, combat, forge, fiche, hallucinations,
+    moor, combat, forge, fiche, hallucinations, pickups,
   });
 
   let last = performance.now();

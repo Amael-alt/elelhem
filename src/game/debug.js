@@ -211,6 +211,12 @@ export function installDebugApi(game) {
       tick(0);
       return info();
     },
+    // Fait tomber du butin en (x, z) sur la lande : des pièces (tokens) et une
+    // fiole si potion vaut 1. Renvoie le nombre d'objets au sol.
+    butin(x, z, tokens = 3, potion = 1) {
+      game.pickups.drop(x, z, tokens, potion);
+      return game.pickups.count;
+    },
     // Forge l'épée de ce niveau (0 : aucune, 1 bois, 2 fer, 3 acier).
     epee(n = 1) {
       game.gameState.epee = n;

@@ -124,6 +124,8 @@ export function createDoors(fade, { village, rooms, houses, player, onChange, ga
         return;
       }
       if (-towardNorth < PUSH) return;
+      // Un monde de plein air sans porte de sortie (la lande) : rien à franchir.
+      if (!current.door) return;
       const threshold = current.door;
       if (Math.abs(x - threshold.x) < DOOR_HALF_WIDTH && z > threshold.z - THRESHOLD_REACH) exit();
     },

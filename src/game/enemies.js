@@ -9,11 +9,14 @@
 
 import * as THREE from 'three';
 import { createBlobShadow, createSprite } from '../gfx/billboard.js';
-import { createCharacterSheet, DIRECTIONS, IDLE_FPS, IDLE_FRAMES } from '../gfx/sprites.js';
+import { createCharacterSheet, DIRECTIONS, FEET_ROW, IDLE_FPS, IDLE_FRAMES, PIXELS_PER_UNIT } from '../gfx/sprites.js';
+import { createHealthBar } from '../gfx/healthbar.js';
 import { ENEMY_TYPES, HERO_COMBAT } from '../data/enemies.js';
+import { barColors } from '../data/palette.js';
 import { SPRITE_LAYER } from '../gfx/post/pipeline.js';
 
 const RADIUS = 0.35; // pour les murs
+const BAR_LIFT = 0.16; // la barre de vie, au-dessus de la tête
 const SEPARATION = 0.8; // deux Hallucinations ne se superposent pas
 const STUN_SECONDS = 0.28;
 const DEATH_SECONDS = 0.55;
@@ -30,9 +33,10 @@ const facingOf = (dx, dz, current) => {
 };
 
 // placements : [{ type, x, z }] ; world : la lande ; sunDirection, post :
-// pour les sprites ; wallet : la bourse (les Tokens gagnés) ; rng : nombres
-// au hasard dans [0, 1) (Math.random par défaut, fixé par les tests).
-export function createEnemies(placements, { world, sunDirection, post, wallet, rng = Math.random }) {
+// pour les sprites ; onDeath(enemy) : une Hallucination se dissipe (son
+// butin tombe, game/pickups.js) ; rng : nombres au hasard dans [0, 1)
+// (Math.random par défaut, fixé par les tests).
+export function createEnemies(placements, { world, sunDirection, post, onDeath = () => {}, rng = Math.random }) {
   const sheets = new Map();
   const sheetOf = (type) => {
     if (!sheets.has(type.sprite)) sheets.set(type.sprite, createCharacterSheet({ id: type.sprite, sprite: type.sprite }));
@@ -42,12 +46,17 @@ export function createEnemies(placements, { world, sunDirection, post, wallet, r
   const enemies = placements.map((placement, index) => {
     const type = ENEMY_TYPES[placement.type];
     if (!type) throw new Error(`Hallucination inconnue : « ${placement.type} »`);
-    const sprite = createSprite(sheetOf(type), sunDirection, post);
+    const sheet = sheetOf(type);
+    const sprite = createSprite(sheet, sunDirection, post);
     sprite.object.layers.set(SPRITE_LAYER); // dessinée après le post-traitement, comme les habitants
     const shadow = createBlobShadow({ width: 0.7, depth: 0.36, opacity: 0.3 });
     sprite.object.material.transparent = true;
-    world.scene.add(sprite.object, shadow);
+    // La barre de vie, au-dessus de la tête (version 2.1).
+    const bar = createHealthBar(barColors.hallucination);
+    world.scene.add(sprite.object, shadow, bar.object);
     return {
+      bar,
+      headHeight: (FEET_ROW + 1 - sheet.top) / PIXELS_PER_UNIT,
       id: `${placement.type}-${index}`,
       kind: placement.type,
       type,
@@ -74,6 +83,7 @@ export function createEnemies(placements, { world, sunDirection, post, wallet, r
     enemy.sprite.object.position.set(enemy.position.x, ground + lift, enemy.position.z);
     enemy.shadow.position.set(enemy.position.x, ground + 0.01, enemy.position.z);
     enemy.shadow.material.opacity = 0.3 - 0.4 * (lift - enemy.type.flotte);
+    enemy.bar.object.position.set(enemy.position.x, ground + lift + enemy.headHeight + BAR_LIFT, enemy.position.z);
   }
 
   function reset() {
@@ -94,6 +104,8 @@ export function createEnemies(placements, { world, sunDirection, post, wallet, r
       enemy.sprite.object.material.opacity = 1;
       enemy.sprite.object.material.color.setScalar(1);
       enemy.shadow.visible = true;
+      enemy.bar.setRatio(1);
+      enemy.bar.setVisible(true);
       place(enemy, 0);
     }
   }
@@ -175,10 +187,12 @@ export function createEnemies(placements, { world, sunDirection, post, wallet, r
       enemy.velocity.x = (dx / d) * HERO_COMBAT.reculEnnemi * 2.2;
       enemy.velocity.z = (dz / d) * HERO_COMBAT.reculEnnemi * 2.2;
       enemy.sprite.object.material.color.setScalar(3.5);
+      enemy.bar.setRatio(enemy.hp / enemy.type.pv);
       if (enemy.hp <= 0) {
         enemy.state = 'meurt';
         enemy.timer = DEATH_SECONDS;
-        wallet.earn(enemy.type.tokens);
+        enemy.bar.setVisible(false);
+        onDeath(enemy);
         return true;
       }
       return false;

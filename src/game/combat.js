@@ -184,6 +184,18 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
       clartes = Math.max(0, Math.min(HERO_COMBAT.clartes, n));
       renderHud();
     },
+    // Une potion ramassée : n clartés de retour, jamais au-delà du plein.
+    // Renvoie vrai si quelque chose a été rendu.
+    heal(n = 1) {
+      if (clartes >= HERO_COMBAT.clartes) return false;
+      clartes = Math.min(HERO_COMBAT.clartes, clartes + n);
+      renderHud();
+      return true;
+    },
+    // Part des clartés qui restent, de 0 à 1 (la barre sous le héros).
+    get ratio() {
+      return clartes / HERO_COMBAT.clartes;
+    },
     // Une Hallucination touche le héros : une clarté de moins, un recul, une
     // seconde d'invulnérabilité ; à zéro, onDeath.
     takeHit(enemy) {

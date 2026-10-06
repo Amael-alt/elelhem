@@ -196,6 +196,10 @@ export const textesInterface = {
     reveil: 'Tu reprends tes esprits',
     reveilDetail: 'à la porte du village, les idées claires',
     gain: (n) => `+${n}`,
+    // Le butin (game/pickups.js) : une fiole ramassée rend une clarté.
+    potion: 'Une fiole de clarté',
+    potionDetail: 'une clarté de retour',
+    potionPleine: 'tes clartés étaient déjà au complet',
   },
   // La feuille de personnage (game/sheet.js), touche F.
   feuille: {

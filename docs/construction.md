@@ -574,3 +574,23 @@ Ce qui a résisté :
 | Pixels saturés | 0 % |
 | Mobile 375 × 812 | héros d'environ 50 px de haut, visage lisible |
 | Console | aucune erreur |
+
+Vérifiée sur l'adresse publique en bureau et en mobile, étiquette `v1.1`.
+
+## Version 1.2 : le héros visible derrière les obstacles (6 octobre 2026)
+
+**But** : le défaut de jouabilité le plus gênant de l'état des lieux. Derrière l'auberge, le héros disparaissait sous le toit ; devant sa maison, l'arbre le cachait. Les RPG du genre montrent le héros en silhouette à travers l'obstacle.
+
+**Le fantôme** (`createSprite(..., { ghost: true })` dans `gfx/billboard.js`, réservé au héros) : un second quad, enfant du sprite, qui suit sa position, son cadre et sa tenue. Même planche, teintée de bleu pâle (`ghostColor` de `data/palette.js`) et translucide à 50 %, sans éclairage, échantillonnage net et étalonnage comme le sprite. Avec le post-traitement, il ne se dessine que là où la scène est **à plus d'une unité devant lui** : les deux profondeurs sont ramenées en distance avec `uNear` et `uFar`, que le pipeline expose désormais aux sprites, pour que l'herbe haute à ses pieds ou un poteau tout contre lui ne déclenchent rien. Il respecte la profondeur des autres sprites : un habitant devant le héros le cache, fantôme compris. En rendu direct (`?nofx`), il se dessine derrière le tampon de profondeur (`GreaterDepth`), sans écart minimal.
+
+Ce qui a résisté : la première version définissait sa fonction de linéarisation dans le corps du shader, GLSL n'accepte pas une fonction dans une fonction ; le programme refusait de se lier et la console se remplissait de « useProgram: program not valid ». La fonction est passée en tête du shader.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Derrière l'auberge (7,3 ; 18,7) | silhouette translucide à travers le toit, avec le post-traitement et en rendu direct |
+| Derrière l'arbre de la maison (36,3 ; 8,4) | silhouette à travers le feuillage, bottes visibles dessous |
+| Dans la prairie (35 ; 16), herbe haute | aucun fantôme parasite |
+| Coût | un appel de dessin de plus (89 à 90), 2 triangles |
+| Console | aucune erreur |

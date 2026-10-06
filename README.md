@@ -70,6 +70,7 @@ Tout le code de ce dépôt a été écrit par Claude Code, les 5 et 6 octobre 20
 | 5 | les finitions : générique de fin, favicon, image de partage |
 | 6 | la version 1.0 : vérification sur l'adresse publique, étiquette `v1.0` |
 | 1.1 | les personnages redessinés en 32 × 48 pixels, trois têtes, visage et marche à six images ; les tenues de la boutique changent la silhouette |
+| 1.2 | le héros reste visible en silhouette derrière un mur ou un arbre |
 
 **Ce que le code fabrique** : les textures (des pixels posés dans des palettes de quelques tons, avec un tramage), les personnages (un générateur qui calcule la silhouette, la marche et les quatre directions, puis habille chacun), le village (une grille de caractères), le ciel, la lumière et les effets (des shaders), les sons d'ambiance (Web Audio : rivière, cascade, oiseaux, feu, marteau, pas), le diplôme et la minimap (un canvas 2D), le favicon (un SVG écrit dans la page) et l'image de partage (`outils/vignette.mjs`).
 

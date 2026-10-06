@@ -6,8 +6,8 @@ Règles de ce dépôt pour Claude Code, valables dans chaque session ouverte ici
 
 « The Legend of Elelhem : La Magie de Lia » (titre d'origine : « Le Village de LIA ») : un petit RPG HD-2D jouable dans le navigateur, dans le village d'Elelhem, où la magie LIA (l'IA) s'apprend auprès des maîtres du village. Chaque maître transpose une notion d'IA en univers médiéval fantastique. C'est une ressource de formation et une démonstration de ce que Claude Code sait construire, partagée surtout sur téléphone.
 
-- Dépôt **public** : https://github.com/Amael-alt/village-de-lia
-- Jeu en ligne (GitHub Pages, branche `main`, racine) : https://amael-alt.github.io/village-de-lia/
+- Dépôt **public** : https://github.com/Amael-alt/elelhem (nommé `village-de-lia` jusqu'au 6 octobre 2026 ; GitHub Pages ne redirige pas l'ancienne adresse)
+- Jeu en ligne (GitHub Pages, branche `main`, racine) : https://amael-alt.github.io/elelhem/
 - Le plan de construction vit hors du dépôt, dans l'espace de travail privé de l'auteur, parce qu'il cite des chemins locaux. Le prompt de chaque session de construction donne son emplacement. Ne jamais le copier ici, ni en citer le chemin.
 - Journal public : `docs/construction.md`, une entrée par étape (ce qui a été fait, ce qui a résisté, les mesures).
 
@@ -20,8 +20,9 @@ Règles de ce dépôt pour Claude Code, valables dans chaque session ouverte ici
 
 ## Ce que la page a le droit de charger
 
-- **Aucune image chargée par le jeu.** Textures, personnages, ciel, effets et diplôme sont générés par le code. Deux exceptions, pas une de plus : la flamme du logo Maintenant Vous Savez sur l'écran titre (`assets/mvs-flame.png`), et la vignette de partage `assets/social-preview.png`, lue par les réseaux sociaux via `og:image` mais jamais par la page.
+- **Aucune image chargée par le jeu.** Textures, personnages, ciel, effets et diplôme sont générés par le code. Deux exceptions, pas une de plus : la flamme du logo Maintenant Vous Savez sur l'écran titre (`assets/mvs-flame.png`), et la vignette de partage `assets/social-preview.png`, lue par les réseaux sociaux via `og:image` mais jamais par la page. Elle se refait avec `node outils/vignette.mjs` (l'écran titre en mode `?vignette`, capturé en 1200 × 630), jamais à la main.
 - Une seule police OFL en `woff2` dans `assets/fonts/`, avec sa licence. Le favicon est un SVG en data URI, pas un fichier.
+- Les balises `og:url`, `og:image` et `canonical` de `index.html`, et l'adresse du jeu dans `src/data/dialogues.js`, portent l'adresse complète : à changer ensemble si le dépôt change de nom.
 - **Une musique de fond**, `assets/audio/village-bell.mp3` (composée par Jordan avec Suno, réencodée à 96 kb/s, sans métadonnées ni pochette, silences de bout retirés pour une boucle sans trou). Elle n'est demandée qu'au lancement du jeu, par le geste qui ferme l'écran titre (`preload="none"`), jamais au chargement de la page. Exclue de la licence MIT, comme la flamme.
 - À chaque vérification, la liste des requêtes réseau ne doit montrer que du HTML, du CSS, du JavaScript, la police et la flamme ; la musique s'y ajoute seulement après le lancement.
 
@@ -32,6 +33,7 @@ Règles de ce dépôt pour Claude Code, valables dans chaque session ouverte ici
 - Aucun addon de `examples/jsm` (ni `EffectComposer`, ni `OrbitControls`) : ce qu'il faut, on l'écrit ici.
 - Le paquet officiel de la r186 n'a plus de version minifiée. Les deux `.min.js` de `vendor/three/` sont minifiés ici avec esbuild, sans autre retouche que le chemin d'import de `three.core`. Version et commande de mise à jour : section « three.js » du README.
 - `npx` ne sert qu'aux outils du poste (serveur local, minification), jamais à une dépendance du jeu.
+- `outils/` : scripts Node du poste, sans dépendance, que la page ne charge jamais (`vignette.mjs`). Aucun chemin de disque écrit en dur : ils cherchent ce qu'il leur faut par les variables d'environnement.
 
 ## Inspirations : on regarde, on ne copie pas
 
@@ -48,7 +50,7 @@ Trois démos publiques servent de référence : `Legerdo/hd2d-diorama` pour le r
 
 - Identité **locale** au dépôt : `Amael-alt`, adresse `310769219+Amael-alt@users.noreply.github.com`. L'identité globale du poste ne signe jamais un commit d'ici. Vérifier `git config user.email` avant de committer ; `git log --format=%ae | sort -u` ne montre que l'adresse anonyme.
 - Commits courts, en français, découpés par sujet, qui disent le pourquoi. Jamais `--no-verify`, jamais `--force`.
-- On pousse à la fin de chaque sous-étape : la carte d'import, les chemins relatifs sous `/village-de-lia/` et les types MIME se vérifient en production, et les tests sur téléphone se font sur l'URL publique.
+- On pousse à la fin de chaque sous-étape : la carte d'import, les chemins relatifs sous `/elelhem/` et les types MIME se vérifient en production, et les tests sur téléphone se font sur l'URL publique.
 
 ## Modules
 

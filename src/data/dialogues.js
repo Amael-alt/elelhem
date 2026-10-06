@@ -61,7 +61,7 @@ const NOTIONS = {
 export const PARCHEMINS_TOTAL = Object.keys(NOTIONS).length;
 
 // Le site du jeu, imprimé sur le diplôme et copié par son bouton de partage.
-const ADRESSE_DU_JEU = 'https://amael-alt.github.io/village-de-lia/';
+const ADRESSE_DU_JEU = 'https://amael-alt.github.io/elelhem/';
 
 // Les textes de l'interface : écran titre, bulle de parole, noms des quartiers
 // affichés dans le bandeau de lieu (les rectangles sont dans world/layout.js),

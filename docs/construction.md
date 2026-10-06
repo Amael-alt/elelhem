@@ -686,3 +686,27 @@ Ce qui a résisté :
 | Portraits | 11 fichiers, 1,1 Mo, demandés seulement après le lancement ; aucune autre image avant |
 | Dialogue | portrait vérifié à 1366 × 768 (à gauche), 800 × 450 (posé sur la boîte) et 375 × 812 (téléphone), paysage 812 × 375 sans portrait |
 | Console | aucune erreur, dehors et dans la maison |
+
+## Version 1.5 : interface plus grande et ornée (6 octobre 2026)
+
+Jordan trouvait l'interface « un petit peu trop petite » et voulait des illustrations pour elle aussi. Les références (l'interface d'Elliot : filets d'ivoire fins, cadres ronds ornés, parchemin des menus, boutons en cercle) ont guidé cinq dessins générés d'un coup : un coin de filigrane d'or, un filet à losange, un cadre rond, une texture de parchemin et une ligne de quatre icônes (parchemin scellé, pièce à la flamme, épée, livre à la plume). Un nouvel outil, `outils/decouper.mjs`, découpe une planche à fond transparent en sujets séparés par les colonnes vides, les rogne et les réduit ; la texture passe par `portrait.mjs` sans cadrage pour devenir un PNG à palette de 512 pixels. Le tout pèse 508 Ko dans `assets/ui/`.
+
+**Les coins** : un seul dessin, fait pour l'angle haut gauche, posé quatre fois et retourné par `scale` (horizontal, vertical, les deux) aux angles de la boîte de dialogue, du grimoire, de la carte et de la boutique (un élément `.coins` à quatre `span`, tailles par variables CSS : 68 px, 60 px dans la boîte, 48 px sur téléphone). Les losanges d'angle d'avant disparaissent. **Le filet** remplace les traits d'un pixel sous le nom du lieu et sous le titre du jeu, et souligne les titres de panneaux. **Les icônes** : le parchemin scellé ouvre la rangée des huit cases, la pièce remplace le disque dessiné en CSS. **Le parchemin** devient le fond des pages du grimoire. Le cadre rond et les icônes de l'épée et du livre attendent la feuille de personnage et le combat.
+
+**Les tailles** : pastilles du HUD de 44 à 52 px (48 sur téléphone), minimap de 168 à 204 px (150 sur téléphone, 118 en paysage bas), bouton d'action de 74 à 86 px, bouton du son à 50 px, boîte de dialogue à 780 px et son texte jusqu'à 1,5 rem, choix de réponse à 52 px de haut. En paysage bas, les coins s'effacent et la boîte reprend ses petites marges.
+
+Ce qui a résisté :
+
+- **Deux fichiers du même nom** : l'icône du parchemin et la texture du parchemin s'appelaient tous deux `parchemin.png` ; la texture a écrasé l'icône, qui s'affichait comme un carré beige. Les icônes portent maintenant le préfixe `icone-`.
+- **La boîte décalée sur téléphone** : la règle qui glisse la boîte vers la droite pour laisser la place au portrait, ajoutée en fin de feuille, l'emportait sur sa propre exception en écran étroit. Elle est maintenant sous `min-width: 1101px`.
+- **La minimap en paysage bas** touchait le cartouche du nom : 118 px là où la hauteur manque.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Ornements | 8 fichiers, 508 Ko, demandés au lancement du jeu avec la feuille de style |
+| Bureau 800 × 450 et 1366 × 768 | coins aux quatre angles de la boîte et des trois panneaux, filets, icônes nettes |
+| Mobile 375 × 812 | HUD sur deux lignes, minimap à 150 px, boîte centrée avec le portrait posé dessus, texte à 1,14 rem |
+| Paysage 812 × 375 | boîte sans coins ni portrait, minimap à 118 px, cartouche du nom dégagé |
+| Console | aucune erreur |

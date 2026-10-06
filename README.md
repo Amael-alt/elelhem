@@ -51,8 +51,9 @@ src/world/        carte, implantation (layout), terrain, maisons, tours, chantie
 src/game/         joueur, habitants, dialogues, quête, interface, débogage
 src/data/         palette, habitants, textes des dialogues, planches de sprites transcrites (sprites/)
 assets/portraits/ portraits de dialogue, un PNG à palette par habitant qui parle
+assets/ui/        ornements de l'interface : coins, filet, cadre rond, icônes, parchemin
 docs/             journal de construction
-outils/           outils du poste, hors du jeu : vignette.mjs (image de partage), transcrire-sprite.mjs (fiche pixel art vers grilles), portrait.mjs (buste d'un dessin), decouper.mjs (planche d'icônes), png.mjs
+outils/           outils du poste, hors du jeu : vignette.mjs (image de partage), transcrire-sprite.mjs (fiche pixel art vers grilles), portrait.mjs (buste d'un dessin), decouper.mjs (planche d'icônes vers fichiers), png.mjs
 ```
 
 ## Comment ce village a été construit
@@ -74,6 +75,7 @@ Tout le code de ce dépôt a été écrit par Claude Code, les 5 et 6 octobre 20
 | 1.2 | le héros reste visible en silhouette derrière un mur ou un arbre |
 | 1.3 | l'écran titre lisible sur le village ; les intérieurs façon HD-2D : plancher de lattes, dalles, lambris, tapis tissés, tableaux, rais de lumière aux fenêtres, poussière, soubassement de pierre, et plus de voile bleu |
 | 1.4 | les personnages redessinés d'après des fiches pixel art illustrées puis transcrites en grilles de code, quatre tenues comprises ; des portraits illustrés dans les dialogues ; les maisons à étage, tours, arbres et muraille aux proportions des références |
+| 1.5 | l'interface plus grande d'un cinquième et ornée de dessins générés puis découpés : coins de filigrane, filets, icônes, parchemin du grimoire |
 
 **Ce que le code fabrique** : les textures (des pixels posés dans des palettes de quelques tons, avec un tramage), les personnages (des planches transcrites en grilles de code d'après des fiches dessinées, que le code anime : respiration, marche à six images, quatre directions), le village (une grille de caractères), le ciel, la lumière et les effets (des shaders), les sons d'ambiance (Web Audio : rivière, cascade, oiseaux, feu, marteau, pas), le diplôme et la minimap (un canvas 2D), le favicon (un SVG écrit dans la page) et l'image de partage (`outils/vignette.mjs`).
 

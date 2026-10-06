@@ -3,6 +3,16 @@
 // « couleurs » (0 à 9 puis a à z, du plus sombre au plus clair), « . » un
 // pixel vide. « lumiere » : les index qui brillent même dans le noir.
 
+// Les poses de combat (version 2.1), transcrites de fiches à part, comme pour
+// le héros : l'épée à la main, puis l'élan et la frappe de chaque coup.
+import { heros_nuit_arme } from './heros_nuit_arme.js';
+import { heros_nuit_coup1_elan } from './heros_nuit_coup1_elan.js';
+import { heros_nuit_coup1_frappe } from './heros_nuit_coup1_frappe.js';
+import { heros_nuit_coup2_elan } from './heros_nuit_coup2_elan.js';
+import { heros_nuit_coup2_frappe } from './heros_nuit_coup2_frappe.js';
+import { heros_nuit_coup3_elan } from './heros_nuit_coup3_elan.js';
+import { heros_nuit_coup3_frappe } from './heros_nuit_coup3_frappe.js';
+
 export const heros_nuit = {
   cadre: [48, 72],
   pieds: 69,
@@ -249,4 +259,6 @@ export const heros_nuit = {
     '................................................',
     '................................................',
   ],
+  arme: heros_nuit_arme,
+  coups: [[heros_nuit_coup1_elan, heros_nuit_coup1_frappe], [heros_nuit_coup2_elan, heros_nuit_coup2_frappe], [heros_nuit_coup3_elan, heros_nuit_coup3_frappe]],
 };

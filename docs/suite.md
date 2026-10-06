@@ -20,7 +20,7 @@ Hauteurs du héros par pose et par vue, à réutiliser pour une nouvelle tenue (
 
 ## Comment vérifier
 
-Tout se vérifie dans un navigateur, sur le serveur local (`npx -y http-server . -a 127.0.0.1 --no-dotfiles -c-1`), en bureau, en mobile 375 × 812 et en paysage 812 × 375, puis sur l'adresse publique après le push. Les outils de test sont dans `window.__lia` (`galerie`, `lande`, `epee`, `frapper`, `butin`, `tenue`, `walk`, `freeze`, `step`, `stats`...). Deux pièges : un onglet de fond tourne au ralenti (tester dans l'onglet au premier plan) ; une touche envoyée par un pilote de navigateur n'atteint pas toujours le jeu (passer par `__lia.advance()` et `__lia.walk()`).
+Tout se vérifie dans un navigateur, sur le serveur local (`npx -y http-server . -a 127.0.0.1 --no-dotfiles -c-1`), en bureau, en mobile 375 × 812 et en paysage 812 × 375, puis sur l'adresse publique après le push. Le déploiement se suit avec `gh run list` (l'exécution « pages build and deployment », une minute environ) ; l'ancien point d'API `pages/builds` peut dire « Page build failed » alors que l'exécution a réussi et que la page est à jour : se fier à l'exécution et à la page. Si une exécution reste bloquée, `gh api -X POST repos/Amael-alt/elelhem/pages/builds` en demande une nouvelle. Les outils de test sont dans `window.__lia` (`galerie`, `lande`, `epee`, `frapper`, `butin`, `tenue`, `walk`, `freeze`, `step`, `stats`...). Deux pièges : un onglet de fond tourne au ralenti (tester dans l'onglet au premier plan) ; une touche envoyée par un pilote de navigateur n'atteint pas toujours le jeu (passer par `__lia.advance()` et `__lia.walk()`).
 
 ## Ce qui vient ensuite
 

@@ -31,6 +31,12 @@ export function createFollowCamera() {
     camera.lookAt(focus);
   }
 
+  // Zoom continu (pincement) : plus de 1, on s'approche.
+  function zoomByFactor(factor) {
+    zoom = THREE.MathUtils.clamp(zoom * factor, ZOOM_MIN, ZOOM_MAX);
+    place();
+  }
+
   function goalFor(target) {
     return goal.set(target.x, target.y, target.z - LOOK_AHEAD);
   }
@@ -53,9 +59,13 @@ export function createFollowCamera() {
       framing = value;
       place();
     },
+    // Crans de molette (positif : on s'éloigne).
     zoomBy(steps) {
-      zoom = THREE.MathUtils.clamp(zoom * ZOOM_STEP ** -steps, ZOOM_MIN, ZOOM_MAX);
-      place();
+      zoomByFactor(ZOOM_STEP ** -steps);
+    },
+    zoomByFactor,
+    get zoom() {
+      return zoom;
     },
     follow(target, dt) {
       focus.lerp(goalFor(target), 1 - Math.exp(-FOLLOW_RATE * dt));

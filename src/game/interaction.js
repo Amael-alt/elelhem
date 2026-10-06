@@ -1,6 +1,6 @@
 // Parler à un habitant : trouve celui qui est à portée, montre l'indicateur
 // au-dessus de sa tête, et ouvre la conversation à l'action (touche, clic ou
-// toucher sur la bulle). Ce qui se dit, et dans quel ordre, est l'affaire de
+// toucher sur la bulle, bouton d'action des écrans tactiles). Ce qui se dit, et dans quel ordre, est l'affaire de
 // quest.js.
 
 import * as THREE from 'three';
@@ -12,8 +12,9 @@ const LABEL_LIFT = 52; // pixels : l'étiquette passe au-dessus de la bulle
 // player : { position, facing, face } ; npcs : liste ; hint, label, dialogue :
 // voir ui.js et dialogue.js ; quest : voir quest.js (talk, isBusy) ; camera et
 // canvas servent à ancrer l'indicateur à l'écran ; talkLabel(nom) : le texte
-// de la bulle pour un lecteur d'écran.
-export function createInteraction({ player, npcs, hint, label, dialogue, quest, talkLabel, camera, canvas }) {
+// de la bulle pour un lecteur d'écran ; button : le bouton d'action (ui.js),
+// et idleLabel son texte quand personne n'est à portée.
+export function createInteraction({ player, npcs, hint, label, dialogue, quest, talkLabel, camera, canvas, button, idleLabel }) {
   const head = new THREE.Vector3();
   const screen = { x: 0, y: 0 };
   let requested = false;
@@ -60,6 +61,9 @@ export function createInteraction({ player, npcs, hint, label, dialogue, quest, 
     update(dt, action) {
       const wanted = action || requested;
       requested = false;
+      // Le bouton d'action : caché pendant une conversation ou un écran
+      // ouvert, une bulle quand quelqu'un est à portée.
+      if (quest.isBusy) button.hide();
       if (dialogue.isOpen) {
         if (wanted) dialogue.advance();
         dialogue.update(dt);
@@ -71,6 +75,7 @@ export function createInteraction({ player, npcs, hint, label, dialogue, quest, 
         start(target);
         return;
       }
+      if (!quest.isBusy) button.show(target ? 'parler' : 'repos', target ? talkLabel(target.character.nom) : idleLabel);
       // Le nom s'affiche dès qu'on approche, la bulle seulement à portée de parole.
       const named = quest.isBusy ? null : target ?? nearest(NAME_RADIUS, false);
       const anchor = named ? projectToScreen(named.headPoint(head), camera, canvas, screen) : null;

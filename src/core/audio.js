@@ -11,6 +11,8 @@
 // Les volumes passent par Web Audio (des nœuds de gain) : sur iPhone, le
 // volume d'un élément audio est ignoré, seul un gain le règle vraiment.
 
+import { onTap } from './input.js';
+
 const MUSIC_VOLUME = 0.21; // assez bas pour rester une ambiance (0,26 avant, baissé de 20 % à la demande de Jordan)
 const DUCK = 0.55; // part du volume de la musique pendant un dialogue
 const FADE_IN = 3; // secondes
@@ -119,7 +121,8 @@ export function createAudio(src, button, labels) {
     }
   }
 
-  button.addEventListener('click', () => {
+  // onTap : le toucher compte même avec un doigt resté sur le joystick.
+  onTap(button, () => {
     button.blur();
     toggle();
   });

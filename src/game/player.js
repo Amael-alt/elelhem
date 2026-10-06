@@ -45,7 +45,8 @@ export function createPlayer({ sprite, shadow, village }) {
     get moving() {
       return moving;
     },
-    // direction : { x, z } de longueur 1 au plus.
+    // direction : { x, z } de longueur 1 à la marche, jusqu'à RUN_FACTOR
+    // (core/input.js) en courant ; la vitesse suit cette longueur.
     update(dt, direction) {
       const wasMoving = moving;
       moving = Math.hypot(direction.x, direction.z) > 0.01;
@@ -56,7 +57,8 @@ export function createPlayer({ sprite, shadow, village }) {
         facing = chooseFacing(direction, facing);
       }
       const frames = moving ? WALK_FRAMES : IDLE_FRAMES;
-      const fps = moving ? WALK_FPS : IDLE_FPS;
+      // En courant (direction plus longue que 1), les jambes vont plus vite.
+      const fps = moving ? WALK_FPS * Math.max(1, Math.hypot(direction.x, direction.z)) : IDLE_FPS;
       sprite.setFrame(DIRECTIONS.indexOf(facing), frames[Math.floor(clock * fps) % frames.length]);
       place();
     },

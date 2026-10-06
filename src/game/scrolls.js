@@ -3,6 +3,8 @@
 // l'emplacement s'illumine et une annonce donne la notion gagnée. Le compteur
 // est un bouton : il ouvre le grimoire. Du DOM, dessiné en CSS : aucune image.
 
+import { onTap } from '../core/input.js';
+
 const ANNOUNCE_MS = 4500;
 
 // root : #parchemins ; notions : identifiant -> notion (data/dialogues.js),
@@ -51,7 +53,8 @@ export function createScrollCounter(root, { notions, texts, state, onOpen = () =
   }
 
   refresh();
-  row.addEventListener('click', () => {
+  // onTap : le toucher compte même avec un doigt resté sur le joystick.
+  onTap(row, () => {
     row.blur(); // les touches Espace et Entrée reviennent au jeu
     onOpen();
   });

@@ -16,6 +16,8 @@
 //   par mégarde.
 // - Aucune phrase ici : les textes viennent de data/dialogues.js.
 
+import { onTap } from '../core/input.js';
+
 const TYPING_SPEED = 55; // caractères par seconde
 const FONTS = ['500 1em Newsreader', '600 1em Newsreader'];
 
@@ -143,11 +145,13 @@ export function createDialogueBox(root, { onClose = () => {} } = {}) {
   }
 
   // Un toucher ou un clic sur la boîte vaut l'action au clavier ; sur un
-  // choix, il choisit (et ne remonte pas jusqu'à la boîte).
-  root.addEventListener('click', advance);
-  list.addEventListener('click', (event) => {
-    event.stopPropagation();
-    const button = event.target.closest('button');
+  // choix, il choisit. onTap (core/input.js) : le toucher compte même quand
+  // un autre doigt est resté sur le joystick.
+  onTap(root, (under) => {
+    if (!list.contains(under)) advance();
+  });
+  onTap(list, (under) => {
+    const button = under.closest('button');
     if (button) choose(buttons.indexOf(button));
   });
   list.addEventListener('pointermove', (event) => {

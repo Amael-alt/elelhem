@@ -1,10 +1,11 @@
-// Démarrage du Village de LIA : vérifie WebGL2, assemble le monde, le héros et
-// les habitants, puis lance la boucle. Post-traitement (flou de profondeur,
+// Démarrage de The Legend of Elelhem : vérifie WebGL2, assemble le monde, le
+// héros et les habitants, puis lance la boucle. Post-traitement (flou de profondeur,
 // bloom, étalonnage) ; ?nofx pour le rendu direct ; ?reset repart d'une partie
 // neuve.
 
 import * as THREE from 'three';
-import { createFloatingStick, createKeyboard, createLoadGate } from './core/input.js';
+import { createKeyboard, createLoadGate, createTouchControls } from './core/input.js';
+import { installTouchGuards, trackTouchScreen } from './core/guards.js';
 import { createRenderer, MAX_PIXEL_RATIO } from './core/renderer.js';
 import { createQualityGovernor } from './core/quality.js';
 import { trackViewportHeight } from './core/viewport.js';
@@ -18,7 +19,7 @@ import { createBlobShadow, createSprite } from './gfx/billboard.js';
 import { createPlayer } from './game/player.js';
 import { createNpc } from './game/npc.js';
 import { createDialogueBox } from './game/dialogue.js';
-import { createInteractionHint, createNameLabel } from './game/ui.js';
+import { createActionButton, createInteractionHint, createNameLabel } from './game/ui.js';
 import { createInteraction } from './game/interaction.js';
 import { createQuest } from './game/quest.js';
 import { createScrollCounter } from './game/scrolls.js';
@@ -33,6 +34,7 @@ import { gains, tenues } from './data/tokens.js';
 import { createInterior } from './world/interior.js';
 import { ROOMS } from './world/rooms.js';
 import { createGameState, resetGameState, saveGameState } from './game/state.js';
+import { loadSettings, saveSettings } from './game/settings.js';
 import { createTitleScreen } from './game/title.js';
 import { createAreaBanner } from './game/banner.js';
 import { ANVIL, CAMPFIRE, HEARTH, HOUSES, PIGEONS, REGIONS, TOWERS, TREES, WATERFALL } from './world/layout.js';
@@ -54,6 +56,8 @@ const CHEST_REACH = 1.0; // un coffre s'ouvre quand on arrive à cette distance
 
 const canvas = document.getElementById('scene');
 trackViewportHeight();
+installTouchGuards();
+trackTouchScreen();
 
 if (!hasWebGL2()) {
   showFatal("Ce village a besoin de WebGL2 pour s'afficher. Ouvre la page dans une version récente de Chrome, Firefox, Safari ou Edge, et vérifie que l'accélération matérielle est activée.");
@@ -99,7 +103,17 @@ function start() {
   const worldOf = (lieu) => (lieu ? rooms[lieu] : village);
   const follow = createFollowCamera();
   const keyboard = createKeyboard();
-  const stick = createFloatingStick(canvas, document.getElementById('stick'));
+  const controls = createTouchControls(canvas, document.getElementById('stick'));
+  // Main gauche : joystick à droite, bouton d'action à gauche (styles.css lit
+  // html[data-main]). Réglage de l'appareil, gardé hors de la partie.
+  const settings = loadSettings();
+  const setLeftHanded = (on) => {
+    settings.mainGauche = on;
+    document.documentElement.dataset.main = on ? 'gauche' : 'droite';
+    controls.setLeftHanded(on);
+    saveSettings(settings);
+  };
+  setLeftHanded(settings.mainGauche);
 
   const gameState = createGameState({ restore: !params.has('reset') });
   const sheet = createCharacterSheet(hero);
@@ -242,9 +256,11 @@ function start() {
   }
   let interaction = null;
   const hint = createInteractionHint(document.getElementById('indice'), () => interaction.request());
+  const actionButton = createActionButton(document.getElementById('action'), () => interaction.request());
   const label = createNameLabel(document.getElementById('nom'));
   interaction = createInteraction({
     player, npcs: activeNpcs, hint, label, dialogue, quest, talkLabel: textesInterface.parlerA, camera: follow.camera, canvas,
+    button: actionButton, idleLabel: textesInterface.action,
   });
 
   // Musique de fond et sons d'ambiance : lancés par le geste qui ferme l'écran titre.
@@ -337,6 +353,8 @@ function start() {
     createTitleScreen(document.getElementById('titre'), {
       texts: textesInterface,
       state: gameState,
+      leftHanded: settings.mainGauche,
+      onHandedness: setLeftHanded,
       onStart({ fresh, prenom }) {
         if (fresh) {
           resetGameState(gameState);
@@ -362,8 +380,10 @@ function start() {
     const step = state.frozen && !force ? 0 : dt;
     const zoom = keyboard.takeZoomSteps();
     if (zoom) follow.zoomBy(zoom);
+    const pinch = controls.takeZoomFactor();
+    if (pinch !== 1) follow.zoomByFactor(pinch);
     state.time += step;
-    const pushed = stick.direction();
+    const pushed = controls.direction();
     // autoDirection : direction imposée par les tests scriptés (__lia.walk).
     const wanted = state.autoDirection ?? (pushed.x !== 0 || pushed.z !== 0 ? pushed : keyboard.direction());
     player.update(step, interaction.isTalking || !playing || doors.isBusy ? STANDING : wanted);
@@ -398,7 +418,7 @@ function start() {
 
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
-    counter, diploma, quest, grimoire, chatter, minimap, doors, rooms, wallet, shop,
+    counter, diploma, quest, grimoire, chatter, minimap, doors, rooms, wallet, shop, controls, actionButton, setLeftHanded,
   });
 
   let last = performance.now();

@@ -4,7 +4,7 @@ Un petit RPG en HD-2D, jouable dans le navigateur. À Elelhem, tout le monde par
 
 **Aucune image n'est chargée par le jeu.** Textures, personnages, ciel, intérieurs et effets de lumière sont générés par le code au chargement de la page.
 
-> **En construction, en public.** La partie commence dans la maison du héros, où Claudette, sa sœur, lui confie la quête. Le village se parcourt au clavier ou au pouce, à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. On entre dans la maison, l'auberge et la forge. Huit maîtres enseignent chacun une notion, posent une question à trois choix et remettent un parchemin ; les huit réunis, Clodomir, l'architecte, remet un diplôme d'apprenti mage, avec une mention selon les erreurs, à partager ou à télécharger. Chaque leçon est facultative et se relit dans le grimoire. Une minimap montre qui attend encore. Commandes : ZQSD, WASD ou flèches, molette pour le zoom, E, Entrée ou Espace pour parler, flèches ou chiffres 1, 2, 3 pour répondre, G pour le grimoire, C pour la carte, M pour couper la musique. Le récit de la construction est dans [`docs/construction.md`](docs/construction.md).
+> **En construction, en public.** La partie commence dans la maison du héros, où Claudette, sa sœur, lui confie la quête. Le village se parcourt au clavier ou au pouce, à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. On entre dans la maison, l'auberge et la forge. Huit maîtres enseignent chacun une notion, posent une question à trois choix et remettent un parchemin ; les huit réunis, Clodomir, l'architecte, remet un diplôme d'apprenti mage, avec une mention selon les erreurs, à partager ou à télécharger. Chaque leçon est facultative et se relit dans le grimoire. Une minimap montre qui attend encore. Au clavier : ZQSD, WASD ou flèches, Maj pour courir, molette pour le zoom, E, Entrée ou Espace pour parler, flèches ou chiffres 1, 2, 3 pour répondre, G pour le grimoire, C pour la carte, M pour couper la musique. Au doigt : un joystick apparaît sous le pouce dans le bas de l'écran (poussé à fond, on court), un bouton d'action parle à l'habitant à portée, deux doigts pincent pour zoomer ; l'écran titre permet de passer le joystick à droite pour jouer de la main gauche. Le récit de la construction est dans [`docs/construction.md`](docs/construction.md).
 
 - **Jouer** : https://amael-alt.github.io/village-de-lia/
 - **Mesurer** : ajouter `?debug` à l'adresse pour afficher les images par seconde et le coût du rendu.
@@ -34,7 +34,7 @@ index.html        page unique : carte d'import, conteneurs de l'interface
 styles.css        interface par-dessus le canvas
 vendor/three/     three.js, avec sa licence
 src/main.js       démarrage, boucle, redimensionnement
-src/core/         rendu, caméra, entrées (clavier, joystick)
+src/core/         rendu, caméra, entrées (clavier, joystick, pincement), garde-fous tactiles
 src/gfx/          pixels, textures, matériaux, sprites, post-traitement, effets
 src/world/        carte, implantation (layout), terrain, maisons, tours, chantier, collisions
 src/game/         joueur, habitants, dialogues, quête, interface, débogage

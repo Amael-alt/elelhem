@@ -3,6 +3,7 @@
 // toucher, ou la touche C, ouvre la carte en grand, avec le nom des quartiers.
 // Dessinée en canvas 2D depuis la grille de world/map.js : aucune image.
 
+import { onTap } from '../core/input.js';
 import { mapColors as COLORS } from '../data/palette.js';
 
 const CELL = 8; // pixels par case dans le plan de référence (dessiné une fois)
@@ -155,7 +156,8 @@ export function createMinimap(small, overlay, { map, trees, regions, names, play
     draw(bigCanvas, true);
   }
 
-  small.addEventListener('click', () => {
+  // onTap : le toucher compte même avec un doigt resté sur le joystick.
+  onTap(small, () => {
     small.blur(); // Espace et Entrée reviennent au jeu
     if (canOpen()) show();
   });

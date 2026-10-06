@@ -1,4 +1,4 @@
-/* Le Village de LIA : interface par-dessus le canvas.
+/* The Legend of Elelhem : interface par-dessus le canvas.
    Garde-fous de base : la page ne défile pas, ne rebondit pas et ne laisse
    pas le navigateur interpréter les gestes. Le jeu reçoit tout. */
 
@@ -44,6 +44,12 @@ body {
   height: var(--hauteur, 100%);
   overflow: hidden;
   background: var(--fond);
+}
+
+/* Safari grossit le texte quand on tourne le téléphone en paysage : non. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -266,7 +272,7 @@ body {
 }
 
 /* Joystick flottant : un anneau de 128 px (rayon 64) centré sous le pouce, et
-   sa bille. Translucide, jamais cliquable. */
+   sa bille. Translucide, jamais cliquable. Il se dore quand on court. */
 #stick {
   position: fixed;
   top: -64px;
@@ -1704,5 +1710,179 @@ body {
   .tokens-gain.tokens-gagne,
   #boutique {
     animation: none !important;
+  }
+}
+
+/* --- Étape 4 : tactile ---------------------------------------------------- */
+
+/* Joystick poussé au-delà de 85 % : on court, l'anneau et la bille se dorent. */
+#stick.stick-course {
+  border-color: rgb(243 208 140 / 0.9);
+  background: rgb(243 208 140 / 0.2);
+  box-shadow: 0 0 16px rgb(243 208 140 / 0.4);
+}
+
+#stick.stick-course .stick-bille {
+  background: rgb(243 208 140 / 0.85);
+}
+
+/* Bouton d'action : 74 px, en bas à droite sous le pouce libre, à gauche pour
+   la main gauche. Seulement sur écran tactile (html[data-tactile], posé par
+   src/core/guards.js) : au bureau, la touche E et la bulle suffisent. Au
+   repos, une étincelle discrète ; un habitant à portée, il devient la bulle,
+   sur fond de parchemin comme celle qui flotte au-dessus de sa tête. */
+#action {
+  position: fixed;
+  right: calc(22px + env(safe-area-inset-right));
+  bottom: calc(26px + env(safe-area-inset-bottom));
+  z-index: 13;
+  display: none;
+  place-items: center;
+  width: 74px;
+  height: 74px;
+  padding: 0;
+  border: 1px solid var(--or-fonce);
+  border-radius: 50%;
+  background: var(--nuit);
+  color: var(--or-vif);
+  box-shadow: inset 0 0 0 3px rgb(14 13 28 / 0.9), inset 0 0 0 4px rgb(243 208 140 / 0.45), 0 6px 18px rgb(0 0 0 / 0.5);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: scale 0.08s ease-out, opacity 0.2s ease;
+}
+
+[data-tactile] #action:not([hidden]) {
+  display: grid;
+}
+
+[data-main="gauche"] #action {
+  right: auto;
+  left: calc(22px + env(safe-area-inset-left));
+}
+
+#action svg {
+  width: 32px;
+  height: 32px;
+}
+
+#action[data-mode="repos"] {
+  opacity: 0.62;
+}
+
+#action .action-bulle,
+#action[data-mode="parler"] .action-etincelle {
+  display: none;
+}
+
+#action[data-mode="parler"] .action-bulle {
+  display: block;
+}
+
+#action[data-mode="parler"] {
+  border: 2px solid var(--encre);
+  background: var(--parchemin);
+  color: var(--encre);
+  box-shadow: 0 0 0 3px rgb(243 208 140 / 0.35), 0 6px 18px rgb(0 0 0 / 0.5);
+  animation: action-appelle 1.6s ease-in-out infinite;
+}
+
+#action:active {
+  scale: 0.92;
+}
+
+@keyframes action-appelle {
+  50% {
+    box-shadow: 0 0 0 7px rgb(243 208 140 / 0.18), 0 6px 18px rgb(0 0 0 / 0.5);
+  }
+}
+
+/* Le côté du joystick, sur l'écran titre : seulement sur écran tactile. */
+.titre-commandes {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 16px;
+  border: 1px solid rgb(168 128 62 / 0.7);
+  border-radius: 22px;
+  background: rgb(14 13 28 / 0.7);
+  color: #e9dcc2;
+  font: 500 0.95rem/1.2 var(--police);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+[data-tactile] .titre-commandes {
+  display: inline-flex;
+}
+
+.titre-commandes svg {
+  color: var(--or-vif);
+}
+
+.titre-commandes:focus-visible {
+  outline: 2px solid var(--or-vif);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #action {
+    animation: none !important;
+  }
+}
+
+/* Écran court (téléphone en paysage) : le HUD tient sur une ligne en haut,
+   la minimap rapetisse à côté du son, le bandeau de lieu passe dessous, et la
+   boîte de dialogue se compacte : deux lignes réservées au lieu de trois,
+   les choix côte à côte plutôt qu'empilés, toujours hauts de 44 px. */
+@media (max-height: 480px) {
+  #minimap {
+    top: calc(12px + env(safe-area-inset-top));
+    right: calc(64px + env(safe-area-inset-right));
+    width: 104px;
+    padding: 3px;
+  }
+
+  #lieu {
+    top: calc(64px + env(safe-area-inset-top));
+    width: min(400px, calc(100% - 32px));
+    gap: 4px;
+  }
+
+  #dialogue {
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    width: min(820px, calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    padding: 16px 20px 12px;
+  }
+
+  .dialogue-texte {
+    min-height: 2.84em;
+    font-size: 1.06rem;
+  }
+
+  .dialogue-choix {
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .dialogue-choix button {
+    height: 100%;
+    min-height: 44px;
+    padding: 6px 10px 6px 38px;
+    font-size: 0.98rem;
+    line-height: 1.25;
+  }
+
+  .dialogue-choix button::before {
+    left: 9px;
+    width: 22px;
+    height: 22px;
+    margin-top: -11px;
+  }
+
+  .titre-commandes {
+    padding: 4px 14px;
   }
 }

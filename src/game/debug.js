@@ -133,7 +133,7 @@ function checkDialogues(texts, characters) {
 // game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
 // dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap, doors, wallet, shop } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap, doors, wallet, shop, controls, actionButton, setLeftHanded } = game;
   let viewer = null;
 
   const info = () => ({
@@ -357,6 +357,14 @@ export function installDebugApi(game) {
     },
     // La réplique de figurant affichée, s'il y en a une.
     chatter: () => chatter.snapshot(),
+    // Contrôles tactiles (étape 4) : doigts posés, joystick, course,
+    // pincement, zoom de la caméra, mode du bouton d'action.
+    touch: () => ({ ...controls.snapshot(), zoom: Number(follow.zoom.toFixed(3)), action: actionButton.mode }),
+    // Joystick à droite et bouton d'action à gauche (main gauche), ou l'inverse.
+    mainGauche(on = true) {
+      setLeftHanded(on);
+      return controls.snapshot().mainGauche;
+    },
     diploma(on = true) {
       if (on) diploma.open();
       else diploma.close();

@@ -1,9 +1,10 @@
 // L'indicateur d'interaction : une bulle au-dessus de la tête de l'habitant à
 // portée. On la touche (ou on clique) pour parler, ou on appuie sur la touche
-// d'action. Du DOM, pas du canvas : cible tactile de 44 pixels, nette à toute
-// résolution.
+// d'action ou sur le bouton d'action des écrans tactiles. Du DOM, pas du
+// canvas : cibles tactiles de 44 pixels au moins, nettes à toute résolution.
 
 import * as THREE from 'three';
+import { onTap } from '../core/input.js';
 
 const point = new THREE.Vector3();
 
@@ -46,7 +47,7 @@ export function createNameLabel(element) {
 // element : le bouton #indice ; onActivate : appelé au toucher ou au clic.
 export function createInteractionHint(element, onActivate) {
   let shown = false;
-  element.addEventListener('click', () => {
+  onTap(element, () => {
     element.blur(); // les touches Espace et Entrée ne doivent plus viser le bouton
     onActivate();
   });
@@ -67,6 +68,48 @@ export function createInteractionHint(element, onActivate) {
       if (!shown) return;
       shown = false;
       element.hidden = true;
+    },
+  };
+}
+
+// Le bouton d'action des écrans tactiles (étape 4) : rond, en bas à droite (à
+// gauche pour jouer de la main gauche), sous le pouce qui ne tient pas le
+// joystick. Son pictogramme dit ce qu'il fera : une étincelle au repos, une
+// bulle quand un habitant est à portée. Il se cache pendant une conversation :
+// la boîte de dialogue, en bas, se touche elle-même pour avancer.
+// Il agit dès que le doigt se pose, comme un bouton de manette ; le click ne
+// sert qu'à un lecteur d'écran.
+export function createActionButton(element, onActivate) {
+  let shown = false;
+  let mode = '';
+  element.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault(); // pas de focus, pas d'événements de souris rejoués
+    onActivate();
+  });
+  element.addEventListener('click', (event) => {
+    if (event.detail === 0) onActivate();
+  });
+  return {
+    // mode : 'repos' ou 'parler' ; label : texte pour lecteur d'écran.
+    show(newMode, label) {
+      if (!shown) {
+        shown = true;
+        element.hidden = false;
+      }
+      if (mode !== newMode) {
+        mode = newMode;
+        element.dataset.mode = newMode;
+      }
+      if (element.getAttribute('aria-label') !== label) element.setAttribute('aria-label', label);
+    },
+    hide() {
+      if (!shown) return;
+      shown = false;
+      element.hidden = true;
+    },
+    get mode() {
+      return shown ? mode : null;
     },
   };
 }

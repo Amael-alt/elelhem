@@ -21,7 +21,7 @@ function chooseFacing(move, current) {
 
 // village : le lieu où se trouve le héros (le village, ou un intérieur de
 // world/interior.js) ; il en change avec setWorld.
-export function createPlayer({ sprite, shadow, village }) {
+export function createPlayer({ sprite, shadow, village, extras = [] }) {
   let world = village;
   const position = { x: world.spawn.x, z: world.spawn.z };
   let facing = 'down';
@@ -70,6 +70,15 @@ export function createPlayer({ sprite, shadow, village }) {
       position.z = z;
       place();
     },
+    // Pousse le héros de (dx, dz) en respectant les murs : recul d'un coup reçu, fente d'un coup donné.
+    shove(dx, dz) {
+      world.collider.move(position, dx, dz, RADIUS);
+      place();
+    },
+    // Le héros clignote quand il vient d'être touché.
+    setVisible(on) {
+      sprite.object.visible = on;
+    },
     worldPosition(target) {
       return target.set(position.x, world.groundHeight(position.x, position.z), position.z);
     },
@@ -77,7 +86,7 @@ export function createPlayer({ sprite, shadow, village }) {
     // objets (sprite, ombre) changent de scène.
     setWorld(newWorld, x, z, direction = facing) {
       world = newWorld;
-      world.scene.add(sprite.object, shadow);
+      world.scene.add(sprite.object, shadow, ...extras);
       facing = direction;
       position.x = x;
       position.z = z;

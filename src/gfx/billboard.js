@@ -44,11 +44,12 @@ const GHOST_OPACITY = 0.5;
 // le héros (en unités) : l'herbe haute à ses pieds ne compte pas.
 const GHOST_MIN_GAP = 1.0;
 
-// Quad de la taille d'un cadre, pivot sous les bottes.
-function createSpriteGeometry() {
-  const width = FRAME_WIDTH / PIXELS_PER_UNIT;
-  const height = FRAME_HEIGHT / PIXELS_PER_UNIT;
-  const belowFeet = (FRAME_HEIGHT - FEET_ROW - 1) / PIXELS_PER_UNIT;
+// Quad de la taille d'un cadre, pivot sous les bottes. Un autre format (une
+// épée, un effet) donne ses pixels : largeur, hauteur, ligne du pivot.
+function createSpriteGeometry(frameWidth = FRAME_WIDTH, frameHeight = FRAME_HEIGHT, feetRow = FEET_ROW) {
+  const width = frameWidth / PIXELS_PER_UNIT;
+  const height = frameHeight / PIXELS_PER_UNIT;
+  const belowFeet = (frameHeight - feetRow - 1) / PIXELS_PER_UNIT;
   const geometry = new THREE.PlaneGeometry(width, height);
   geometry.translate(0, height / 2 - belowFeet, 0);
   return geometry;
@@ -222,9 +223,12 @@ export function createSprite(sheet, sunDirection, post = null, { ghost = false }
   texture.repeat.set(1 / sheet.columns, 1 / sheet.rows);
   const glowTexture = sheet.emissive?.clone() ?? null;
   glowTexture?.repeat.copy(texture.repeat);
-  const texSize = new THREE.Vector2(sheet.columns * FRAME_WIDTH, sheet.rows * FRAME_HEIGHT);
+  // Une planche d'un autre format que les personnages dit sa taille de cadre.
+  const frameWidth = sheet.frameWidth ?? FRAME_WIDTH;
+  const frameHeight = sheet.frameHeight ?? FRAME_HEIGHT;
+  const texSize = new THREE.Vector2(sheet.columns * frameWidth, sheet.rows * frameHeight);
 
-  const mesh = new THREE.Mesh(createSpriteGeometry(), createVisibleMaterial(texture, glowTexture, texSize, sunDirection, post));
+  const mesh = new THREE.Mesh(createSpriteGeometry(frameWidth, frameHeight, sheet.feetRow ?? FEET_ROW), createVisibleMaterial(texture, glowTexture, texSize, sunDirection, post));
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.frustumCulled = false; // le quad tourne dans le shader, sa boîte englobante ne le suit pas

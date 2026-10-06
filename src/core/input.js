@@ -57,6 +57,9 @@ const MOVE_KEYS = {
 const ACTION_KEYS = new Set(['KeyE', 'Enter', 'NumpadEnter', 'Space']);
 const CANCEL_KEYS = new Set(['Escape']);
 const RUN_KEYS = new Set(['ShiftLeft', 'ShiftRight']);
+// Touches qui comptent une fois par appui, lues par takeKey : frapper (J ou
+// X), ouvrir la feuille de personnage (F).
+const ONCE_KEYS = new Set(['KeyJ', 'KeyX', 'KeyF']);
 
 // La course : le héros va RUN_FACTOR fois plus vite qu'à la marche. Les
 // entrées renvoient une direction de longueur RUN_FACTOR au plus, le héros
@@ -69,6 +72,7 @@ export function createKeyboard() {
   let zoomSteps = 0;
   let action = false;
   let cancel = false;
+  const once = new Set();
 
   window.addEventListener('keydown', (event) => {
     if (RUN_KEYS.has(event.code)) running.add(event.code);
@@ -83,6 +87,11 @@ export function createKeyboard() {
         if (ACTION_KEYS.has(event.code)) action = true;
         else cancel = true;
       }
+      event.preventDefault();
+      return;
+    }
+    if (ONCE_KEYS.has(event.code)) {
+      if (!event.repeat) once.add(event.code);
       event.preventDefault();
       return;
     }
@@ -123,6 +132,12 @@ export function createKeyboard() {
       if (length === 0) return { x: 0, z: 0 };
       const speed = running.size > 0 ? RUN_FACTOR : 1;
       return { x: (x / length) * speed, z: (z / length) * speed };
+    },
+    // Vrai une fois par appui sur l'une des touches données (codes physiques).
+    takeKey(...codes) {
+      let hit = false;
+      for (const code of codes) if (once.delete(code)) hit = true;
+      return hit;
     },
     // Vrai une fois par appui sur une touche d'action, puis faux jusqu'au suivant.
     takeAction() {

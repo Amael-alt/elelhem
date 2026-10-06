@@ -27,6 +27,9 @@ import { createGrimoire } from './game/grimoire.js';
 import { createChatter } from './game/chatter.js';
 import { createMinimap } from './game/minimap.js';
 import { createDoors } from './game/doors.js';
+import { createWallet } from './game/wallet.js';
+import { createShop } from './game/shop.js';
+import { gains, tenues } from './data/tokens.js';
 import { createInterior } from './world/interior.js';
 import { ROOMS } from './world/rooms.js';
 import { createGameState, resetGameState, saveGameState } from './game/state.js';
@@ -47,6 +50,7 @@ const STANDING = { x: 0, z: 0 }; // direction du héros pendant une conversation
 const PIGEON_HEAR_RADIUS = 3.2; // les pigeons parlent quand on passe sous leur vol
 const INTERIOR_FRAMING = 0.55; // dans une pièce, la caméra se rapproche
 const FIRST_TALK_DELAY_MS = 700; // au réveil, Claudette parle après un instant
+const CHEST_REACH = 1.0; // un coffre s'ouvre quand on arrive à cette distance
 
 const canvas = document.getElementById('scene');
 trackViewportHeight();
@@ -101,6 +105,15 @@ function start() {
   const sheet = createCharacterSheet(hero);
   const sheets = { [hero.id]: sheet };
   const sprite = createSprite(sheet, village.sunDirection, pipeline.spriteHooks);
+  // La tenue du héros (data/tokens.js) : une palette qui remplace la sienne.
+  const dressHero = (id) => {
+    const outfit = tenues.find((t) => t.id === id);
+    if (!outfit?.palette) {
+      sprite.setSheet(sheet);
+      return;
+    }
+    sprite.setSheet(createCharacterSheet({ ...hero, palette: { ...hero.palette, ...outfit.palette } }));
+  };
   sprite.object.layers.set(SPRITE_LAYER);
   const shadow = createBlobShadow();
   scene.add(sprite.object, shadow);
@@ -178,6 +191,12 @@ function start() {
     ids: counter.ids, notions, texts: dialogues, labels: textesInterface.grimoire, state: gameState, canOpen: canOpenOverlay,
   });
   const diploma = createDiploma(document.getElementById('diplome'), { texts: textesInterface.diplome, notions, state: gameState });
+  // La bourse et la boutique de Berthe.
+  const wallet = createWallet(document.getElementById('tokens'), { state: gameState, texts: textesInterface.tokens });
+  const shop = createShop(document.getElementById('boutique'), {
+    outfits: tenues, basePalette: hero.palette, texts: textesInterface.boutique, state: gameState, wallet, onWear: dressHero,
+  });
+  if (gameState.tenue !== tenues[0].id) dressHero(gameState.tenue);
   // La minimap : un point doré pour l'habitant qui a encore une leçon à donner,
   // un point bleu pour Claudette. Un habitant dans une pièce est montré à la
   // porte de sa maison.
@@ -202,8 +221,25 @@ function start() {
   });
   quest = createQuest({
     dialogue, state: gameState, texts: dialogues, offer: textesInterface.offreLecon, scrolls: counter.ids, counter,
-    overlays: [diploma, grimoire, minimap], diploma,
+    overlays: [diploma, grimoire, minimap, shop], diploma, wallet, gains, shop, shopOffer: textesInterface.boutique.offre,
   });
+
+  // L'exploration paie : un lieu découvert (quartier ou pièce), une fois ; un
+  // coffre ouvert, une fois.
+  const discover = (id) => {
+    if (!id || gameState.decouvertes.has(id)) return;
+    gameState.decouvertes.add(id);
+    wallet.earn(gains.decouverte);
+  };
+  function openChests(world) {
+    for (const chest of world.chests ?? []) {
+      if (gameState.coffres.has(chest.id)) continue;
+      if (Math.hypot(chest.x - player.position.x, chest.z - player.position.z) > CHEST_REACH) continue;
+      gameState.coffres.add(chest.id);
+      wallet.earn(chest.tokens);
+      counter.say(textesInterface.tokens.coffre, textesInterface.tokens.contenu(chest.tokens));
+    }
+  }
   let interaction = null;
   const hint = createInteractionHint(document.getElementById('indice'), () => interaction.request());
   const label = createNameLabel(document.getElementById('nom'));
@@ -264,7 +300,10 @@ function start() {
       follow.snap(player.worldPosition(focusTarget));
       minimap.setVisible(playing && !room);
       ambience.setIndoors(room ? { fires: world.fires } : null);
-      if (room) banner.showRoom(world.room.lieu);
+      if (room) {
+        banner.showRoom(world.room.lieu);
+        discover(`piece:${room}`);
+      }
       hint.hide();
       label.hide();
     },
@@ -278,6 +317,7 @@ function start() {
       if (depart && npc.world !== worldOf(depart.lieu)) npc.moveTo(worldOf(depart.lieu), depart.x, depart.z, depart.direction);
     }
     const home = Object.keys(ROOMS).find((id) => ROOMS[id].start);
+    gameState.decouvertes.add(`piece:${home}`); // sa propre maison ne se découvre pas
     doors.enter(home, { instant: true, at: ROOMS[home].start });
     setTimeout(() => {
       const guide = activeNpcs.find((npc) => npc.character.depart);
@@ -289,6 +329,7 @@ function start() {
   if (playing) {
     music.showButton();
     counter.show();
+    wallet.show();
     minimap.setVisible(true);
     if (freshGame()) wakeUp();
   }
@@ -297,7 +338,10 @@ function start() {
       texts: textesInterface,
       state: gameState,
       onStart({ fresh, prenom }) {
-        if (fresh) resetGameState(gameState);
+        if (fresh) {
+          resetGameState(gameState);
+          dressHero(gameState.tenue);
+        }
         gameState.prenom = prenom;
         saveGameState(gameState);
         // La touche qui a lancé le jeu ne doit pas aussi ouvrir un dialogue.
@@ -306,6 +350,7 @@ function start() {
         music.start();
         music.showButton();
         counter.show();
+        wallet.show();
         minimap.setVisible(!doors.room);
         if (freshGame()) wakeUp();
       },
@@ -329,7 +374,12 @@ function start() {
     if (playing) {
       if (keyboard.takeCancel()) dialogue.close();
       interaction.update(dt, keyboard.takeAction());
-      if (!doors.room) banner.update(player.position);
+      if (!doors.room) {
+        banner.update(player.position);
+        discover(banner.current);
+      } else {
+        openChests(doors.current);
+      }
       if (!interaction.isTalking) doors.update(wanted);
       chatter.update(dt, quest.isBusy || doors.room !== null);
       minimap.update(dt);
@@ -348,7 +398,7 @@ function start() {
 
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
-    counter, diploma, quest, grimoire, chatter, minimap, doors, rooms,
+    counter, diploma, quest, grimoire, chatter, minimap, doors, rooms, wallet, shop,
   });
 
   let last = performance.now();

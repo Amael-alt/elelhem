@@ -35,6 +35,21 @@ export function createScrollCounter(root, { notions, texts, state, onOpen = () =
     row.setAttribute('aria-label', texts.ouvrir(count, ids.length));
   }
 
+  // L'annonce sous le compteur : un titre, une ligne, un rappel facultatif.
+  function say(title, line, note = '') {
+    const parts = [title, document.createElement('br'), line];
+    if (note) {
+      const small = document.createElement('small');
+      small.textContent = note;
+      parts.push(small);
+    }
+    announce.replaceChildren(...parts);
+    announce.hidden = false;
+    announce.classList.remove('parchemins-sortie');
+    clearTimeout(timer);
+    timer = setTimeout(() => announce.classList.add('parchemins-sortie'), ANNOUNCE_MS);
+  }
+
   refresh();
   row.addEventListener('click', () => {
     row.blur(); // les touches Espace et Entrée reviennent au jeu
@@ -57,13 +72,9 @@ export function createScrollCounter(root, { notions, texts, state, onOpen = () =
       slot.classList.remove('gagne');
       void slot.offsetWidth; // relance l'animation si elle vient de jouer
       slot.classList.add('gagne');
-      const hint = document.createElement('small');
-      hint.textContent = texts.relire;
-      announce.replaceChildren(texts.obtenu, document.createElement('br'), notions[id], hint);
-      announce.hidden = false;
-      announce.classList.remove('parchemins-sortie');
-      clearTimeout(timer);
-      timer = setTimeout(() => announce.classList.add('parchemins-sortie'), ANNOUNCE_MS);
+      say(texts.obtenu, notions[id], texts.relire);
     },
+    // Une autre annonce au même endroit (un coffre ouvert, par exemple).
+    say,
   };
 }

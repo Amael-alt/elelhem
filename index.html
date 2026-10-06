@@ -78,7 +78,11 @@
   <!-- Compteur de parchemins, en haut à gauche : rempli par src/game/scrolls.js.
        On le touche pour ouvrir le grimoire. -->
   <div id="parchemins" hidden>
-    <button class="parchemins-rangee" type="button" tabindex="-1"></button>
+    <div class="parchemins-ligne">
+      <button class="parchemins-rangee" type="button" tabindex="-1"></button>
+      <!-- La bourse : les Tokens du héros (src/game/wallet.js). -->
+      <div id="tokens" role="status"><span class="tokens-piece" aria-hidden="true"></span><span class="tokens-montant">0</span><span class="tokens-gain" aria-hidden="true"></span></div>
+    </div>
     <p class="parchemins-annonce" role="status" hidden></p>
   </div>
 
@@ -106,6 +110,16 @@
       <canvas class="carte-toile" role="img"></canvas>
       <ul class="carte-legende"></ul>
       <button class="carte-fermer" type="button"></button>
+    </div>
+  </div>
+
+  <!-- La boutique de Berthe : les tenues du héros (src/game/shop.js). -->
+  <div id="boutique" role="dialog" aria-modal="true" aria-labelledby="boutique-titre" hidden>
+    <div class="boutique-cadre">
+      <p class="boutique-titre" id="boutique-titre"></p>
+      <p class="boutique-bourse"></p>
+      <ul class="boutique-liste"></ul>
+      <button class="boutique-fermer" type="button"></button>
     </div>
   </div>
 

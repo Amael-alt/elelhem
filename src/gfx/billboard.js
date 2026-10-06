@@ -169,6 +169,12 @@ export function createSprite(sheet, sunDirection, post = null) {
       texture.offset.set(column / sheet.columns, 1 - (row + 1) / sheet.rows);
       glowTexture?.offset.copy(texture.offset);
     },
+    // Nouvelle planche de même format (le héros change de tenue) : on
+    // recopie ses pixels dans la texture en place, matériaux inchangés.
+    setSheet(next) {
+      texture.image.data.set(next.texture.image.data); // déjà dans le sens de la carte graphique
+      texture.needsUpdate = true;
+    },
     // Force de l'émission, 1 = normale ; sans effet si le personnage n'émet pas.
     setGlow(strength) {
       if (glowTexture) mesh.material.emissiveIntensity = GLOW_INTENSITY * strength;

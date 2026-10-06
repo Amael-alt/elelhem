@@ -12,6 +12,8 @@
 //   bonne réponse           son retour, le parchemin (sauvegardé aussitôt,
 //                           compteur animé), puis la recompense
 //   un guide (Claudette)    intro, puis retour : il n'enseigne rien
+//   la marchande (Berthe)   une fois son parchemin gagné, elle propose sa
+//                           boutique après ses pages
 //   l'habitant du diplôme   ne pose sa question que si tous les parchemins
 //                           sont réunis ; la recompense ouvre le diplôme, et
 //                           chaque visite suivante le rouvre
@@ -25,8 +27,11 @@ const TAKE_LESSON = 0;
 // data/dialogues.js ; offer : textesInterface.offreLecon ; scrolls :
 // identifiants des parchemins à gagner ; counter : le compteur (scrolls.js) ;
 // overlays : les écrans qui suspendent le jeu quand ils sont ouverts (le
-// diplôme, le grimoire), chacun avec isOpen ; diploma : l'écran du diplôme.
-export function createQuest({ dialogue, state, texts, offer, scrolls, counter, overlays, diploma }) {
+// diplôme, le grimoire), chacun avec isOpen ; diploma : l'écran du diplôme ;
+// wallet : la bourse (wallet.js) et gains, ce que rapporte chaque récompense
+// (data/tokens.js) ; shop : la boutique (shop.js) et shopOffer, sa question
+// (textesInterface.boutique.offre), pour l'habitant qui porte `boutique`.
+export function createQuest({ dialogue, state, texts, offer, scrolls, counter, overlays, diploma, wallet, gains, shop, shopOffer }) {
   const missing = () => scrolls.filter((id) => !state.parchemins.has(id)).length;
 
   function showDiploma() {
@@ -40,12 +45,14 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
     state.choix.set(key, index);
     if (entry.diplome) {
       saveGameState(state);
+      wallet.earn(gains.diplome);
       dialogue.open(entry.nom, entry.recompense, showDiploma);
       return;
     }
     state.parchemins.add(key);
     saveGameState(state);
     counter.gain(key);
+    wallet.earn(gains.parchemin);
     dialogue.open(entry.nom, entry.recompense);
   }
 
@@ -79,6 +86,15 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
     });
   }
 
+  // Après ses pages, la marchande propose sa boutique.
+  function offerShop(entry) {
+    const options = shopOffer.choix.map((texte) => ({ texte }));
+    dialogue.ask(entry.nom, shopOffer.texte, options, (index) => {
+      dialogue.close();
+      if (index === 0) shop.open();
+    }, 'boutique');
+  }
+
   return {
     // Ouvre la conversation avec npc.
     talk(npc) {
@@ -95,7 +111,7 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
         else if (missing() > 0) dialogue.open(entry.nom, opening);
         else lessonOrQuestion(entry, key, opening);
       } else if (state.parchemins.has(key)) {
-        dialogue.open(entry.nom, opening);
+        dialogue.open(entry.nom, opening, entry.boutique ? () => offerShop(entry) : null);
       } else {
         lessonOrQuestion(entry, key, opening);
       }

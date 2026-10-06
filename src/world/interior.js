@@ -76,6 +76,11 @@ export function createInterior(room, { materials, sunDirection }) {
   const builders = Object.fromEntries(keys.map((key) => [key, createMeshBuilder()]));
   const posts = [];
   const flames = [];
+  // Les coffres qui contiennent des Tokens : on les ouvre en s'en approchant.
+  const chests = [];
+  room.props.forEach((item, index) => {
+    if (item.type === 'chest' && item.tokens) chests.push({ id: `${room.lieu}:${index}`, x: item.x, z: item.z, tokens: item.tokens });
+  });
   for (const item of room.props) {
     const build = FURNITURE[item.type];
     if (!build) throw new Error(`Intérieur : meuble inconnu « ${item.type} ».`);
@@ -152,6 +157,7 @@ export function createInterior(room, { materials, sunDirection }) {
     spawn: room.entry,
     // Le seuil : on sort en le franchissant vers le sud.
     door: { x: doorX + 0.5, z: map.depth },
+    chests,
     // Les feux de la pièce, pour le crépitement (core/ambience.js).
     fires: fires.map((f) => [f.x, f.z]),
     groundHeight(x, z) {

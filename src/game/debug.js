@@ -133,7 +133,7 @@ function checkDialogues(texts, characters) {
 // game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
 // dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap, doors } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap, doors, wallet, shop } = game;
   let viewer = null;
 
   const info = () => ({
@@ -308,6 +308,7 @@ export function installDebugApi(game) {
         const snap = dialogue.snapshot();
         if (snap.enFrappe) dialogue.advance();
         else if (snap.sorte === 'offre') dialogue.choose(lecon ? 0 : 1);
+        else if (snap.sorte === 'boutique') dialogue.choose(1);
         else if (snap.mode === 'question') {
           const pick = picks.shift() ?? right;
           log.essais.push(pick);
@@ -337,6 +338,16 @@ export function installDebugApi(game) {
       if (id) doors.enter(id, { instant: true });
       else doors.exit({ instant: true });
       return doors.room;
+    },
+    // Tokens : en donner (tests de la boutique), ouvrir la boutique.
+    tokens(n = 0) {
+      wallet.earn(n);
+      return wallet.balance;
+    },
+    boutique(on = true) {
+      if (on) shop.open();
+      else shop.close();
+      return shop.isOpen;
     },
     // La carte en grand.
     carte(on = true) {
@@ -405,6 +416,11 @@ export function installDebugApi(game) {
       visites: Object.fromEntries(gameState.visites),
       choix: Object.fromEntries(gameState.choix),
       erreurs: Object.fromEntries(gameState.erreurs),
+      tokens: gameState.tokens,
+      tenue: gameState.tenue,
+      tenues: [...gameState.tenues],
+      decouvertes: [...gameState.decouvertes],
+      coffres: [...gameState.coffres],
     }),
     checkDialogues: () => checkDialogues(texts, npcs.map((npc) => npc.character)),
   };

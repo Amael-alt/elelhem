@@ -2148,3 +2148,55 @@ body {
     animation: none !important;
   }
 }
+
+/* Mode vignette (?vignette) : l'écran titre recomposé pour l'image de
+   partage des réseaux sociaux, en 1200 × 630, que capture outils/vignette.mjs.
+   La flamme grande à gauche ; titre, contrée, accroche et signature à
+   droite ; ni prénom, ni invitation, ni bouton. */
+[data-vignette] :is(.titre-prenom, .titre-commencer, .titre-nouvelle, .titre-commandes) {
+  display: none !important;
+}
+
+[data-vignette] .titre-cadre {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: repeat(5, auto);
+  align-content: center;
+  column-gap: 64px;
+  row-gap: 0;
+  width: min(1100px, 100%);
+}
+
+[data-vignette] .titre-cadre > * {
+  grid-column: 2;
+  margin-block: 7px;
+}
+
+[data-vignette] .titre-cadre > .titre-flamme {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  align-self: center;
+  height: 470px;
+  animation: none;
+  filter: drop-shadow(0 0 30px rgb(255 170 90 / 0.6));
+}
+
+[data-vignette] .titre-nom {
+  font-size: 88px;
+}
+
+[data-vignette] .titre-orne {
+  width: 72%;
+}
+
+[data-vignette] .titre-contree {
+  font-size: 36px;
+}
+
+[data-vignette] .titre-accroche {
+  font-size: 30px;
+}
+
+[data-vignette] .titre-credits {
+  margin-top: 22px;
+  font-size: 22px;
+}

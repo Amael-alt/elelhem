@@ -89,6 +89,9 @@ function showFatal(text) {
 function start() {
   const params = new URLSearchParams(window.location.search);
   const postProcessing = !params.has('nofx');
+  // ?vignette : l'écran titre recomposé pour l'image de partage (styles.css,
+  // outils/vignette.mjs).
+  if (params.has('vignette')) document.documentElement.dataset.vignette = '';
   const narrowScreen = Math.min(window.innerWidth, window.innerHeight) < NARROW_SCREEN;
 
   const renderer = createRenderer(canvas, { postProcessing });

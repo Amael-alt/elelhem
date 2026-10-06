@@ -554,6 +554,8 @@ Jordan a choisi de commencer par les personnages, en s'inspirant des sprites d'O
 
 **Les tenues** (`data/tokens.js`) : une tenue change maintenant la silhouette (`look` : accessoire, tenue, coiffure) en plus de la palette, par `habiller(hero, tenue)`. Cape écarlate longue, rouge vif ; cape des bois à bord dentelé et courroie ; cape de nuit à capuche baissée, les cheveux à l'air, semée de lucioles émissives ; habit d'apprenti mage, robe violette à liserés d'or et chapeau pointu à ruban d'or et étoile.
 
+**Le héros**, à la relecture de la galerie par Jordan : plus de capuche, mais une tenue de voyage dans l'esprit d'Elliot (The Adventures of Elliot: The Millennium Tales, le jeu d'action HD-2D de l'équipe d'Octopath Traveler) : chapeau rouge à large bord et plume dorée, cheveux blond pâle, écharpe rouge dont le pan tombe sur l'épaule, veste claire barrée d'une sangle de cuir, bottes brunes. Pas d'épée, on ne se bat pas à Elelhem. La plume emprunte la rampe des cheveux, blond doré : aucune rampe de plus. Le libellé de la boutique suit (« Tenue de voyage »). Jordan a aussi fait recentrer le chapeau de l'Oracle Gépété, dont la pointe penchait de face.
+
 Outils de QA : `__lia.galerie(lignes, échelle)` montre des poses choisies à l'échelle (`heros:nuit` pour une tenue, dernier paramètre pour nu-tête), `__lia.tenue(id)` habille le héros comme un achat.
 
 Ce qui a résisté :

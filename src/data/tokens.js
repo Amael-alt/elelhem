@@ -25,12 +25,12 @@ export function habiller(hero, tenue) {
 // rampes de la palette du héros : accent (la capuche et la cape), vetement (la
 // tunique), parfois lumiere (les pixels qui brillent). Depuis la version 1.1,
 // une tenue change aussi la silhouette (look) : la grille de son accessoire
-// remplace la capuche de voyage, dans le même format que data/characters.js
-// (repères de la silhouette en tête de ce fichier-là). La première tenue est
-// celle du départ, gratuite.
+// remplace le chapeau et l'écharpe de la tenue de voyage, dans le même format
+// que data/characters.js (repères de la silhouette en tête de ce fichier-là).
+// La première tenue est celle du départ, gratuite.
 
-// Cape longue à capuche : la même tête que la capuche de voyage, mais la cape
-// tombe de chaque côté du corps jusqu'aux genoux (écarlate, des bois).
+// Cape longue à capuche : la capuche couvre les cheveux et encadre le visage,
+// la cape tombe de chaque côté du corps jusqu'aux genoux (écarlate, des bois).
 const capeTete = [
   '.......aaaa.......',
   '.....aaaaaaaa.....',

@@ -131,7 +131,7 @@ export const textesInterface = {
     titre: 'Les tenues de Berthe',
     bourse: (n) => `Ta bourse : ${n} Token${n > 1 ? 's' : ''}`,
     tenues: {
-      voyage: { nom: 'Cape de voyage', description: 'Celle de tous les jours. Elle a vu du pays.' },
+      voyage: { nom: 'Tenue de voyage', description: 'Chapeau à plume et écharpe : celle de tous les jours. Elle a vu du pays.' },
       ecarlate: { nom: 'Cape écarlate', description: 'On la voit de loin. Les pigeons aussi.' },
       foret: { nom: 'Cape des bois', description: 'Pour se fondre dans la prairie, ou faire la sieste.' },
       nuit: { nom: 'Cape de nuit', description: 'Couleur du ciel quand les lucioles sortent.' },

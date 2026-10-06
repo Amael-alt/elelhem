@@ -194,6 +194,25 @@ export const textesInterface = {
     fichier: 'diplome-apprenti-mage-elelhem.jpg',
     alt: (prenom) => `Diplôme d'apprenti mage d'Elelhem${prenom ? ` décerné à ${prenom}` : ''}, pour les huit parchemins du village`,
   },
+  // Le générique de fin, après le diplôme remis par Clodomir. La section
+  // `habitants` reçoit les noms des habitants depuis leur fiche.
+  generique: {
+    titre: 'The Legend of Elelhem',
+    sousTitre: 'La Magie de Lia',
+    sections: [
+      { role: 'Conception, écriture et direction', noms: ['Jordan Goussery'], note: 'formateur et consultant IA à Bayonne' },
+      { role: 'Code', noms: ['Claude Code'], note: 'qui a posé chaque pierre, en suivant le plan' },
+      { role: 'Les habitants d\'Elelhem', habitants: true, note: 'avec les apprentis du chantier et les pigeons du colombier' },
+      { role: 'Musique', noms: ['« The Village Bell »'], note: 'Jordan Goussery, avec Suno' },
+      { role: 'Décors, lumière, personnages et sons', noms: ['Générés par le code'], note: 'aucune image chargée' },
+      { role: 'Moteur 3D', noms: ['three.js'], note: 'licence MIT' },
+      { role: 'Police', noms: ['Newsreader'], note: 'licence SIL Open Font' },
+    ],
+    merci: (prenom) => `Merci d'avoir joué${prenom ? `, ${prenom}` : ''} !`,
+    site: 'maintenant-vous-savez.com',
+    passer: 'Appuyer pour passer',
+    revenir: 'Appuyer pour revenir au village',
+  },
 };
 
 // « , Prénom » quand le joueur a donné le sien, rien sinon.

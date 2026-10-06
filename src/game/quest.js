@@ -30,13 +30,16 @@ const TAKE_LESSON = 0;
 // diplôme, le grimoire), chacun avec isOpen ; diploma : l'écran du diplôme ;
 // wallet : la bourse (wallet.js) et gains, ce que rapporte chaque récompense
 // (data/tokens.js) ; shop : la boutique (shop.js) et shopOffer, sa question
-// (textesInterface.boutique.offre), pour l'habitant qui porte `boutique`.
-export function createQuest({ dialogue, state, texts, offer, scrolls, counter, overlays, diploma, wallet, gains, shop, shopOffer }) {
+// (textesInterface.boutique.offre), pour l'habitant qui porte `boutique` ;
+// credits : le générique de fin (credits.js), joué quand on referme le
+// diplôme qui vient d'être remis.
+export function createQuest({ dialogue, state, texts, offer, scrolls, counter, overlays, diploma, wallet, gains, shop, shopOffer, credits }) {
   const missing = () => scrolls.filter((id) => !state.parchemins.has(id)).length;
 
-  function showDiploma() {
+  // then : la suite quand on le referme (le générique, à la remise).
+  function showDiploma(then = null) {
     dialogue.close();
-    diploma.open();
+    diploma.open(then);
   }
 
   // Bonne réponse : on note le choix et on remet le parchemin (ou le diplôme)
@@ -46,7 +49,7 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
     if (entry.diplome) {
       saveGameState(state);
       wallet.earn(gains.diplome);
-      dialogue.open(entry.nom, entry.recompense, showDiploma);
+      dialogue.open(entry.nom, entry.recompense, () => showDiploma(() => credits.play()));
       return;
     }
     state.parchemins.add(key);

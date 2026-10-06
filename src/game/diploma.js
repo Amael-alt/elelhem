@@ -295,6 +295,7 @@ export function createDiploma(root, { texts, notions, state }) {
   (canShare ? share : download).classList.add('principal');
 
   let open = false;
+  let afterClose = null; // la suite, une fois le diplôme refermé (le générique)
   let jour = new Date();
   let copiedTimer = 0;
   let file = null; // l'image prête à partager, refaite après chaque dessin
@@ -331,6 +332,9 @@ export function createDiploma(root, { texts, notions, state }) {
     // Le focus quitte le diplôme : les touches reviennent au jeu.
     if (root.contains(document.activeElement)) document.activeElement.blur();
     root.hidden = true;
+    const next = afterClose;
+    afterClose = null;
+    next?.();
   }
 
   input.addEventListener('input', () => {
@@ -390,7 +394,9 @@ export function createDiploma(root, { texts, notions, state }) {
     get isOpen() {
       return open;
     },
-    async open() {
+    // then : appelé quand on le referme (le générique, la première fois).
+    async open(then = null) {
+      afterClose = then;
       jour = new Date();
       input.value = state.prenom;
       open = true;

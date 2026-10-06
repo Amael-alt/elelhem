@@ -25,6 +25,7 @@ import { createQuest } from './game/quest.js';
 import { createScrollCounter } from './game/scrolls.js';
 import { createDiploma } from './game/diploma.js';
 import { createGrimoire } from './game/grimoire.js';
+import { createCredits } from './game/credits.js';
 import { createChatter } from './game/chatter.js';
 import { createMinimap } from './game/minimap.js';
 import { createDoors } from './game/doors.js';
@@ -205,6 +206,10 @@ function start() {
     ids: counter.ids, notions, texts: dialogues, labels: textesInterface.grimoire, state: gameState, canOpen: canOpenOverlay,
   });
   const diploma = createDiploma(document.getElementById('diplome'), { texts: textesInterface.diplome, notions, state: gameState });
+  // Le générique de fin, après le diplôme : les habitants y sont nommés d'après leur fiche.
+  const credits = createCredits(document.getElementById('generique'), {
+    texts: textesInterface.generique, cast: villagers.map((character) => character.nom), state: gameState,
+  });
   // La bourse et la boutique de Berthe.
   const wallet = createWallet(document.getElementById('tokens'), { state: gameState, texts: textesInterface.tokens });
   const shop = createShop(document.getElementById('boutique'), {
@@ -235,7 +240,7 @@ function start() {
   });
   quest = createQuest({
     dialogue, state: gameState, texts: dialogues, offer: textesInterface.offreLecon, scrolls: counter.ids, counter,
-    overlays: [diploma, grimoire, minimap, shop], diploma, wallet, gains, shop, shopOffer: textesInterface.boutique.offre,
+    overlays: [diploma, grimoire, minimap, shop, credits], diploma, wallet, gains, shop, shopOffer: textesInterface.boutique.offre, credits,
   });
 
   // L'exploration paie : un lieu découvert (quartier ou pièce), une fois ; un
@@ -418,7 +423,7 @@ function start() {
 
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
-    counter, diploma, quest, grimoire, chatter, minimap, doors, rooms, wallet, shop, controls, actionButton, setLeftHanded,
+    counter, diploma, quest, grimoire, chatter, minimap, doors, rooms, wallet, shop, controls, actionButton, setLeftHanded, credits,
   });
 
   let last = performance.now();

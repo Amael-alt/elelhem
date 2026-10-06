@@ -133,7 +133,7 @@ function checkDialogues(texts, characters) {
 // game : { renderer, player, follow, tick, state, sheets, npcs, interaction,
 // dialogue, gameState, texts }.
 export function installDebugApi(game) {
-  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap, doors, wallet, shop, controls, actionButton, setLeftHanded } = game;
+  const { renderer, player, follow, tick, state, sheets, npcs, interaction, dialogue, gameState, texts, music, ambience, counter, diploma, grimoire, chatter, minimap, doors, wallet, shop, controls, actionButton, setLeftHanded, credits } = game;
   let viewer = null;
 
   const info = () => ({
@@ -364,6 +364,12 @@ export function installDebugApi(game) {
     mainGauche(on = true) {
       setLeftHanded(on);
       return controls.snapshot().mainGauche;
+    },
+    // Le générique de fin, sans passer par Clodomir.
+    generique(on = true) {
+      if (on) credits.play();
+      else credits.close();
+      return credits.isOpen;
     },
     diploma(on = true) {
       if (on) diploma.open();

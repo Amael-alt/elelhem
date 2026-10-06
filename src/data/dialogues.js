@@ -76,7 +76,31 @@ export const textesInterface = {
   commencer: 'Appuyer pour commencer',
   reprendre: 'Appuyer pour reprendre la partie',
   nouvellePartie: 'Nouvelle partie',
+  // Le menu de l'écran titre (version 2.1) : continuer la partie sauvegardée,
+  // ou en commencer une nouvelle.
+  continuer: 'Continuer',
+  // L'illustration de l'écran titre, pour un lecteur d'écran.
+  illustration: "Le voyageur d'Elelhem bondit vers la flamme de la magie LIA",
   parlerA: (nom) => `Parler à ${nom}`,
+  // La légende des touches, sur ordinateur seulement (game/keys.js). Les
+  // touches de déplacement sont lues sur le clavier réel quand le navigateur
+  // le permet (ZQSD sur un AZERTY, WASD ailleurs), sinon les flèches.
+  touches: {
+    titre: 'Commandes',
+    deplacer: 'Se déplacer',
+    courir: 'Courir',
+    parler: 'Parler, valider',
+    frapper: 'Frapper',
+    fiche: "Fiche d'apprenti",
+    grimoire: 'Grimoire',
+    carte: 'Carte',
+    son: 'Son',
+    fermer: 'Fermer',
+    maj: 'Maj',
+    entree: 'Entrée',
+    echap: 'Échap',
+    fleches: 'Flèches',
+  },
   // Le bouton d'action des écrans tactiles, quand personne n'est à portée
   // (lu par un lecteur d'écran).
   action: 'Action : personne à qui parler ici',

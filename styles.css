@@ -2964,3 +2964,790 @@ body {
     top: calc(120px + env(safe-area-inset-top));
   }
 }
+
+/* ==== Version 2.1 : l'interface illustrée ==================================
+   Les cadres, plaques et gemmes sont des dessins (assets/ui/, générés puis
+   détourés par outils/detourer.mjs et découpés par outils/decouper.mjs), posés
+   en bordure étirable (border-image) : les coins restent entiers, les filets
+   s'étirent. La boîte de dialogue garde son cadre de nuit ; les menus passent
+   sur parchemin, encre et sépia ; le HUD tient sur des plaques d'ivoire ; les
+   clartés sont des gemmes. L'écran titre devient une page de parchemin avec
+   l'illustration du voyageur et un menu. Une légende des touches apparaît
+   sur ordinateur. Tout grandit d'un dixième. */
+
+:root {
+  --ivoire: #efe2c4;
+  --sepia: #7a4a12;
+  --encre-douce: rgb(42 29 46 / 0.72);
+  --cadre-sombre: url("assets/ui/cadre-sombre.png") 110 fill;
+  --cadre-parchemin: url("assets/ui/cadre-parchemin.png") 110 fill;
+  --plaque: url("assets/ui/bouton.png") 0 95 fill;
+}
+
+/* --- Les plaques d'ivoire : une bordure étirable aux deux bouts seulement. */
+.parchemins-rangee,
+#tokens,
+#clartes,
+.titre-menu button,
+.dialogue-nom,
+.forge-epee button,
+.forge-fermer,
+.feuille-fermer,
+.boutique-tenue button,
+.boutique-fermer,
+.carte-fermer,
+.grimoire-boutons button,
+.diplome-boutons button,
+.generique-passer {
+  border: 0 solid transparent;
+  border-width: 0 30px;
+  border-image: var(--plaque) / 0 30px stretch;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--encre);
+  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 0.4));
+}
+
+/* --- La boîte de dialogue : le cadre de nuit, le nom sur une plaque. ------- */
+#dialogue {
+  width: min(840px, calc(100% - 28px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+  padding: 6px 12px 10px;
+  border: 48px solid transparent;
+  border-image: var(--cadre-sombre) / 48px stretch;
+  border-radius: 0;
+  background: none;
+  box-shadow: 0 18px 46px rgb(0 0 0 / 0.55);
+}
+
+#dialogue .coins {
+  display: none;
+}
+
+.dialogue-nom {
+  top: -36px;
+  left: 28px;
+  padding: 6px 22px 7px;
+  font-size: clamp(0.98rem, 0.6rem + 1.4vw, 1.12rem);
+  letter-spacing: 0.1em;
+}
+
+.dialogue-nom::before {
+  display: none;
+}
+
+.dialogue-texte {
+  margin-top: 2px;
+  min-height: 4.4em;
+  padding-right: 20px;
+  font-size: clamp(1.2rem, 0.8rem + 1.7vw, 1.6rem);
+}
+
+.dialogue-suite {
+  right: 4px;
+  bottom: 2px;
+}
+
+.dialogue-choix button {
+  min-height: 56px;
+  font-size: clamp(1.08rem, 0.74rem + 1.4vw, 1.3rem);
+}
+
+@media (min-width: 1101px) {
+  #dialogue.avec-portrait {
+    transform: translateX(calc(-50% + 150px));
+  }
+}
+
+/* --- Les menus : parchemin, encre et sépia. -------------------------------- */
+.carte-cadre,
+.boutique-cadre,
+.grimoire-livre,
+.forge-cadre,
+.feuille-cadre {
+  padding: 4px 10px 8px;
+  border: 54px solid transparent;
+  border-image: var(--cadre-parchemin) / 54px stretch;
+  border-radius: 0;
+  background: none;
+  box-shadow: 0 22px 54px rgb(0 0 0 / 0.55);
+  color: var(--encre);
+}
+
+.carte-cadre .coins,
+.boutique-cadre .coins,
+.grimoire-livre .coins,
+.forge-cadre .coins,
+.feuille-cadre .coins {
+  display: none;
+}
+
+.carte-titre,
+.boutique-titre,
+.grimoire-titre,
+.forge-titre,
+.feuille-titre {
+  color: var(--sepia);
+  font-size: clamp(1.2rem, 0.9rem + 1.2vw, 1.5rem);
+}
+
+.forge-bourse,
+.boutique-bourse,
+.feuille-stat dt,
+.feuille-notions-titre,
+.grimoire-numero,
+.grimoire-maitre {
+  color: var(--sepia);
+}
+
+.forge-epee,
+.boutique-tenue,
+.feuille-stat {
+  border-color: rgb(122 74 18 / 0.35);
+  background: rgb(255 250 238 / 0.6);
+}
+
+.forge-epee[data-forgee="oui"],
+.boutique-tenue[data-portee="oui"] {
+  border-color: var(--or-fonce);
+  background: rgb(243 208 140 / 0.35);
+}
+
+.forge-nom,
+.boutique-nom,
+.feuille-prenom,
+.feuille-stat dd,
+.feuille-notion,
+.carte-legende {
+  color: var(--encre);
+}
+
+.forge-nom,
+.boutique-nom {
+  font-size: 1.15rem;
+}
+
+.forge-description,
+.boutique-description,
+.feuille-sous-titre,
+.feuille-etat {
+  color: var(--encre-douce);
+  font-size: 1rem;
+}
+
+.feuille-notions {
+  font-size: 1.05rem;
+}
+
+.feuille-notions li[data-etat="apprise"] .feuille-etat {
+  color: var(--sepia);
+}
+
+.feuille-notions li[data-etat="a-apprendre"] .feuille-notion {
+  color: rgb(42 29 46 / 0.55);
+}
+
+.forge-epee button,
+.forge-fermer,
+.feuille-fermer,
+.boutique-tenue button,
+.boutique-fermer,
+.carte-fermer,
+.grimoire-boutons button,
+.diplome-boutons button {
+  min-height: 48px;
+  padding: 8px 10px;
+  font: 600 1.02rem/1.2 var(--police);
+  letter-spacing: 0.04em;
+}
+
+.forge-epee button.principal,
+.boutique-tenue button.principal,
+.diplome-boutons .principal {
+  color: var(--encre);
+  filter: drop-shadow(0 0 9px rgb(243 208 140 / 0.95)) drop-shadow(0 3px 6px rgb(0 0 0 / 0.4));
+}
+
+.forge-epee button:disabled,
+.boutique-tenue button:disabled,
+.grimoire-boutons button:disabled {
+  opacity: 0.5;
+}
+
+.forge-epee button:focus-visible,
+.forge-fermer:focus-visible,
+.feuille-fermer:focus-visible,
+.boutique-tenue button:focus-visible,
+.boutique-fermer:focus-visible,
+.carte-fermer:focus-visible,
+.grimoire-boutons button:focus-visible,
+.titre-menu button:focus-visible {
+  outline: 2px solid var(--sepia);
+  outline-offset: 2px;
+}
+
+.grimoire-onglet::before {
+  border-color: rgb(122 74 18 / 0.5);
+  background: rgb(122 74 18 / 0.08);
+}
+
+.grimoire-onglet[aria-current="page"]::before {
+  box-shadow: 0 0 0 2px var(--sepia);
+}
+
+/* --- Le HUD : plaques d'ivoire, icônes dessinées, gemmes de clarté. -------- */
+.parchemins-rangee,
+#tokens,
+#clartes {
+  height: 58px;
+  padding: 0 4px;
+  font-size: 1.3rem;
+}
+
+.parchemins-rangee {
+  gap: 8px;
+}
+
+.parchemins-rangee::before {
+  width: 40px;
+  height: 32px;
+}
+
+.parchemin {
+  width: 19px;
+  height: 25px;
+  border-color: rgb(122 74 18 / 0.5);
+  background: rgb(122 74 18 / 0.08);
+}
+
+.parchemin::before,
+.parchemin::after {
+  border-color: rgb(122 74 18 / 0.5);
+  background: #e9d8b3;
+}
+
+.parchemins-rangee:hover,
+.parchemins-rangee:focus-visible {
+  filter: drop-shadow(0 0 8px rgb(243 208 140 / 0.9));
+  outline: none;
+}
+
+#tokens .tokens-montant {
+  color: var(--encre);
+}
+
+.tokens-piece {
+  width: 30px;
+  height: 30px;
+}
+
+#clartes {
+  gap: 4px;
+}
+
+.clarte {
+  width: 20px;
+  height: 28px;
+  background: url("assets/ui/clarte.png") no-repeat center / contain;
+  rotate: 0deg;
+  box-shadow: none;
+  filter: drop-shadow(0 0 5px rgb(255 220 140 / 0.7));
+}
+
+.clarte.perdue {
+  background-image: url("assets/ui/clarte-eteinte.png");
+  box-shadow: none;
+  scale: 1;
+  filter: none;
+  opacity: 0.8;
+}
+
+#clartes[data-alerte="oui"] .clarte:not(.perdue) {
+  animation: clarte-alerte-2 0.8s ease-in-out infinite;
+}
+
+@keyframes clarte-alerte-2 {
+  50% {
+    filter: drop-shadow(0 0 10px rgb(255 120 90 / 1)) brightness(1.25);
+  }
+}
+
+/* Les boutons ronds (livre du HUD, son) : ivoire dans l'anneau d'or. */
+.fiche-bouton,
+#son {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border: 0;
+  background: radial-gradient(circle at 50% 40%, #f8ecd4, #e2cc9f 70%);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.45);
+  color: var(--encre);
+  overflow: visible;
+}
+
+.fiche-bouton {
+  background: url("assets/ui/icone-livre.png") no-repeat center / 32px auto, radial-gradient(circle at 50% 40%, #f8ecd4, #e2cc9f 70%);
+}
+
+.fiche-bouton::after,
+#son::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  background: url("assets/ui/cadre-rond.png") no-repeat center / contain;
+  pointer-events: none;
+}
+
+#son {
+  position: fixed;
+  width: 54px;
+  height: 54px;
+}
+
+.fiche-bouton:hover,
+.fiche-bouton:focus-visible,
+#son:hover,
+#son:focus-visible {
+  filter: drop-shadow(0 0 8px rgb(243 208 140 / 0.9));
+  outline: none;
+}
+
+/* L'annonce (parchemin gagné, coffre) : un petit cadre de nuit. */
+.parchemins-annonce {
+  padding: 2px 8px 4px;
+  border: 30px solid transparent;
+  border-image: var(--cadre-sombre) / 30px stretch;
+  border-radius: 0;
+  background: none;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.5);
+  font-size: 1.1rem;
+}
+
+/* Les boutons tactiles : ivoire dans l'anneau d'or, l'étincelle ou la bulle en encre. */
+#action,
+#attaque {
+  border: 0;
+  background: radial-gradient(circle at 50% 40%, #f8ecd4, #dcc69a 72%);
+  color: var(--encre);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.5);
+}
+
+#attaque {
+  width: 84px;
+  height: 84px;
+  background: url("assets/ui/icone-epee.png") no-repeat center / auto 50px, radial-gradient(circle at 50% 40%, #f8ecd4, #dcc69a 72%);
+}
+
+#action::after,
+#attaque::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  background: url("assets/ui/cadre-rond.png") no-repeat center / contain;
+  pointer-events: none;
+}
+
+#action[data-mode="parler"] {
+  border: 0;
+  background: radial-gradient(circle at 50% 40%, #fff6e2, #f3d08c 75%);
+  box-shadow: 0 0 0 3px rgb(243 208 140 / 0.35), 0 6px 18px rgb(0 0 0 / 0.5);
+}
+
+#action[data-mode="repos"] {
+  opacity: 0.8;
+}
+
+/* --- La légende des touches, sur ordinateur. ------------------------------- */
+#touches {
+  position: fixed;
+  left: calc(14px + env(safe-area-inset-left));
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: 11;
+  display: none;
+  padding: 2px 6px 4px;
+  border: 34px solid transparent;
+  border-image: var(--cadre-sombre) / 34px stretch;
+  color: var(--texte);
+  font: 500 0.95rem/1.3 var(--police);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.5);
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #touches:not([hidden]) {
+    display: block;
+  }
+}
+
+#touches[data-efface="oui"] {
+  opacity: 0;
+}
+
+.touches-titre {
+  margin: 0 0 8px;
+  color: var(--or-vif);
+  font: 600 0.8rem/1.2 var(--police);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.touches-liste {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.touches-liste li {
+  display: grid;
+  grid-template-columns: 106px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.touches-liste li[hidden] {
+  display: none;
+}
+
+.touches-touches {
+  display: flex;
+  gap: 3px;
+}
+
+.touches-touches kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--or-fonce);
+  border-bottom-width: 3px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #f8e9c9, #dcc08a);
+  color: var(--encre);
+  font: 600 0.8rem/1 var(--police);
+  white-space: nowrap;
+}
+
+.touches-action {
+  color: #efe3cb;
+  white-space: nowrap;
+}
+
+/* --- L'écran titre : une page de parchemin, l'illustration, le menu. ------- */
+#titre {
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(ellipse 85% 75% at 50% 42%, rgb(255 250 238 / 0.9), rgb(255 250 238 / 0) 70%),
+    linear-gradient(180deg, #f2e6cc, #e9d8b3 60%, #d9c39a);
+  cursor: default;
+}
+
+#titre::before {
+  display: none;
+}
+
+.titre-cadre {
+  gap: clamp(6px, 1.4vh, 14px);
+  width: min(1100px, 100%);
+}
+
+.titre-illustration {
+  width: auto;
+  height: clamp(170px, 34vh, 360px);
+  filter: drop-shadow(0 16px 26px rgb(90 55 20 / 0.28));
+  animation: titre-flotte 5s ease-in-out infinite;
+}
+
+@keyframes titre-flotte {
+  50% {
+    translate: 0 -6px;
+  }
+}
+
+.titre-texte {
+  display: grid;
+  justify-items: center;
+  gap: clamp(6px, 1.2vh, 12px);
+  text-align: center;
+}
+
+.titre-nom {
+  background: none;
+  color: #2b1b22;
+  filter: none;
+  text-shadow: 0 1px 0 #fff8e6, 0 3px 0 rgb(122 74 18 / 0.18);
+  font-size: clamp(2.2rem, 1rem + 6vw, 4.6rem);
+}
+
+.titre-orne {
+  width: min(380px, 80%);
+}
+
+.titre-contree {
+  color: var(--sepia);
+  text-shadow: none;
+}
+
+.titre-accroche {
+  color: #4d3b33;
+  text-shadow: none;
+}
+
+.titre-menu {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.titre-menu button {
+  min-width: 280px;
+  min-height: 56px;
+  margin: 0;
+  padding: 10px 14px;
+  border-width: 0 40px;
+  border-image: var(--plaque) / 0 40px stretch;
+  font: 600 clamp(1.1rem, 0.9rem + 0.8vw, 1.3rem) / 1.2 var(--police);
+  letter-spacing: 0.08em;
+  text-transform: none;
+  text-decoration: none;
+  text-shadow: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  animation: none;
+  transition: scale 0.15s ease, filter 0.15s ease;
+}
+
+.titre-menu button.choisi,
+.titre-menu button:hover {
+  scale: 1.04;
+  filter: drop-shadow(0 0 10px rgb(243 208 140 / 0.95)) drop-shadow(0 3px 6px rgb(0 0 0 / 0.35));
+}
+
+.titre-menu button[hidden] {
+  display: none;
+}
+
+.titre-prenom {
+  margin-top: 4px;
+  color: #4d3b33;
+  text-shadow: none;
+}
+
+.titre-prenom input {
+  border-color: var(--sepia);
+  background: #fff8e8;
+  color: var(--encre);
+}
+
+.titre-prenom input:focus {
+  outline-color: var(--sepia);
+}
+
+.titre-commandes {
+  border-color: rgb(122 74 18 / 0.6);
+  background: rgb(255 248 232 / 0.7);
+  color: var(--encre);
+}
+
+.titre-credits {
+  color: #5a463a;
+  text-shadow: none;
+}
+
+.titre-site {
+  color: var(--sepia);
+}
+
+/* Écran large : l'illustration à gauche, grande, le texte et le menu à droite. */
+@media (orientation: landscape) and (min-width: 560px) {
+  .titre-cadre {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto;
+    align-items: center;
+    column-gap: clamp(20px, 4vw, 56px);
+  }
+
+  .titre-cadre > .titre-illustration {
+    grid-column: 1;
+    grid-row: 1;
+    height: min(80vh, 640px);
+    margin: 0;
+  }
+
+  .titre-cadre > .titre-texte {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+  }
+}
+
+/* Écran court (téléphone en paysage) : tout plus petit. */
+@media (max-height: 480px) {
+  .titre-illustration {
+    height: 36vh;
+  }
+
+  .titre-cadre > .titre-illustration {
+    height: 78vh;
+  }
+
+  .titre-menu button {
+    min-width: 220px;
+    min-height: 44px;
+    padding: 6px 10px;
+  }
+
+  .titre-nom {
+    font-size: clamp(1.7rem, 5.5vh + 0.9rem, 2.8rem);
+  }
+}
+
+/* L'image de partage : l'illustration grande à gauche, le titre à droite. */
+[data-vignette] .titre-cadre {
+  grid-template-rows: auto;
+}
+
+[data-vignette] .titre-cadre > .titre-illustration {
+  grid-column: 1;
+  grid-row: 1;
+  height: 560px;
+  animation: none;
+}
+
+[data-vignette] .titre-cadre > .titre-texte {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+[data-vignette] .titre-menu {
+  display: none;
+}
+
+/* Téléphone : cadres et plaques plus fins, HUD sur deux lignes. */
+@media (max-width: 640px) {
+  #dialogue {
+    border-width: 32px;
+    border-image-width: 32px;
+    padding: 4px 6px 8px;
+  }
+
+  .dialogue-nom {
+    top: -30px;
+    left: 10px;
+  }
+
+  .carte-cadre,
+  .boutique-cadre,
+  .grimoire-livre,
+  .forge-cadre,
+  .feuille-cadre {
+    border-width: 38px;
+    border-image-width: 38px;
+    padding: 2px 4px 6px;
+  }
+
+  .parchemins-rangee,
+  #tokens,
+  #clartes {
+    height: 50px;
+    border-width: 0 24px;
+    border-image-width: 0 24px;
+    font-size: 1.15rem;
+  }
+
+  .fiche-bouton {
+    width: 50px;
+    height: 50px;
+  }
+
+  .clarte {
+    width: 17px;
+    height: 24px;
+  }
+
+  #lieu {
+    top: calc(126px + env(safe-area-inset-top));
+  }
+}
+
+/* Paysage bas : les grands cadres prendraient la place du texte. */
+@media (max-height: 480px) {
+  #dialogue {
+    border-width: 22px;
+    border-image-width: 22px;
+    padding: 2px 6px 4px;
+  }
+
+  .dialogue-nom {
+    top: -26px;
+  }
+
+  .carte-cadre,
+  .boutique-cadre,
+  .grimoire-livre,
+  .forge-cadre,
+  .feuille-cadre {
+    border-width: 28px;
+    border-image-width: 28px;
+  }
+
+  #touches {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titre-illustration {
+    animation: none;
+  }
+}
+
+/* Les panneaux sur parchemin : plus larges, le cadre prenant sa part ; les
+   petits boutons gardent des bouts de plaque plus courts et une seule ligne. */
+.forge-cadre,
+.boutique-cadre {
+  width: min(680px, 100%);
+}
+
+.feuille-cadre {
+  width: min(760px, 100%);
+}
+
+.grimoire-livre {
+  width: min(720px, 100%);
+}
+
+.carte-cadre {
+  width: min(860px, 100%);
+}
+
+.forge-epee button,
+.forge-fermer,
+.feuille-fermer,
+.boutique-tenue button,
+.boutique-fermer,
+.carte-fermer,
+.grimoire-boutons button,
+.diplome-boutons button,
+.generique-passer {
+  padding: 8px 4px;
+  border-width: 0 22px;
+  border-image-width: 0 22px;
+  white-space: nowrap;
+}
+
+.forge-epee,
+.boutique-tenue {
+  gap: 14px;
+  padding: 12px 14px;
+}
+
+.forge-fermer,
+.feuille-fermer,
+.boutique-fermer,
+.carte-fermer {
+  min-width: 170px;
+}

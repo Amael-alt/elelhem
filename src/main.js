@@ -36,6 +36,7 @@ import { createEnemies } from './game/enemies.js';
 import { createCombat } from './game/combat.js';
 import { createForge } from './game/forge.js';
 import { createSheet } from './game/sheet.js';
+import { createKeyGuide } from './game/keys.js';
 import { createSlash, createSword } from './gfx/weapon.js';
 import { MOOR_ENEMIES, SWORDS } from './data/enemies.js';
 import { gains, habiller, tenues } from './data/tokens.js';
@@ -129,6 +130,7 @@ function start() {
   const gameState = createGameState({ restore: !params.has('reset') });
   const sheet = createCharacterSheet(hero);
   const sheets = { [hero.id]: sheet };
+  let heroSheet = sheet; // la planche portée en ce moment (la tenue)
   // Le héros a un fantôme : sa silhouette reste visible derrière un mur ou un arbre.
   const sprite = createSprite(sheet, village.sunDirection, pipeline.spriteHooks, { ghost: true });
   // La tenue du héros (data/tokens.js) : une palette, et depuis la version 1.1
@@ -136,7 +138,8 @@ function start() {
   const dressHero = (id) => {
     const outfit = tenues.find((t) => t.id === id);
     const dressed = habiller(hero, outfit);
-    sprite.setSheet(dressed === hero ? sheet : createCharacterSheet(dressed));
+    heroSheet = dressed === hero ? sheet : createCharacterSheet(dressed);
+    sprite.setSheet(heroSheet);
   };
   sprite.object.layers.set(SPRITE_LAYER);
   sprite.ghost.layers.set(SPRITE_LAYER);
@@ -281,6 +284,8 @@ function start() {
     places: REGIONS.length + Object.keys(ROOMS).length + 1, canOpen: canOpenOverlay,
   });
   quest.overlays.push(fiche);
+  // La légende des touches (game/keys.js), sur ordinateur seulement.
+  const keyGuide = createKeyGuide(document.getElementById('touches'), { texts: textesInterface.touches });
 
   // L'exploration paie : un lieu découvert (quartier ou pièce), une fois ; un
   // coffre ouvert, une fois.
@@ -443,6 +448,7 @@ function start() {
     counter.show();
     fiche.showButton();
     wallet.show();
+    keyGuide.show();
     minimap.setVisible(true);
     if (freshGame()) wakeUp();
   }
@@ -474,6 +480,7 @@ function start() {
         counter.show();
         fiche.showButton();
         wallet.show();
+        keyGuide.show();
         minimap.setVisible(!doors.room);
         if (freshGame()) wakeUp();
       },
@@ -492,14 +499,20 @@ function start() {
     // autoDirection : direction imposée par les tests scriptés (__lia.walk).
     const wanted = state.autoDirection ?? (pushed.x !== 0 || pushed.z !== 0 ? pushed : keyboard.direction());
     const frozen = interaction.isTalking || !playing || doors.isBusy;
+    // Sur la lande avec une épée, une planche qui la dessine (gfx/sprites.js)
+    // montre le héros l'arme à la main ; sinon l'épée est un sprite à part.
+    combat.setDrawnSword(heroSheet.armed);
+    player.setArmed(heroSheet.armed && combat.armed && !frozen);
     player.update(step, frozen || combat.isAttacking ? STANDING : wanted);
-    // Pendant un coup, la planche montre la pose du coup.
+    // Pendant un coup, la planche montre l'élan puis la frappe.
     if (combat.frame !== null) sprite.setFrame(DIRECTIONS.indexOf(player.facing), combat.frame);
     for (const npc of activeNpcs) npc.update(step, state.time, player.position);
     if (playing && keyboard.takeKey('KeyJ', 'KeyX')) combat.request();
     combat.update(step, frozen);
     if (doors.current === moor && !frozen) hallucinations.update(step, state.time, player.position, (enemy) => combat.takeHit(enemy));
     attackButton.hidden = !(playing && doors.current === moor && combat.hasSword);
+    keyGuide.setFighting(doors.current === moor && combat.hasSword);
+    keyGuide.setFaded(interaction.isTalking || quest.isBusy);
     follow.follow(player.worldPosition(focusTarget), step);
     // Après la caméra : la bulle se pose sur l'image qui va être dessinée.
     // Le temps de la conversation est réel : le gel du temps ne fige pas le texte.

@@ -1860,8 +1860,9 @@ body {
 
 /* Téléphone court en portrait (petit écran, ou barres du navigateur
    affichées) : flamme et espacements resserrés, pour que le bas de l'écran
-   titre reste visible avec « Nouvelle partie » et le côté du joystick. */
-@media (max-height: 720px) and (min-height: 481px) {
+   titre reste visible avec « Nouvelle partie » et le côté du joystick.
+   Écrans étroits seulement : un ordinateur portable garde sa grande flamme. */
+@media (max-height: 720px) and (min-height: 481px) and (max-width: 640px) {
   .titre-cadre {
     gap: 6px;
   }
@@ -1876,6 +1877,33 @@ body {
 
   .titre-credits {
     margin-top: 2px;
+  }
+}
+
+/* Écran large (ordinateur, tablette ou téléphone en paysage) : l'écran titre
+   sur deux colonnes, la flamme grande à gauche, le titre et le reste à
+   droite, comme l'image de partage. En une seule colonne, la flamme restait
+   petite et l'écran débordait en bas sur un portable avec une sauvegarde. */
+@media (orientation: landscape) and (min-width: 560px) {
+  .titre-cadre {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: repeat(9, auto);
+    align-content: center;
+    column-gap: clamp(20px, 4vw, 64px);
+    row-gap: 0;
+    width: min(1100px, 100%);
+  }
+
+  .titre-cadre > * {
+    grid-column: 2;
+    margin-block: clamp(3px, 0.8vh, 7px);
+  }
+
+  .titre-cadre > .titre-flamme {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+    height: min(64vh, 470px);
   }
 }
 
@@ -1928,29 +1956,6 @@ body {
     width: 22px;
     height: 22px;
     margin-top: -11px;
-  }
-
-  /* L'écran titre sur deux colonnes : la flamme, grande, à gauche ; le
-     titre et le reste à droite. En une seule colonne, il débordait en bas. */
-  .titre-cadre {
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: repeat(9, auto);
-    align-content: center;
-    column-gap: clamp(20px, 4vw, 44px);
-    row-gap: 0;
-    width: min(760px, 100%);
-  }
-
-  .titre-cadre > * {
-    grid-column: 2;
-    margin-block: 3px;
-  }
-
-  .titre-cadre > .titre-flamme {
-    grid-column: 1;
-    grid-row: 1 / -1;
-    align-self: center;
-    height: min(64vh, 230px);
   }
 
   .titre-commencer {

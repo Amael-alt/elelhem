@@ -122,7 +122,8 @@ function start() {
   const gameState = createGameState({ restore: !params.has('reset') });
   const sheet = createCharacterSheet(hero);
   const sheets = { [hero.id]: sheet };
-  const sprite = createSprite(sheet, village.sunDirection, pipeline.spriteHooks);
+  // Le héros a un fantôme : sa silhouette reste visible derrière un mur ou un arbre.
+  const sprite = createSprite(sheet, village.sunDirection, pipeline.spriteHooks, { ghost: true });
   // La tenue du héros (data/tokens.js) : une palette, et depuis la version 1.1
   // une allure (cape, chapeau, robe), qui remplacent les siennes.
   const dressHero = (id) => {
@@ -131,6 +132,7 @@ function start() {
     sprite.setSheet(dressed === hero ? sheet : createCharacterSheet(dressed));
   };
   sprite.object.layers.set(SPRITE_LAYER);
+  sprite.ghost.layers.set(SPRITE_LAYER);
   const shadow = createBlobShadow();
   scene.add(sprite.object, shadow);
   const player = createPlayer({ sprite, shadow, village });

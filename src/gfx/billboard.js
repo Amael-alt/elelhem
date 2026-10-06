@@ -23,12 +23,15 @@
 // - Avec le post-traitement, le sprite est dessiné après la composition, pour
 //   rester net : il compare lui-même sa profondeur à celle de la scène et
 //   s'étalonne avec la même fonction que l'image (voir gfx/post/).
+// - Fantôme (le héros) : un second quad, même planche teintée et translucide,
+//   dessiné seulement là où le décor passe nettement devant le personnage
+//   (un mur, un toit, un arbre) : on ne perd jamais le héros de vue.
 
 import * as THREE from 'three';
 import { FRAME_WIDTH, FRAME_HEIGHT, FEET_ROW, PIXELS_PER_UNIT } from './sprites.js';
 import { createNoPointShadowMaterial, injectSharpSampling } from './materials.js';
 import { createPixelBuffer, hexToRgb, setPixel, toDataTexture } from './pixels.js';
-import { outlineColor } from '../data/palette.js';
+import { ghostColor, outlineColor } from '../data/palette.js';
 
 const NORMAL_TILT = 0.6;
 const LIGHT_WRAP = 0.45;
@@ -36,6 +39,10 @@ const SHADOW_SAMPLE_HEIGHT = 0.45;
 const SHADOW_SAMPLE_PUSH = 0.45;
 const RIM_STRENGTH = 0.12;
 const GLOW_INTENSITY = 1.5; // émission des pixels de lumière, avant étalonnage
+const GHOST_OPACITY = 0.5;
+// Le fantôme n'apparaît que si l'obstacle est à cette distance au moins devant
+// le héros (en unités) : l'herbe haute à ses pieds ne compte pas.
+const GHOST_MIN_GAP = 1.0;
 
 // Quad de la taille d'un cadre, pivot sous les bottes.
 function createSpriteGeometry() {
@@ -95,6 +102,66 @@ const DRAWN_AFTER_COMPOSITE = /* glsl */`
 if ( gl_FragCoord.z > texture2D( uSceneDepth, gl_FragCoord.xy * uInvResolution ).r + 1e-6 ) discard;
 `;
 
+// Le quad du fantôme suit la caméra comme le sprite visible (mêmes axes,
+// même étirement), sans normale : il n'est pas éclairé.
+const GHOST_BEGIN = /* glsl */`
+vec3 spriteRight = normalize( vec3( viewMatrix[ 0 ][ 0 ], 0.0, viewMatrix[ 2 ][ 0 ] ) );
+vec3 spriteBack = vec3( viewMatrix[ 0 ][ 2 ], viewMatrix[ 1 ][ 2 ], viewMatrix[ 2 ][ 2 ] );
+float spriteStretch = 1.0 / max( length( spriteBack.xz ), 0.3 );
+vec3 transformed = spriteRight * position.x + vec3( 0.0, position.y * spriteStretch, 0.0 );
+`;
+
+// Avec le post-traitement : le fantôme ne se dessine que là où la scène est
+// nettement plus proche de la caméra que lui. Les deux profondeurs sont
+// ramenées en distance (unités du monde) pour comparer un écart réel.
+const GHOST_UNIFORMS = /* glsl */`
+uniform sampler2D uSceneDepth;
+uniform vec2 uInvResolution;
+uniform float uNear;
+uniform float uFar;
+float ghostLinear( float depth ) {
+  float ndc = depth * 2.0 - 1.0;
+  return ( 2.0 * uNear * uFar ) / ( uFar + uNear - ndc * ( uFar - uNear ) );
+}
+`;
+const DRAWN_WHEN_HIDDEN = /* glsl */`
+#include <clipping_planes_fragment>
+float ghostScene = ghostLinear( texture2D( uSceneDepth, gl_FragCoord.xy * uInvResolution ).r );
+if ( ghostLinear( gl_FragCoord.z ) - ghostScene < ${GHOST_MIN_GAP.toFixed(2)} ) discard;
+`;
+
+function createGhostMaterial(texture, texSize, post) {
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    alphaTest: 0.5,
+    transparent: true,
+    opacity: GHOST_OPACITY,
+    depthWrite: false,
+    color: new THREE.Color(ghostColor),
+  });
+  // Rendu direct : le tampon de profondeur contient le décor, on ne dessine
+  // que derrière lui. Pas d'écart minimal possible ici : c'est la version de
+  // référence, pas la version jouée.
+  if (!post) material.depthFunc = THREE.GreaterDepth;
+  material.customProgramCacheKey = () => (post ? 'fantome-apres-composition' : 'fantome-direct');
+  material.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', GHOST_BEGIN);
+    injectSharpSampling(shader, texSize);
+    if (!post) return;
+    Object.assign(shader.uniforms, post.uniforms);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>\n${GHOST_UNIFORMS}\n${post.grading}`)
+      .replace('#include <clipping_planes_fragment>', DRAWN_WHEN_HIDDEN)
+      .replace('#include <fog_fragment>', '')
+      .replace('#include <colorspace_fragment>', '')
+      .replace('#include <tonemapping_fragment>', [
+        '#include <fog_fragment>',
+        'gl_FragColor.rgb = gradeToDisplay( gl_FragColor.rgb, gl_FragCoord.xy * uInvResolution );',
+      ].join('\n'));
+  };
+  return material;
+}
+
 function createVisibleMaterial(texture, glowTexture, texSize, sunDirection, post) {
   const material = new THREE.MeshLambertMaterial({ map: texture, alphaTest: 0.5 });
   if (glowTexture) {
@@ -147,8 +214,10 @@ function createDepthMaterial(texture) {
 
 // Un sprite animé : sa propre copie de la texture (même image sur le GPU),
 // dont le décalage choisit le cadre. Les matériaux d'ombre lisent la même.
-// post : crochets du post-traitement, ou null en rendu direct.
-export function createSprite(sheet, sunDirection, post = null) {
+// post : crochets du post-traitement, ou null en rendu direct. ghost : ajoute
+// le fantôme, enfant du quad (il suit sa position et son cadre), à mettre sur
+// la même couche que lui.
+export function createSprite(sheet, sunDirection, post = null, { ghost = false } = {}) {
   const texture = sheet.texture.clone();
   texture.repeat.set(1 / sheet.columns, 1 / sheet.rows);
   const glowTexture = sheet.emissive?.clone() ?? null;
@@ -163,8 +232,16 @@ export function createSprite(sheet, sunDirection, post = null) {
   // Les ombres des lanternes, figées au chargement, ne doivent pas le garder.
   mesh.customDistanceMaterial = createNoPointShadowMaterial();
 
+  let ghostMesh = null;
+  if (ghost) {
+    ghostMesh = new THREE.Mesh(mesh.geometry, createGhostMaterial(texture, texSize, post));
+    ghostMesh.frustumCulled = false;
+    mesh.add(ghostMesh);
+  }
+
   return {
     object: mesh,
+    ghost: ghostMesh,
     // row : ligne de la planche (direction) ; column : image.
     setFrame(row, column) {
       texture.offset.set(column / sheet.columns, 1 - (row + 1) / sheet.rows);

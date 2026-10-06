@@ -87,6 +87,10 @@ export const faceColors = { bouche: '#8e4a40', joue: '#e8907f', reflet: '#fbf7ee
 // Contour des personnages : sombre et bleuté, jamais noir pur.
 export const outlineColor = '#1b1a2e';
 
+// Silhouette du héros quand un mur ou un arbre le cache : sa planche teintée
+// de bleu pâle, translucide, dessinée à travers l'obstacle.
+export const ghostColor = '#b4c4ff';
+
 // Ciel provisoire, en attendant la sphère de ciel de l'étape 1d : la couleur
 // de la brume, pour que le lointain s'y fonde.
 export const backgroundColor = hazeColor;

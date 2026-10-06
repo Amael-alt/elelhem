@@ -98,7 +98,7 @@ export function createPipeline(renderer, { enabled = true, view = 'final', narro
     enabled,
     // Ce dont les sprites ont besoin pour se dessiner après la composition.
     spriteHooks: {
-      uniforms: { uSceneDepth: { value: depthTexture }, uInvResolution: invResolution, uTime: time },
+      uniforms: { uSceneDepth: { value: depthTexture }, uInvResolution: invResolution, uTime: time, uNear: shared.uNear, uFar: shared.uFar },
       grading: GRADE_GLSL,
     },
     // width, height : taille réelle du tampon de dessin, en pixels.

@@ -6,7 +6,7 @@ Un petit RPG en HD-2D, jouable dans le navigateur. À Elelhem, tout le monde par
 
 **Le décor et les personnages sont générés par le code** au chargement de la page : textures, silhouettes en pixel art, ciel, intérieurs et effets de lumière. Les seules images chargées sont l'illustration de l'écran titre, les ornements de l'interface (cadres, plaques, icônes) et, une fois le jeu lancé, les portraits de dialogue des habitants, tous illustrés avec Higgsfield d'après une description, puis détourés, découpés ou cadrés par les scripts du dépôt. Les silhouettes elles-mêmes ont été dessinées sur fiche puis transcrites pixel par pixel en grilles de code (voir [`docs/construction.md`](docs/construction.md), versions 1.4 et 2.1).
 
-Version 2.1, du 6 octobre 2026.
+Version 2.2, du 7 octobre 2026. L'état du chantier et ce qui vient ensuite : [`docs/suite.md`](docs/suite.md).
 
 ## Le jeu
 
@@ -93,7 +93,7 @@ Tout le code de ce dépôt a été écrit par Claude Code, les 5 et 6 octobre 20
 - **Le héros la tête en bas** après son premier achat de tenue.
 - **Un second doigt ne fait pas de « click »** sur téléphone : avec le pouce sur le joystick, les boutons ne répondaient plus. Ils écoutent maintenant chaque doigt.
 
-**Poids** : la page charge 77 fichiers, 1,4 Mo, dont 530 Ko réellement transférés une fois compressés par GitHub Pages (mesure du 6 octobre 2026). La musique (2,6 Mo) n'est demandée qu'au lancement de la partie.
+**Poids** : sur le disque, ce que la page peut charger pèse 5,0 Mo en 166 fichiers, dont 1,2 Mo de grilles de sprites en JavaScript (les planches du héros et de ses quatre tenues, avec leurs poses de combat), 1,1 Mo de portraits et 1,1 Mo d'ornements (mesure du 7 octobre 2026). Les portraits et la plupart des ornements ne sont demandés qu'après le lancement de la partie, et les textes se compressent bien chez GitHub Pages. La musique (2,6 Mo) aussi n'est demandée qu'au lancement.
 
 ## Refaire l'image de partage
 

@@ -9,7 +9,7 @@ Règles de ce dépôt pour Claude Code, valables dans chaque session ouverte ici
 - Dépôt **public** : https://github.com/Amael-alt/elelhem (nommé `village-de-lia` jusqu'au 6 octobre 2026 ; GitHub Pages ne redirige pas l'ancienne adresse)
 - Jeu en ligne (GitHub Pages, branche `main`, racine) : https://amael-alt.github.io/elelhem/
 - Le plan de construction vit hors du dépôt, dans l'espace de travail privé de l'auteur, parce qu'il cite des chemins locaux. Le prompt de chaque session de construction donne son emplacement. Ne jamais le copier ici, ni en citer le chemin.
-- Journal public : `docs/construction.md`, une entrée par étape (ce qui a été fait, ce qui a résisté, les mesures).
+- Journal public : `docs/construction.md`, une entrée par étape (ce qui a été fait, ce qui a résisté, les mesures). L'état du chantier, la méthode pour fabriquer un sprite et ce qui vient ensuite : `docs/suite.md`, à mettre à jour à chaque version publiée.
 
 ## Écriture
 

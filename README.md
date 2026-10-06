@@ -36,7 +36,7 @@ Puis ouvrir http://localhost:8080 (ou http://localhost:8080/?debug).
 
 - **Aucun outil de build.** Des modules ES natifs, une carte d'import dans `index.html`, et GitHub Pages sert les fichiers tels quels. Le code se lit directement en ligne.
 - **Une seule dépendance** : three.js, copiée dans `vendor/three/`.
-- **Tout est écrit pour ce jeu** : post-traitement, génération des textures et des personnages, effets. Aucun addon, aucune bibliothèque de plus.
+- **Tout est écrit pour ce jeu** : post-traitement, génération des textures, animation des personnages, effets. Aucun addon, aucune bibliothèque de plus.
 
 Arborescence :
 
@@ -49,9 +49,10 @@ src/core/         rendu, caméra, entrées (clavier, joystick, pincement), garde
 src/gfx/          pixels, textures, matériaux, sprites, post-traitement, effets
 src/world/        carte, implantation (layout), terrain, maisons, tours, chantier, collisions
 src/game/         joueur, habitants, dialogues, quête, interface, débogage
-src/data/         palette, habitants, textes des dialogues
+src/data/         palette, habitants, textes des dialogues, planches de sprites transcrites (sprites/)
+assets/portraits/ portraits de dialogue, un PNG à palette par habitant qui parle
 docs/             journal de construction
-outils/           outils du poste, hors du jeu : vignette.mjs refait l'image de partage
+outils/           outils du poste, hors du jeu : vignette.mjs (image de partage), transcrire-sprite.mjs (fiche pixel art vers grilles), portrait.mjs (buste d'un dessin), decouper.mjs (planche d'icônes), png.mjs
 ```
 
 ## Comment ce village a été construit
@@ -72,10 +73,11 @@ Tout le code de ce dépôt a été écrit par Claude Code, les 5 et 6 octobre 20
 | 1.1 | les personnages redessinés en 32 × 48 pixels, trois têtes, visage et marche à six images ; les tenues de la boutique changent la silhouette |
 | 1.2 | le héros reste visible en silhouette derrière un mur ou un arbre |
 | 1.3 | l'écran titre lisible sur le village ; les intérieurs façon HD-2D : plancher de lattes, dalles, lambris, tapis tissés, tableaux, rais de lumière aux fenêtres, poussière, soubassement de pierre, et plus de voile bleu |
+| 1.4 | les personnages redessinés d'après des fiches pixel art illustrées puis transcrites en grilles de code, quatre tenues comprises ; des portraits illustrés dans les dialogues ; les maisons à étage, tours, arbres et muraille aux proportions des références |
 
-**Ce que le code fabrique** : les textures (des pixels posés dans des palettes de quelques tons, avec un tramage), les personnages (un générateur qui calcule la silhouette, la marche et les quatre directions, puis habille chacun), le village (une grille de caractères), le ciel, la lumière et les effets (des shaders), les sons d'ambiance (Web Audio : rivière, cascade, oiseaux, feu, marteau, pas), le diplôme et la minimap (un canvas 2D), le favicon (un SVG écrit dans la page) et l'image de partage (`outils/vignette.mjs`).
+**Ce que le code fabrique** : les textures (des pixels posés dans des palettes de quelques tons, avec un tramage), les personnages (des planches transcrites en grilles de code d'après des fiches dessinées, que le code anime : respiration, marche à six images, quatre directions), le village (une grille de caractères), le ciel, la lumière et les effets (des shaders), les sons d'ambiance (Web Audio : rivière, cascade, oiseaux, feu, marteau, pas), le diplôme et la minimap (un canvas 2D), le favicon (un SVG écrit dans la page) et l'image de partage (`outils/vignette.mjs`).
 
-**Ce qui ne l'est pas** : la flamme du logo Maintenant Vous Savez, la musique, la police Newsreader et three.js.
+**Ce qui ne l'est pas** : la flamme du logo Maintenant Vous Savez, la musique, la police Newsreader, three.js, et depuis la version 1.4 les portraits de dialogue et les fiches pixel art des personnages, illustrés avec Higgsfield d'après leur description (les fiches sont ensuite transcrites en code, les portraits cadrés par un script).
 
 **Ce qui a résisté** :
 

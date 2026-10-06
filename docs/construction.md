@@ -652,3 +652,37 @@ Ce qui a résisté :
 | La forge | 36 appels, 2 120 triangles | 38 appels, 2 160 triangles |
 
 Pixels saturés 0 à 0,01 %. Console sans erreur, avec et sans post-traitement (`?nofx`). Écran titre vérifié en bureau et au préréglage mobile ; les trois pièces vérifiées en bureau et en mobile, la maison et l'auberge jusqu'au tapis et à la vaisselle. Dehors, rien n'a changé.
+
+## Version 1.4 : personnages transcrits, portraits illustrés, proportions (6 octobre 2026)
+
+Jordan a demandé une refonte en profondeur du design : des sprites « dans le style de The Adventures of Elliot », des illustrations façon manga quand une bulle de dialogue s'ouvre, des proportions corrigées (« on dirait des humains géants »), une interface plus grande, puis des mécaniques de RPG (forge, feuille de personnage, combat en temps réel hors les murs). Quatre choix ont ouvert le chantier : **les illustrations entrent dans le dépôt en fichiers et la règle « aucune image » est réécrite** ; **les sprites sont transcrits à la main en grilles de code** d'après des fiches dessinées ; **les proportions se mesurent sur de vraies captures** d'Octopath Traveler II et d'Elliot ; **le combat ira sur une lande hors les murs**, le village restant paisible. Cette version couvre les trois premiers points.
+
+**Les mesures sur les références** (captures publiques des deux jeux) : un personnage mesure à peu près une porte, un étage fait un personnage et demi, une maison en compte quatre à six, un arbre trois à cinq. Les silhouettes font environ trois têtes et demie, pour une soixantaine de pixels de haut. Chez nous, un personnage faisait 1,67 unité pour des murs de 2,5 : une maison entière ne dépassait pas deux personnages et demi. Le problème n'était pas la taille des sprites à l'écran, mais celle des maisons.
+
+**Les fiches.** Un générateur d'images (Higgsfield, modèle GPT Image) a d'abord dessiné le héros en pied, dans un style décrit par ses traits (dessin anime, aquarelle douce, encrage fin, palette chaude), sans citer de studio ni de jeu. Ce dessin a servi de référence de style aux dix habitants et à l'apprenti du chantier, puis chaque dessin a servi de référence à sa **fiche pixel art** : trois silhouettes sur une ligne (face, profil vers la gauche, dos), à la même hauteur, sur fond transparent. Les quatre tenues du héros ont leur fiche, dérivée de la sienne. Seize fiches, une trentaine d'images en tout, environ 1,5 crédit chacune ; les fiches et les dessins ne sont pas dans le dépôt.
+
+**La transcription** (`outils/transcrire-sprite.mjs`, sans dépendance, module PNG dans `outils/png.mjs`) : la fiche est découpée en trois silhouettes par les colonnes vides, chacune réduite à la hauteur voulue (54 à 66 pixels selon le personnage et son accessoire) par moyenne de surface, la couleur de chaque case étant lue dans son noyau central pour ne pas mélanger les voisins ; les couleurs des trois vues sont regroupées en une palette de dix-huit tons (k-moyennes en Oklab, triées du sombre au clair), et chaque pixel devient un index. Le résultat est un module par personnage dans `src/data/sprites/`, lisible et retouchable : trois grilles de 48 × 72 caractères et une palette. Un aperçu PNG agrandi (réduction en couleurs vraies, puis en palette) sert au contrôle. Les pixels de lumière (le bâton de l'Oracle, la fiole de Basile, les lucioles de la cape de nuit) sont déclarés par leur index.
+
+**Le nouveau générateur** (`gfx/sprites.js`) ne dessine plus de silhouette : il anime les grilles. Il trouve la ligne des hanches dans la vue de face (la plus haute ligne où un vide sépare les deux jambes ; sous une robe, seules les bottes bougent) et la reporte aux autres vues. De face et de dos, les jambes se lèvent tour à tour, le corps rebondit d'un pixel, les bords du buste balancent ; de profil, les jambes dessinées servent deux fois, cisaillées en sens contraires (une jambe arrière assombrie, une jambe avant). Les objets tenus loin du corps (bâton, hallebarde) ne bougent pas. Cadres de 48 × 72 à 36 pixels par unité : le héros fait 56 pixels, chapeau compris, soit 1,55 unité, un peu moins qu'une porte. Les fiches de `data/characters.js` ne gardent qu'un nom de planche et une palette (945 lignes deviennent 261) ; une tenue de la boutique est une planche de plus.
+
+**Les portraits** (`outils/portrait.mjs`) : le buste de chaque dessin en pied, du haut de la tête aux hanches, réduit à 560 pixels de haut et enregistré en PNG à palette de 255 couleurs, avec une légère diffusion d'erreur : 78 à 120 Ko chacun, 1,1 Mo pour les onze, chargés en tâche de fond après l'écran titre. Dans la boîte de dialogue, le portrait se tient à gauche de la boîte sur grand écran (la boîte glisse vers la droite pour que l'ensemble reste centré), posé sur le bord haut de la boîte en écran étroit et sur téléphone (le cartouche du nom passe à droite), effacé en paysage bas. Un halo sombre le détache du village.
+
+**Les proportions** : l'auberge (4,8), la bibliothèque (5,6, trois rangées de fenêtres) et l'apothicairerie (4,2) gagnent un étage, avec une lisse de plancher à mi-hauteur (`TALL_WALL`) et des fenêtres hautes ; la forge (3,3), la maison du héros (3,4) et la guérite grandissent d'un tiers ; la tour de l'architecte passe à 7,4, le colombier à 4,6, la muraille à 3,4, les arbres grandissent de moitié. En portrait, la caméra se rapproche un peu (`PORTRAIT_MAX` 1,65 au lieu de 1,9) pour garder le héros lisible sur téléphone.
+
+Ce qui a résisté :
+
+- **Quatre rampes ne suffisent pas.** La première transcription forçait chaque pixel dans les rampes de l'ancienne palette (peau, vêtement, accent, cheveux, cuir) : le pantalon brun et la veste crème du héros n'avaient pas de rampe à eux, le résultat était sale. D'où la palette propre à chaque sprite.
+- **Le générateur d'images ignore la grille.** Ses « gros pixels » ne sont ni alignés ni réguliers : la réduction par moyenne de surface avec un noyau central donne un meilleur résultat que de chercher le pas.
+- **Les limites de débit** du générateur : sept images sur onze refusées d'un coup (erreur 429), renvoyées par lots de trois ou quatre.
+- **Les objets tenus** : la hallebarde de Rocard court sur toute la hauteur de la silhouette ; sans la zone des jambes bornée autour du centre, elle aurait été cisaillée en deux à chaque pas.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Planches | seize, de dix-sept ou dix-huit couleurs, grilles valides (48 × 72, pieds en 69) |
+| Galerie | douze personnages en quatre directions et les cycles de marche du héros, de Gépété et de Berthe, lisibles à l'échelle 2 |
+| Place du puits | 95 appels de dessin, 37 900 triangles, 49 programmes, 0,34 ms par image dans le navigateur intégré ; 0 % de pixels saturés |
+| Portraits | 11 fichiers, 1,1 Mo, demandés seulement après le lancement ; aucune autre image avant |
+| Dialogue | portrait vérifié à 1366 × 768 (à gauche), 800 × 450 (posé sur la boîte) et 375 × 812 (téléphone), paysage 812 × 375 sans portrait |
+| Console | aucune erreur, dehors et dans la maison |

@@ -6,29 +6,24 @@
 // connaît aucun habitant par son nom.
 
 import { createBlobShadow, createSprite } from '../gfx/billboard.js';
-import { DIRECTIONS, FEET_ROW, IDLE_FPS, IDLE_FRAMES, PIXELS_PER_UNIT, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
+import { DIRECTIONS, directionOf, IDLE_FPS, IDLE_FRAMES, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
 import { SPRITE_LAYER } from '../gfx/post/pipeline.js';
 
 export const INTERACTION_RADIUS = 2.2; // en dessous, on peut lui parler
 export const NAME_RADIUS = 4.5; // en dessous, son nom s'affiche et il se tourne vers le héros
 const BODY_RADIUS = 0.35; // le héros ne le traverse pas
 const HEAD_MARGIN = 0.12; // au-dessus du haut du sprite, où se pose l'indicateur
-const TURN_BIAS = 1.25; // garde son regard sur la diagonale, pas de tremblement
+const TURN_BIAS = 0.3; // radians de plus avant de changer de vue : pas de tremblement
 const GLOW_PULSE = 0.16; // respiration de la lumière, en part de l'émission
 const GLOW_RATE = 2.2; // radians par seconde
 const WALK_SPEED = 1.1; // figurants : unités par seconde
 const EXTRA_WALK_FPS = WALK_FPS * 0.7; // les figurants flânent : foulée plus lente
 const PAUSE_SECONDS = 1.8; // arrêt à chaque bout du trajet
 
-// Direction du regard pour un écart (dx, dz) vers le héros. Sud = +z = bas de
-// l'écran. L'axe du regard actuel est favorisé de 25 % : sur une diagonale,
-// l'habitant ne bascule pas d'une vue à l'autre.
-export function directionToward(dx, dz, current) {
-  const horizontal = Math.abs(dx) * (current === 'left' || current === 'right' ? TURN_BIAS : 1);
-  const vertical = Math.abs(dz) * (current === 'up' || current === 'down' ? TURN_BIAS : 1);
-  if (horizontal > vertical) return dx < 0 ? 'left' : 'right';
-  return dz < 0 ? 'up' : 'down';
-}
+// Direction du regard pour un écart (dx, dz) vers le héros : l'une des huit
+// (version 2.5), la direction en cours gardée tant que l'écart n'en sort pas
+// franchement.
+export const directionToward = (dx, dz, current) => directionOf(dx, dz, current, TURN_BIAS);
 
 // character : une entrée de data/characters.js avec une position ; sheet : sa
 // planche (createCharacterSheet) ; village : le lieu où il se tient (le
@@ -42,7 +37,7 @@ export function createNpc({ character, sheet, village, sunDirection, post, at = 
   let rest = at?.direction ?? character.direction; // où il regarde au repos
   const sprite = createSprite(sheet, sunDirection, post);
   // Haut du personnage (chapeau compris), lu dans sa planche.
-  const headHeight = (FEET_ROW + 1 - sheet.top) / PIXELS_PER_UNIT + HEAD_MARGIN;
+  const headHeight = sheet.height + HEAD_MARGIN;
   sprite.object.layers.set(SPRITE_LAYER);
   const shadow = createBlobShadow();
 

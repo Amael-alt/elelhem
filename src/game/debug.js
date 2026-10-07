@@ -7,7 +7,7 @@
 
 import * as THREE from 'three';
 import { repliques } from '../data/dialogues.js';
-import { createCharacterSheet, FRAME_HEIGHT, FRAME_WIDTH } from '../gfx/sprites.js';
+import { createCharacterSheet, DIRECTIONS, FRAME_HEIGHT, FRAME_WIDTH } from '../gfx/sprites.js';
 import { figurants, hero, villagers } from '../data/characters.js';
 import { habiller, tenues } from '../data/tokens.js';
 
@@ -285,16 +285,16 @@ export function installDebugApi(game) {
       }
       return Boolean(viewer);
     },
-    // Galerie de QA : les personnages en grand, au repos, dans leurs quatre
-    // directions (bas, gauche, droite, haut), sur un fond neutre. ids : liste
+    // Galerie de QA : les personnages en grand, au repos, dans leurs huit
+    // directions (l'ordre de DIRECTIONS), sur un fond neutre. ids : liste
     // d'identifiants (tous par défaut) ; scale : agrandissement.
     portraits(on = true, ids = Object.keys(sheets), scale = 5) {
       document.getElementById('lia-portraits')?.remove();
       if (!on) return false;
       const canvas = document.createElement('canvas');
       canvas.id = 'lia-portraits';
-      const perRow = 4;
-      const cell = FRAME_WIDTH * 4 * scale + 16;
+      const perRow = 2;
+      const cell = FRAME_WIDTH * DIRECTIONS.length * scale + 16;
       const rowHeight = FRAME_HEIGHT * scale + 16;
       canvas.width = Math.min(ids.length, perRow) * cell;
       canvas.height = Math.ceil(ids.length / perRow) * rowHeight;
@@ -302,23 +302,24 @@ export function installDebugApi(game) {
       const context = canvas.getContext('2d');
       context.imageSmoothingEnabled = false;
       ids.forEach((id, n) => {
-        const { buffer } = sheets[id];
+        const { buffer, frameWidth: fw, frameHeight: fh } = sheets[id];
         const source = document.createElement('canvas');
         source.width = buffer.width;
         source.height = buffer.height;
         source.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buffer.data), buffer.width, buffer.height), 0, 0);
         const ox = (n % perRow) * cell + 8;
         const oy = Math.floor(n / perRow) * rowHeight + 8;
-        for (let row = 0; row < 4; row += 1) {
-          context.drawImage(source, 0, row * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT, ox + row * FRAME_WIDTH * scale, oy, FRAME_WIDTH * scale, FRAME_HEIGHT * scale);
+        for (let row = 0; row < DIRECTIONS.length; row += 1) {
+          context.drawImage(source, 0, row * fh, fw, fh, ox + row * FRAME_WIDTH * scale, oy + (FRAME_HEIGHT - fh) * scale, fw * scale, fh * scale);
         }
       });
       document.body.append(canvas);
       return true;
     },
     // Galerie d'images choisies, pour juger une pose pixel par pixel : rows est
-    // une liste de lignes, chaque ligne une liste de [id, direction (0 bas,
-    // 1 gauche, 2 droite, 3 haut), colonne de la planche, sansAccessoire].
+    // une liste de lignes, chaque ligne une liste de [id, direction (indice
+    // dans DIRECTIONS : 0 bas, 2 gauche, 4 haut, 6 droite, les diagonales
+    // entre), colonne de la planche, sansAccessoire].
     // L'id « heros:nuit » montre le héros dans une tenue de data/tokens.js.
     // Les planches sont refaites depuis les fiches, sans toucher au jeu.
     galerie(rows, scale = 4) {
@@ -344,13 +345,13 @@ export function installDebugApi(game) {
       const context = canvas.getContext('2d');
       context.imageSmoothingEnabled = false;
       rows.forEach((row, r) => row.forEach(([id, direction, column, bare], i) => {
-        const { buffer } = sheetOf(id, bare);
+        const { buffer, frameWidth: fw, frameHeight: fh } = sheetOf(id, bare);
         const source = document.createElement('canvas');
         source.width = buffer.width;
         source.height = buffer.height;
         source.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buffer.data), buffer.width, buffer.height), 0, 0);
-        context.drawImage(source, column * FRAME_WIDTH, direction * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT,
-          8 + i * (FRAME_WIDTH * scale + 4), 8 + r * (FRAME_HEIGHT * scale + 8), FRAME_WIDTH * scale, FRAME_HEIGHT * scale);
+        context.drawImage(source, column * fw, direction * fh, fw, fh,
+          8 + i * (FRAME_WIDTH * scale + 4) + Math.floor(((FRAME_WIDTH - fw) * scale) / 2), 8 + r * (FRAME_HEIGHT * scale + 8) + (FRAME_HEIGHT - fh) * scale, fw * scale, fh * scale);
       }));
       document.body.append(canvas);
       return true;

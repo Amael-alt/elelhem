@@ -1,24 +1,15 @@
 // Le héros : déplacement, collisions, direction du regard et animation.
 
-import { ARMED_IDLE_FRAMES, ARMED_RUN_FRAMES, ARMED_WALK_FRAMES, DIRECTIONS, IDLE_FPS, IDLE_FRAMES, RUN_FRAMES, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
+import { ARMED_IDLE_FRAMES, ARMED_RUN_FRAMES, ARMED_WALK_FRAMES, DIRECTIONS, directionOf, IDLE_FPS, IDLE_FRAMES, RUN_FRAMES, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
 
 const SPEED = 3.4; // unités par seconde
 const RADIUS = 0.3;
 const RUN_FROM = 1.3; // au-delà de ce facteur de vitesse, la foulée de course
 
-// En diagonale, on garde la direction en cours si elle fait partie du
-// mouvement : le personnage ne tremble pas entre deux vues.
-function chooseFacing(move, current) {
-  const horizontal = Math.abs(move.x) > 1e-3;
-  const vertical = Math.abs(move.z) > 1e-3;
-  const h = move.x < 0 ? 'left' : 'right';
-  const v = move.z < 0 ? 'up' : 'down';
-  if (horizontal && vertical) {
-    if (current === h || current === v) return current;
-    return Math.abs(move.x) >= Math.abs(move.z) ? h : v;
-  }
-  return horizontal ? h : v;
-}
+// Le regard suit le déplacement dans huit directions (version 2.5 : les
+// diagonales ont leurs vues). La direction en cours est gardée tant que le
+// mouvement n'en sort pas franchement : pas de tremblement entre deux vues.
+const chooseFacing = (move, current) => directionOf(move.x, move.z, current);
 
 // village : le lieu où se trouve le héros (le village, ou un intérieur de
 // world/interior.js) ; il en change avec setWorld.
@@ -71,7 +62,7 @@ export function createPlayer({ sprite, shadow, village, extras = [] }) {
     setArmed(on) {
       armed = Boolean(on);
     },
-    // Tourne le héros vers une direction ('down', 'left', 'right', 'up').
+    // Tourne le héros vers une direction (DIRECTIONS de gfx/sprites.js).
     face(direction) {
       facing = direction;
     },

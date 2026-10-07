@@ -1,4 +1,4 @@
-// La tenue de la cascade (version 2.3) : la planche du héros, l'épée à la
+// La tenue de la cascade (version 2.3, index refaits en 2.5) : la planche du héros, l'épée à la
 // main et ses six poses de coup comprises, dont les rouges (chapeau, écharpe)
 // deviennent des bleu-vert d'eau vive. Aucune fiche dessinée : une recoloration
 // de la palette, les grilles sont celles de heros.js. Les index de palette
@@ -11,10 +11,10 @@ import { heros } from './heros.js';
 // Index de palette du héros vers la couleur de l'eau : du rouge sombre au
 // rouge vif, du bleu profond au bleu clair.
 const WATER = {
-  4: '#0f3a5a',
+  5: '#0f3a5a',
   7: '#155a7a',
-  9: '#1f7fa0',
-  b: '#38a8c8',
+  a: '#1f7fa0',
+  c: '#38a8c8',
 };
 const DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
 

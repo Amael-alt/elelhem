@@ -9,7 +9,7 @@
 
 import * as THREE from 'three';
 import { createBlobShadow, createSprite } from '../gfx/billboard.js';
-import { createCharacterSheet, DIRECTIONS, FEET_ROW, IDLE_FPS, IDLE_FRAMES, PIXELS_PER_UNIT } from '../gfx/sprites.js';
+import { createCharacterSheet, DIRECTIONS, directionOf, IDLE_FPS, IDLE_FRAMES } from '../gfx/sprites.js';
 import { createHealthBar } from '../gfx/healthbar.js';
 import { ENEMY_TYPES, HERO_COMBAT } from '../data/enemies.js';
 import { barColors } from '../data/palette.js';
@@ -27,10 +27,7 @@ const FLOAT_RATE = 2.1; // balancement du flottement
 const FLOAT_AMPLITUDE = 0.08;
 const RETURN_MARGIN = 1.5; // au-delà de son rayon de ce pas, un poursuivant rentre chez lui
 
-const facingOf = (dx, dz, current) => {
-  if (Math.abs(dx) < 1e-3 && Math.abs(dz) < 1e-3) return current;
-  return Math.abs(dx) > Math.abs(dz) ? (dx < 0 ? 'left' : 'right') : dz < 0 ? 'up' : 'down';
-};
+const facingOf = (dx, dz, current) => directionOf(dx, dz, current);
 
 // placements : [{ type, x, z }] ; world : la lande ; sunDirection, post :
 // pour les sprites ; onDeath(enemy) : une Hallucination se dissipe (son
@@ -56,7 +53,7 @@ export function createEnemies(placements, { world, sunDirection, post, onDeath =
     world.scene.add(sprite.object, shadow, bar.object);
     return {
       bar,
-      headHeight: (FEET_ROW + 1 - sheet.top) / PIXELS_PER_UNIT,
+      headHeight: sheet.height,
       id: `${placement.type}-${index}`,
       kind: placement.type,
       type,

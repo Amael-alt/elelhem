@@ -11,7 +11,7 @@
 // qui tourne autour de sa poignée (gfx/weapon.js).
 
 import * as THREE from 'three';
-import { STRIKE_FRAMES } from '../gfx/sprites.js';
+import { cardinalOf, STRIKE_FRAMES } from '../gfx/sprites.js';
 import { HERO_COMBAT, SWORDS } from '../data/enemies.js';
 
 // Les trois coups : durée, fenêtre où la lame porte (de... à...), fente en
@@ -26,7 +26,7 @@ const QUEUE_FROM = 0.1; // à partir de quand un appui prépare le coup suivant
 const COOLDOWN = 0.28; // après le troisième coup
 const ARC = Math.PI * 0.42; // demi-angle de la lame, devant le héros
 const BLINK_PERIOD = 0.09;
-const HAND_HEIGHT = 0.72; // la poignée, au-dessus des pieds
+const HAND_HEIGHT = 0.5; // la poignée, au-dessus des pieds (héros de 1,1 unité depuis la version 2.5)
 const SWORD_LAYER = 0.07; // devant ou derrière le héros, selon la vue
 const REST_ANGLE = 0.35; // l'épée au repos, un peu inclinée
 
@@ -73,6 +73,9 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
   const hasSword = () => swordLevel() > 0;
 
   function startHit(index) {
+    // Les coups sont dessinés dans quatre directions : sur une diagonale, le
+    // héros se tourne d'abord vers le côté le plus proche (version 2.5).
+    if (cardinalOf(player.facing) !== player.facing) player.face(cardinalOf(player.facing));
     attack = { hit: index, t: 0, queued: false, struck: new Set(), slashed: false };
     onStrike();
   }
@@ -80,7 +83,8 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
   // Place l'épée (si la planche ne la dessine pas) et, au bon moment, lance
   // la lame et porte le coup.
   function animate(dt) {
-    const view = VIEWS[player.facing];
+    const facing = cardinalOf(player.facing);
+    const view = VIEWS[facing];
     const base = player.worldPosition(point);
     const dz = view.front ? SWORD_LAYER : -SWORD_LAYER;
     if (!attack) {
@@ -102,16 +106,16 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
 
     // La fente : une avance vers l'avant pendant la fenêtre active.
     if (attack.t >= spec.from && attack.t <= spec.to) {
-      const [fx, fz] = FACING_VECTOR[player.facing];
+      const [fx, fz] = FACING_VECTOR[facing];
       const step = (spec.lunge / (spec.to - spec.from)) * dt;
       player.shove(fx * step, fz * step);
     }
     if (attack.t >= spec.from && !attack.slashed) {
       attack.slashed = true;
-      const [fx, fz] = FACING_VECTOR[player.facing];
+      const [fx, fz] = FACING_VECTOR[facing];
       slash.play({
-        x: base.x + fx * 0.75, y: base.y + 0.7, z: base.z + fz * 0.75 + (player.facing === 'up' ? -0.2 : 0.2),
-        angle: player.facing === 'down' ? Math.PI : player.facing === 'left' ? -Math.PI / 2 : player.facing === 'right' ? Math.PI / 2 : 0,
+        x: base.x + fx * 0.6, y: base.y + 0.5, z: base.z + fz * 0.6 + (facing === 'up' ? -0.2 : 0.2),
+        angle: facing === 'down' ? Math.PI : facing === 'left' ? -Math.PI / 2 : facing === 'right' ? Math.PI / 2 : 0,
         scale: spec.scale,
       });
       strike(spec);
@@ -127,7 +131,7 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
 
   // Devant le héros, à portée : (dx, dz) vers la cible, vrai si la lame porte.
   function inReach(dx, dz, spec) {
-    const [fx, fz] = FACING_VECTOR[player.facing];
+    const [fx, fz] = FACING_VECTOR[cardinalOf(player.facing)];
     const d = Math.hypot(dx, dz);
     if (d > spec.reach) return false;
     const cos = (dx * fx + dz * fz) / (d || 1);
@@ -144,7 +148,7 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
       onDummy(dummy);
     }
     if (!enemies) return;
-    const [fx, fz] = FACING_VECTOR[player.facing];
+    const [fx, fz] = FACING_VECTOR[cardinalOf(player.facing)];
     const damage = swordDamage() * spec.factor;
     for (const enemy of enemies.alive) {
       if (attack.struck.has(enemy)) continue;

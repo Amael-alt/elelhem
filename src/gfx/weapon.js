@@ -168,4 +168,93 @@ export function createSlash() {
   };
 }
 
+// --- L'éclat d'impact (version 2.5) -------------------------------------------
+
+// Quand la lame touche : une étoile de lumière à huit branches, deux longues
+// et deux courtes en alternance, avec un cœur blanc, et quelques étincelles
+// autour. Elle jaillit, grossit et s'éteint en un cinquième de seconde ; le
+// bloom en fait un éclair. Trois éclats au plus à la fois.
+const IMPACT_SIZE = 64;
+const IMPACT_SECONDS = 0.2;
+const IMPACT_INTENSITY = 3.2;
+const IMPACT_POOL = 3;
+
+function drawImpact() {
+  const buffer = createPixelBuffer(IMPACT_SIZE, IMPACT_SIZE);
+  const core = hexToRgb(swordColors.eclat[0]);
+  const ray = hexToRgb(swordColors.eclat[1]);
+  const center = IMPACT_SIZE / 2;
+  for (let y = 0; y < IMPACT_SIZE; y += 1) {
+    for (let x = 0; x < IMPACT_SIZE; x += 1) {
+      const dx = (x + 0.5 - center) / center;
+      const dy = (y + 0.5 - center) / center;
+      const r = Math.hypot(dx, dy);
+      const a = Math.atan2(dy, dx);
+      // Huit branches : la longueur de la branche selon l'angle, effilée.
+      const arm = Math.abs(Math.cos(4 * a));
+      const long = Math.abs(Math.cos(2 * a)) > 0.7 ? 1 : 0.55;
+      const reach = (0.18 + 0.82 * arm ** 18) * long;
+      if (r > reach) continue;
+      const inCore = r < 0.2;
+      const alpha = inCore ? 255 : Math.round(255 * (1 - r / reach) ** 0.8);
+      if (alpha > 10) setPixel(buffer, x, y, inCore ? core : ray, alpha);
+    }
+  }
+  // Des étincelles semées autour, en croix de trois pixels.
+  const sparks = [[0.62, 0.3], [-0.55, -0.48], [0.35, -0.7], [-0.72, 0.4], [0.08, 0.82]];
+  for (const [sx, sy] of sparks) {
+    const px = Math.round(center + sx * center);
+    const py = Math.round(center + sy * center);
+    for (const [ox, oy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) setPixel(buffer, px + ox, py + oy, core, ox || oy ? 150 : 255);
+  }
+  return buffer;
+}
+
+export function createImpacts() {
+  const texture = toDataTexture(drawImpact(), { repeat: false, mipmaps: false });
+  const group = new THREE.Group();
+  const pool = Array.from({ length: IMPACT_POOL }, () => {
+    const material = new THREE.SpriteMaterial({
+      map: texture, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false,
+      color: new THREE.Color(IMPACT_INTENSITY, IMPACT_INTENSITY, IMPACT_INTENSITY),
+    });
+    const sprite = new THREE.Sprite(material);
+    sprite.visible = false;
+    sprite.renderOrder = 5;
+    group.add(sprite);
+    return { sprite, life: 0, size: 1 };
+  });
+  let next = 0;
+
+  return {
+    object: group,
+    // Un éclat en (x, y, z), de taille scale en unités.
+    play({ x, y, z, scale = 0.9 }) {
+      const item = pool[next];
+      next = (next + 1) % pool.length;
+      item.sprite.position.set(x, y, z);
+      item.sprite.material.rotation = Math.random() * Math.PI;
+      item.size = scale;
+      item.life = IMPACT_SECONDS;
+      item.sprite.visible = true;
+    },
+    update(dt) {
+      for (const item of pool) {
+        if (!item.sprite.visible) continue;
+        item.life -= dt;
+        if (item.life <= 0) {
+          item.sprite.visible = false;
+          continue;
+        }
+        const t = 1 - item.life / IMPACT_SECONDS;
+        // Il jaillit vite (le premier quart), puis s'élargit en s'éteignant.
+        const grow = t < 0.25 ? 0.4 + 2.4 * t : 1 + 0.25 * (t - 0.25);
+        const s = item.size * grow;
+        item.sprite.scale.set(s, s, 1);
+        item.sprite.material.opacity = t < 0.25 ? 1 : 1 - ((t - 0.25) / 0.75) ** 1.5;
+      }
+    },
+  };
+}
+
 export const SWORD_UNITS = SWORD_HEIGHT / PIXELS_PER_UNIT;

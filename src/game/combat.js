@@ -49,7 +49,8 @@ const FACING_VECTOR = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] 
 // canFight() : on est quelque part où l'on se bat ; dummies() : les mannequins
 // à portée de coups (points { x, z }, version 2.3) et onDummy(dummy) quand l'un
 // d'eux est touché ; onStrike() : un coup part.
-export function createCombat({ player, sword, slash, state, hud, texts, onDeath, canFight, onEmpty = () => false, dummies = () => [], onDummy = () => {}, onStrike = () => {} }) {
+// impacts : les éclats d'impact (gfx/weapon.js, version 2.5), facultatif.
+export function createCombat({ player, sword, slash, impacts = null, state, hud, texts, onDeath, canFight, onEmpty = () => false, dummies = () => [], onDummy = () => {}, onStrike = () => {} }) {
   let clartes = HERO_COMBAT.clartes;
   let invulnerable = 0;
   let blink = 0;
@@ -138,6 +139,16 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
     return !(cos < Math.cos(ARC) && d > 0.45);
   }
 
+  // L'éclat d'impact sur la cible, un peu vers le héros et à mi-hauteur ; plus
+  // grand au troisième coup.
+  function burst(x, z, spec) {
+    if (!impacts) return;
+    const dx = player.position.x - x;
+    const dz = player.position.z - z;
+    const d = Math.hypot(dx, dz) || 1;
+    impacts.play({ x: x + (dx / d) * 0.2, y: player.worldPosition(point).y + 0.55, z: z + (dz / d) * 0.2 + 0.1, scale: 0.85 * spec.scale });
+  }
+
   // Les Hallucinations devant le héros, à portée, prennent le coup ; les
   // mannequins de l'enclos aussi, pour le défi.
   function strike(spec) {
@@ -145,6 +156,7 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
       if (attack.struck.has(dummy)) continue;
       if (!inReach(dummy.x - player.position.x, dummy.z - player.position.z, spec)) continue;
       attack.struck.add(dummy);
+      burst(dummy.x, dummy.z, spec);
       onDummy(dummy);
     }
     if (!enemies) return;
@@ -159,6 +171,7 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
       const cos = (dx * fx + dz * fz) / (d || 1);
       if (cos < Math.cos(ARC) && d > 0.45) continue;
       attack.struck.add(enemy);
+      burst(enemy.position.x, enemy.position.z, spec);
       enemies.hit(enemy, damage, player.position.x, player.position.z);
     }
   }
@@ -249,6 +262,7 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
     // dt : temps de l'image ; frozen : le jeu est suspendu (dialogue, écran).
     update(dt, frozen) {
       slash.update(dt);
+      impacts?.update(dt);
       if (invulnerable > 0) {
         invulnerable -= dt;
         blink += dt;

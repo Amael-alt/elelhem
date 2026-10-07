@@ -178,6 +178,8 @@ export const moorColors = {
 // L'épée du héros (gfx/weapon.js) : acier, garde d'or, poignée de cuir, et
 // la lame de lumière du coup qui part.
 export const swordColors = {
+  // L'éclat d'impact (version 2.5) : un cœur blanc chaud, des rayons dorés.
+  eclat: ['#fff8e6', '#ffcf5a'],
   acier: ['#5e6778', '#9aa4b5', '#d7dde8', '#ffffff'],
   or: ['#8a6414', '#d9a935', '#ffe08a'],
   cuir: ['#3a2418', '#6e4a2a'],

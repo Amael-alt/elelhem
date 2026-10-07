@@ -42,7 +42,7 @@ import { createSpots } from './game/spots.js';
 import { createExploits } from './game/exploits.js';
 import { createHealthBar } from './gfx/healthbar.js';
 import { barColors } from './data/palette.js';
-import { createSlash, createSword } from './gfx/weapon.js';
+import { createImpacts, createSlash, createSword } from './gfx/weapon.js';
 import { MOOR_ENEMIES, SWORDS } from './data/enemies.js';
 import { gains, habiller, tenues } from './data/tokens.js';
 import { createInterior } from './world/interior.js';
@@ -156,10 +156,11 @@ function start() {
   const sword = createSword(village.sunDirection, pipeline.spriteHooks);
   sword.object.layers.set(SPRITE_LAYER);
   const slash = createSlash();
+  const impacts = createImpacts();
   // La barre des clartés, à plat sous les pieds du héros, sur la lande (gfx/healthbar.js).
   const heroBar = createHealthBar(barColors.clarte, { ground: true });
-  scene.add(sprite.object, shadow, sword.object, slash.object, heroBar.object);
-  const player = createPlayer({ sprite, shadow, village, extras: [sword.object, slash.object, heroBar.object] });
+  scene.add(sprite.object, shadow, sword.object, slash.object, impacts.object, heroBar.object);
+  const player = createPlayer({ sprite, shadow, village, extras: [sword.object, slash.object, impacts.object, heroBar.object] });
 
   // Les habitants : de la donnée (data/characters.js), une planche chacun. Chacun
   // vit dans son lieu (le village ou une pièce) ; celui qui a un départ
@@ -264,7 +265,7 @@ function start() {
   };
   let spots = null;
   const combat = createCombat({
-    player, sword, slash, state: gameState, hud: document.getElementById('clartes'), texts: textesInterface.combat,
+    player, sword, slash, impacts, state: gameState, hud: document.getElementById('clartes'), texts: textesInterface.combat,
     canFight: () => doors?.current === moor || (doors?.current === village && inTraining()),
     // Plus de clartés : retour à la porte du village (les clartés reviennent à l'arrivée, voir onChange).
     onDeath: () => doors?.travel(doors.gates.find((gate) => gate.to === village)),

@@ -898,3 +898,27 @@ Ce qui a résisté :
 | Planches | 20 personnages, 8 directions, 48 modules de sprites de moins (les poses dessinées des quatre tenues) |
 | Higgsfield | 24 images, 36 crédits, 115 restants |
 | Console | aucune erreur |
+
+## Version 2.6 en cours : l'auberge, premier décor riche (7 octobre 2026)
+
+La 2.4 et la 2.5 publiées (étiquettes `v2.4` et `v2.5`), Jordan a lancé la richesse des décors en partant d'une seule maison, l'auberge, dedans et dehors, à faire valider avant d'étendre. Un constat d'abord : les petits objets du village étaient des boîtes (le tonneau était un cube), exactement les « gros blocs » à éviter.
+
+**Dehors.** Un parvis de pavés en éventail (case `e` de `world/map.js`, texture `createFanCobbleTextures` : des demi-disques d'une unité, quatre anneaux de pavés, posés en écailles ; rampe `parvis`, plus claire et plus chaude que les pavés de la place) devant la façade et jusqu'au chemin du marché. Un muret de pierre à chaperon (`buildLowWall`) le ferme à l'ouest et au sud, avec des piliers coiffés et une ouverture face à la porte ; des auges de pierre fleuries sur le muret et une jardinière de bois à l'est (`buildPlanterBox`, ses fleurs plantées comme celles des rebords de fenêtre) ; un chevalet d'ardoise à la porte (`buildChalkboard`) ; une rangée de tonneaux contre la façade ; les tables de la terrasse sur le parvis, un tabouret à chaque bout. L'arbre qui cachait la porte recule à l'ouest. Partout dans le village, les tonneaux deviennent ronds et ventrus (dix douelles, trois cercles de fer, un couvercle) : `pushRevolution` et `pushDisc`, dans `world/builder.js`, font les surfaces de révolution.
+
+**Dedans** (`ROOMS.auberge` de `world/rooms.js`). Un salon près du feu, à l'ouest : grand tapis, canapé contre le mur, deux fauteuils, table basse avec un livre et une tasse, un grand tableau au-dessus du canapé, une horloge comtoise, une plante. Une salle à l'est : une table ronde sur pied et ses quatre chaises à dossier, une longue table à bancs, une seconde plante. Un escalier vers l'étage le long du mur est, avec son palier et sa rampe à balustres ; les cases dessous sont réservées. Le comptoir de Berthe raccourcit pour laisser passer l'escalier. Nouveaux meubles dans `world/furniture.js` : `buildChair`, `buildArmchair`, `buildSofa`, `buildRoundTable`, `buildLowTable`, `buildClock`, `buildPlant`, `buildStairs`, avec une aide qui tourne un meuble d'un quart de tour (`orientedBox`). Une matière de plus, `velvet`.
+
+Ce qui a résisté :
+
+- **Deux grands carrés noirs** dans l'auberge : au sommet des plantes, la surface de révolution finit en pointe, deux sommets se confondent, la normale du quad devient invalide et le bloom propage l'erreur en carrés. `pushRevolution` émet désormais un triangle à la pointe.
+- **Le velours rouge** se perdait sur le tapis rouge : vert bouteille.
+- **Le parvis trop sombre** : l'éventail ne se lisait pas dans l'ombre de l'auberge, d'où la rampe plus claire.
+- **Pas de perron surélevé** : la grille n'a pas de case praticable en hauteur, et la hauteur du héros saute d'une case à l'autre. Un vrai perron à marches demandera de lisser cette hauteur ; noté pour la suite.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Rendu devant l'auberge | 117 appels de dessin, 76 800 triangles (73 500 avant) |
+| Rendu dans l'auberge | 58 appels de dessin, 12 300 triangles (8 800 avant) |
+| Collisions | bloqué au pied de l'escalier et contre le canapé |
+| Console | aucune erreur |

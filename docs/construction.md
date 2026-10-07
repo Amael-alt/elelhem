@@ -899,7 +899,7 @@ Ce qui a résisté :
 | Higgsfield | 24 images, 36 crédits, 115 restants |
 | Console | aucune erreur |
 
-## Version 2.6 en cours : l'auberge, la forge, la bibliothèque, l'apothicairerie, la maison du héros et la place, des décors riches (7 octobre 2026)
+## Version 2.6 : l'auberge, la forge, la bibliothèque, l'apothicairerie, la maison du héros et la place, des décors riches (7 octobre 2026)
 
 La 2.4 et la 2.5 publiées (étiquettes `v2.4` et `v2.5`), Jordan a lancé la richesse des décors en partant d'une seule maison, l'auberge, dedans et dehors, à faire valider avant d'étendre. Un constat d'abord : les petits objets du village étaient des boîtes (le tonneau était un cube), exactement les « gros blocs » à éviter.
 
@@ -945,7 +945,7 @@ Ce qui a résisté : la caméra plonge assez pour que le pan sud du toit du puit
 | Collisions | bloqué au pied de l'escalier et contre le canapé |
 | Console | aucune erreur |
 
-## Version 2.7 en cours : la liste de Jordan après sa partie (7 octobre 2026)
+## Version 2.7 : la liste de Jordan après sa partie (7 octobre 2026)
 
 Jordan a joué à la 2.6 et rendu une liste de retours, traitée dans l'ordre où elle pouvait l'être en une session. Fait :
 
@@ -979,7 +979,7 @@ Jordan a joué à la 2.6 et rendu une liste de retours, traitée dans l'ordre o�
 | Décor à 32 texels | place : 123 appels de dessin, 113 800 triangles (122 et 112 500 à 16 texels) |
 | Contraste | le plus bas : 5,1 (texte sépia du grimoire sur parchemin) |
 
-## Version 2.8 en cours : le ressenti du jeu (7 octobre 2026)
+## Version 2.8 : le ressenti du jeu (7 octobre 2026)
 
 Une seconde liste de Jordan, dix points de « game feel », tous faits dans la foulée de la 2.7, en local :
 
@@ -1003,7 +1003,7 @@ Une seconde liste de Jordan, dix points de « game feel », tous faits dans la f
 | Chiffres | 1,3 rem pour 1 point, 1,48 pour 2, 2,2 et jaune pour un critique de 4 |
 | Console | aucune erreur |
 
-## Version 2.9 en cours : moins de tics, plus de vie (7 octobre 2026)
+## Version 2.9 : moins de tics, plus de vie (7 octobre 2026)
 
 La suite des retours de Jordan, après la 2.8 : une correction, les tics d'IA que j'avais pointés, deux points de ressenti, la direction artistique, le bois.
 

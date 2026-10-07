@@ -106,6 +106,12 @@ export function createCobbleTextures(seed) {
         heights[i] = 0;
         continue;
       }
+      // Une pierre sur vingt-cinq manque (version 2.9) : la terre affleure.
+      if (hash2(id, 11, seed) > 0.96) {
+        tones[i] = 0.14 + grain(x, y) * 0.1;
+        heights[i] = grain(x, y) * 0.15;
+        continue;
+      }
       const dome = Math.min(1, (edge - JOINT) / 0.4);
       tones[i] = 0.36 + hash2(id, 3, seed) * 0.22 + dome * 0.14 + (grain(x, y) - 0.5) * 0.12;
       heights[i] = Math.sqrt(dome) * 0.9 + grain(x, y) * 0.1;
@@ -207,20 +213,62 @@ export function createPlasterTextures(seed, ramp = buildingRamps.enduit) {
   return finish(ramp, tones, heights, 0.5);
 }
 
-// Bois : des fibres verticales, chaque colonne de pixels son ton. Sert aux
-// colombages (rouge) et, avec une autre rampe, à l'écorce des arbres.
+// Bois (refait en version 2.9) : des planches verticales d'une demi-unité,
+// un joint sombre entre deux, des fibres fines qui ondulent légèrement le
+// long de la planche, un nœud ici et là (ellipse sombre entourée d'un cerne
+// clair), le bord gauche de chaque planche un peu plus clair. Sert aux
+// colombages, poteaux, bancs, pancartes, et, avec une autre rampe, à
+// l'écorce des arbres.
 export function createWoodTextures(seed, ramp = buildingRamps.bois) {
   const grain = fbm(seed + 1, SIZE, 8, 3);
+  const wave = fbm(seed + 9, SIZE, 3, 2, 0.5);
   const tones = new Float32Array(SIZE * SIZE);
   const heights = new Float32Array(SIZE * SIZE);
+  const PLANK = 8 * K; // une demi-unité
+  const planks = SIZE / PLANK;
+  // Les nœuds : au plus un par planche, à une hauteur tirée.
+  const knots = [];
+  for (let p = 0; p < planks; p += 1) {
+    if (hash2(p, 5, seed) < 0.45) knots.push({ x: p * PLANK + PLANK * (0.3 + hash2(p, 6, seed) * 0.4), y: hash2(p, 7, seed) * SIZE, r: (1.2 + hash2(p, 8, seed) * 1.4) * K });
+  }
   for (let y = 0; y < SIZE; y += 1) {
     for (let x = 0; x < SIZE; x += 1) {
-      const fiber = (hash2(x, 0, seed) + hash2(x, 1, seed) * 0.5) / 1.5;
-      tones[y * SIZE + x] = 0.38 + (fiber - 0.5) * 0.45 + (grain(x, y) - 0.5) * 0.3;
-      heights[y * SIZE + x] = fiber;
+      const i = y * SIZE + x;
+      const plank = Math.floor(x / PLANK);
+      const inPlank = x % PLANK;
+      // La fibre ondule : la colonne lue se décale un peu avec la hauteur.
+      const drift = (wave(x, y) - 0.5) * 3 * K;
+      const column = Math.floor(x + drift);
+      const fiber = (hash2(column, 0, seed) + hash2(column, 1, seed) * 0.5 + hash2(column >> 1, 2, seed) * 0.5) / 2;
+      let tone = 0.36 + hash2(plank, 3, seed) * 0.14 + (fiber - 0.5) * 0.4 + (grain(x, y) - 0.5) * 0.18;
+      let height = 0.45 + fiber * 0.45;
+      if (inPlank < K) {
+        tone = 0.08 + grain(x, y) * 0.08; // le joint
+        height = 0;
+      } else if (inPlank < 2 * K) {
+        tone += 0.1; // le chanfrein clair
+        height += 0.1;
+      } else if (inPlank >= PLANK - K) {
+        tone -= 0.08; // l'ombre du bord
+      }
+      for (const knot of knots) {
+        const dx = (x - knot.x) / knot.r;
+        const dy = (wrap(y - knot.y + SIZE / 2) - SIZE / 2) / (knot.r * 1.6);
+        const d = Math.hypot(dx, dy);
+        if (d < 0.6) {
+          tone -= 0.28;
+          height -= 0.25;
+        } else if (d < 1.0) {
+          tone += 0.08;
+        } else if (d < 1.4) {
+          tone -= 0.06;
+        }
+      }
+      tones[i] = tone;
+      heights[i] = height;
     }
   }
-  return finish(ramp, tones, heights, 0.8);
+  return finish(ramp, tones, heights, 0.9);
 }
 
 // Tuiles canal : colonnes de 4 pixels qui descendent la pente, alternance de

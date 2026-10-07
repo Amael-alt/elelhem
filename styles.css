@@ -4111,3 +4111,167 @@ body {
     display: none;
   }
 }
+
+/* --- Version 2.6 : bandeaux, annonces, chiffres de dégâts, lieu courant. --- */
+
+/* Le bandeau de lieu descend vers le centre de l'écran : en haut, il passait
+   sous les pastilles et la minimap sur un écran de portable. */
+#lieu {
+  top: 30vh;
+}
+
+/* Les annonces (parchemin, Token, coffre, exploit) quittent le coin des
+   pastilles pour le milieu du bord gauche, où rien ne les couvre. */
+.parchemins-annonce {
+  position: fixed;
+  left: calc(16px + env(safe-area-inset-left));
+  top: 42vh;
+  z-index: 13;
+  margin: 0;
+}
+
+@media (max-width: 640px), (max-height: 480px) {
+  body:has(.parchemins-annonce:not([hidden])) #lieu {
+    visibility: visible;
+  }
+}
+
+/* Le lieu où l'on est : sous la minimap, au-dessus du bouton du son. */
+#endroit {
+  position: fixed;
+  top: calc(224px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  z-index: 13;
+  width: 204px;
+  margin: 0;
+  padding: 7px 12px 8px;
+  border: 1px solid var(--or-fonce);
+  border-radius: 4px;
+  background: rgb(14 13 28 / 0.86);
+  box-shadow: inset 0 0 0 2px rgb(14 13 28 / 0.9), inset 0 0 0 3px rgb(243 208 140 / 0.35), 0 4px 14px rgb(0 0 0 / 0.45);
+  color: #fbf1dc;
+  font: 500 0.95rem/1.25 var(--police);
+  text-align: right;
+  pointer-events: none;
+}
+
+#endroit[hidden] {
+  display: none;
+}
+
+.endroit-monde {
+  display: block;
+  color: var(--or-vif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.endroit-lieu {
+  display: block;
+  margin-top: 2px;
+}
+
+.endroit-lieu:empty {
+  display: none;
+}
+
+#endroit:has(.endroit-lieu:empty) .endroit-monde {
+  color: #fbf1dc;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+@media (max-width: 640px) {
+  #endroit {
+    top: calc(160px + env(safe-area-inset-top));
+    width: 150px;
+    padding: 5px 9px 6px;
+    font-size: 0.82rem;
+  }
+}
+
+/* Avec le lieu courant sous la minimap, le bouton du son descend d'autant. */
+#son {
+  top: calc(296px + env(safe-area-inset-top));
+}
+
+@media (max-width: 640px) {
+  #son {
+    top: calc(222px + env(safe-area-inset-top));
+  }
+}
+
+/* Les chiffres de dégâts (src/game/damage.js), posés sur le canvas. */
+#degats {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.degat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  justify-items: center;
+  color: #fff3d6;
+  font: 700 1.5rem/1 var(--police);
+  text-shadow: 0 0 2px #2a1308, 0 2px 0 #2a1308, 0 -2px 0 #2a1308, 2px 0 0 #2a1308, -2px 0 0 #2a1308, 0 3px 10px rgb(0 0 0 / 0.7);
+  translate: -50% -100%;
+  will-change: transform, opacity;
+}
+
+.degat-critique {
+  color: var(--or-vif);
+  font-size: 2.1rem;
+}
+
+.degat small {
+  margin-top: 2px;
+  color: #fff3d6;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.degat-recu {
+  color: #ff7a6a;
+}
+
+/* Le dernier choix d'une question, « Au revoir » : en retrait, sans numéro. */
+.dialogue-choix button.sortie {
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* Le « double fond » des cadres illustrés : box-shadow dessine un rectangle
+   autour de la boîte entière, qui dépassait du filet doré en haut et en bas
+   (les coins du cadre sont transparents). drop-shadow suit le dessin. */
+.carte-cadre,
+.boutique-cadre,
+.grimoire-livre,
+.forge-cadre,
+.feuille-cadre {
+  box-shadow: none;
+  filter: drop-shadow(0 16px 22px rgb(0 0 0 / 0.5));
+}
+
+#touches {
+  box-shadow: none;
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.5));
+}
+
+/* Sans minimap (la lande, une pièce), le lieu courant monte sous les pastilles. */
+body:has(#minimap[hidden]) #endroit {
+  top: calc(74px + env(safe-area-inset-top));
+}
+
+body:has(#minimap[hidden]) #son {
+  top: calc(146px + env(safe-area-inset-top));
+}

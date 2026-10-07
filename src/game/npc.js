@@ -172,6 +172,9 @@ export function createNpc({ character, sheet, village, sunDirection, post, at = 
     setQuest(on) {
       quest.visible = Boolean(on);
     },
+    get quest() {
+      return quest.visible;
+    },
     // Tourne l'habitant vers un point (au début d'une conversation).
     faceToward(point) {
       facing = directionToward(point.x - position.x, point.z - position.z, facing);

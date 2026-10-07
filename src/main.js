@@ -43,6 +43,9 @@ import { createExploits } from './game/exploits.js';
 import { createHealthBar } from './gfx/healthbar.js';
 import { createDamageNumbers } from './game/damage.js';
 import { createBursts } from './gfx/fx/bursts.js';
+import { createCritters } from './gfx/fx/critters.js';
+import { createRunes } from './gfx/fx/runes.js';
+import { createDaylight, daylightAt, DAY_PERIOD } from './world/daylight.js';
 import { barColors } from './data/palette.js';
 import { createImpacts, createSlash, createSword } from './gfx/weapon.js';
 import { MOOR_ENEMIES, SWORDS } from './data/enemies.js';
@@ -245,6 +248,7 @@ function start() {
   const canOpenOverlay = () => playing && !quest.isBusy;
   const counter = createScrollCounter(document.getElementById('parchemins'), {
     notions, texts: textesInterface.parchemins, state: gameState, onOpen: () => canOpenOverlay() && grimoire.open(),
+    onGain: () => ambience.chime('parchemin'),
   });
   const grimoire = createGrimoire(document.getElementById('grimoire'), {
     ids: counter.ids, notions, texts: dialogues, labels: textesInterface.grimoire, state: gameState, canOpen: canOpenOverlay,
@@ -292,6 +296,7 @@ function start() {
   });
   const pickups = createPickups({
     world: moor, sunDirection: moor.sunDirection, post: pipeline.spriteHooks, wallet,
+    onCoin: () => ambience.chime('piece'),
     onPotion: () => {
       const healed = combat.heal(1);
       counter.say(textesInterface.combat.potion, healed ? textesInterface.combat.potionDetail : textesInterface.combat.potionPleine);
@@ -379,6 +384,7 @@ function start() {
       if (Math.hypot(chest.x - player.position.x, chest.z - player.position.z) > CHEST_REACH) continue;
       gameState.coffres.add(chest.id);
       wallet.earn(chest.tokens);
+      ambience.chime('coffre');
       // Le coffre de la cascade (version 2.3) rend aussi une tenue.
       if (chest.tenue) {
         gameState.tenues.add(chest.tenue);
@@ -450,6 +456,20 @@ function start() {
   let lastPace = 0;
   let wasRunning = false;
   const RUN_PACE = 1.3; // le facteur de vitesse à partir duquel le héros court (game/player.js)
+  const allScrolls = () => counter.ids.every((id) => gameState.parchemins.has(id));
+  // La lumière du jour (version 2.9), les petites vies, les runes de la place.
+  const daylight = createDaylight();
+  const critters = createCritters({
+    cat: { x: 20.6, y: 0.66, z: 14.3 }, // sur le muret de la bibliothèque
+    hens: { rect: [47.9, 23.9, 52.3, 28.3], count: 3 }, // la pâture aux meules
+    book: { x: 18.6, y: 1.3, z: 11.9 }, // devant la porte de la bibliothèque
+    hammer: { x: 9.88, y: 0.55, z: 11.3 }, // la main de Ferrand
+    groundHeight: (x, z) => village.groundHeight(x, z),
+  });
+  village.scene.add(critters.group, createRunes({ center: WELL, radius: 2.0 }, village.fx));
+  const gepeto = npcs.find((npc) => npc.character.id === 'gepeto') ?? null;
+  let sparkTimer = 0;
+  const MIST = { x: (WATERFALL.x0 + WATERFALL.x1) / 2, z: WATERFALL.z + 0.3, reach: 18 }; // la brume au pied de la cascade
   // Un habitant a-t-il une quête pour le grimoire (son parchemin, ou le diplôme) encore à faire ?
   const hasQuest = (npc) => {
     const key = npc.character.dialogue;
@@ -483,7 +503,16 @@ function start() {
     },
     { from: moor, to: village, zone: MOOR_GATE, push: { x: 1, z: 0 }, at: GATE.back },
   ];
+  // L'iris des portes (version 2.9) se ferme sur le héros, à l'écran.
+  const irisPoint = new THREE.Vector3();
+  const irisAt = () => {
+    player.worldPosition(irisPoint);
+    irisPoint.y += 0.5;
+    irisPoint.project(follow.camera);
+    return { x: (irisPoint.x * 0.5 + 0.5) * canvas.clientWidth, y: (0.5 - irisPoint.y * 0.5) * canvas.clientHeight };
+  };
   doors = createDoors(document.getElementById('fondu'), {
+    irisAt,
     village, rooms, houses: HOUSES, player, gates,
     onRefused(gate) {
       if (performance.now() - refusedAt < 3000 || dialogue.isOpen) return;
@@ -628,7 +657,24 @@ function start() {
     if (combat.frame !== null) sprite.setFrame(DIRECTIONS.indexOf(player.facing), combat.frame);
     for (const npc of activeNpcs) {
       npc.update(step, state.time, player.position);
-      npc.setQuest(hasQuest(npc));
+      const quest = hasQuest(npc);
+      if (npc.quest && !quest) ambience.chime('quete'); // la quête est faite : le point s'efface avec un son
+      npc.setQuest(quest);
+    }
+    // La lumière qui tourne (version 2.9), la vie du village, les runes, les
+    // étincelles de Gépété, la brume de la cascade.
+    if (playing) village.setDaylight(daylightAt(state.heureForcee ?? state.time / DAY_PERIOD, daylight));
+    if (doors.current === village) {
+      critters.update(state.time, step, ambience.hammerPhase);
+      sparkTimer -= step;
+      if (sparkTimer <= 0 && gepeto?.world === village) {
+        sparkTimer = 0.28;
+        gepeto.headPoint(focusTarget);
+        bursts.emit('etincelles', focusTarget.x - 0.3, focusTarget.y + 0.05, focusTarget.z + 0.05);
+      }
+      if (Math.hypot(player.position.x - MIST.x, player.position.z - MIST.z) < MIST.reach && Math.random() < step * 9) {
+        bursts.emit('brume', MIST.x - 1.4 + Math.random() * 2.8, 0.05, MIST.z + Math.random() * 0.8);
+      }
     }
     // Les bouffées (version 2.8) : de la poussière quand le héros tourne court
     // ou part en courant, des feuilles quand il traverse l'herbe.
@@ -644,6 +690,8 @@ function start() {
       if (pace > 0.01 && surfaceAt(player.position.x, player.position.z) === 'grass' && Math.random() < step * (running ? 9 : 5)) {
         bursts.emit('feuilles', here.x, here.y + 0.15, here.z);
       }
+      // Tous les parchemins réunis : une poussière d'étoiles suit le héros.
+      if (pace > 0.01 && allScrolls() && Math.random() < step * 14) bursts.emit('etoiles', here.x, here.y + 0.3, here.z);
       lastMove.x = wanted.x;
       lastMove.z = wanted.z;
       lastPace = pace;

@@ -243,6 +243,11 @@ export function installDebugApi(game) {
       else game.fiche.close();
       return game.fiche.isOpen;
     },
+    // Force l'heure du cycle de lumière (0 soir, 0,22 nuit, 0,48 aube, 0,72 jour), null pour reprendre le cours du temps.
+    heure(part = null) {
+      state.heureForcee = part;
+      return part;
+    },
     // La scène du lieu courant, pour fouiller dans la console.
     scene: () => game.doors.current.scene,
     // Un objet de la scène courante, par son nom : visible, nombre d'instances, rayon.

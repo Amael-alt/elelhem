@@ -8,13 +8,19 @@
 import * as THREE from 'three';
 import { FX_OUTPUT_GLSL, PIXEL_DISC_GLSL, POINT_SIZE_GLSL } from './points.js';
 
-const POOL = 96; // particules au plus, les plus anciennes sont reprises
+const POOL = 192; // particules au plus, les plus anciennes sont reprises
 const ART_PIXELS = 4; // un disque de quatre gros pixels de côté
 
 // Les sortes de bouffées : couleur, taille, vitesse, gravité, durée de vie.
 export const BURSTS = {
   poussiere: { colors: ['#c9b38a', '#b89c73', '#e0ceaa'], size: 0.1, speed: 0.9, up: 1.1, gravity: 2.4, drag: 3.5, life: 0.45, count: 6 },
   feuilles: { colors: ['#6fae4a', '#a6d35e', '#4e8a35'], size: 0.075, speed: 0.6, up: 1.4, gravity: 1.6, drag: 2.5, life: 0.65, count: 2 },
+  // Les étincelles du bâton de Gépété : elles montent lentement (version 2.9).
+  etincelles: { colors: ['#ffe08a', '#fff6c8', '#ffb347'], size: 0.06, speed: 0.25, up: 0.35, gravity: -0.25, drag: 1.5, life: 0.9, count: 1 },
+  // La poussière d'étoiles derrière le héros qui a tous ses parchemins.
+  etoiles: { colors: ['#fff3c4', '#ffd36b', '#c8e8ff'], size: 0.07, speed: 0.3, up: 0.6, gravity: -0.15, drag: 2.0, life: 0.8, count: 1 },
+  // La brume au pied de la cascade : blanche, lente, elle flotte.
+  brume: { colors: ['#e9f3ff', '#d4e6f7', '#ffffff'], size: 0.24, speed: 0.35, up: 0.45, gravity: -0.12, drag: 1.2, life: 1.8, count: 1 },
 };
 
 // pointScale : uniforme { value } partagé avec les autres effets (pixels par
@@ -119,8 +125,8 @@ export function createBursts(pointScale) {
         positions[i * 3] += p.vx * dt;
         positions[i * 3 + 1] += p.vy * dt;
         positions[i * 3 + 2] += p.vz * dt;
-        // Au sol, la particule s'arrête et s'efface.
-        if (positions[i * 3 + 1] < 0.02) {
+        // Au sol, la particule s'arrête et s'efface (sauf celles qui montent).
+        if (p.gravity > 0 && positions[i * 3 + 1] < 0.02) {
           positions[i * 3 + 1] = 0.02;
           p.vy = 0;
           p.vx *= 0.5;

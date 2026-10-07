@@ -10,9 +10,9 @@ Un petit RPG pour découvrir l'IA en dix minutes, dans le navigateur.
 
 Elelhem poursuit deux buts.
 
-**Faire découvrir l'IA en s'amusant.** Le jeu s'adresse à celles et ceux qui ne connaissent pas encore l'IA, ou qui commencent à peine, le temps d'une pause. Huit maîtres du village enseignent chacun une notion, posent une question, et remettent un parchemin ; les huit réunis valent un diplôme d'apprenti mage. Le niveau est volontairement simple : c'est une première rencontre avec l'IA, pas une formation complète.
+**Faire découvrir l'IA en s'amusant.** Le temps d'une pause, on parcourt les notions clés de l'IA générative sans jargon. Huit maîtres du village enseignent chacun une notion, posent une question, et remettent un parchemin ; les huit réunis valent un diplôme d'apprenti mage.
 
-**Montrer ce qu'on construit quand on pilote bien une IA.** On lit souvent qu'un seul prompt suffit pour créer un jeu vidéo. Un prompt donne un premier jet. Celui-ci a demandé trois jours de pilotage de Claude Code : un plan écrit avant la première ligne, des étapes vérifiées une à une dans le navigateur, des choix de game design, et beaucoup de refus. Tout le code a été écrit par Claude Code. L'idée, l'histoire, les décisions et la relecture sont de Jordan Goussery, formateur et consultant IA, passionné de jeux de rôle.
+**Montrer ce qu'on construit quand on pilote bien une IA.** On lit souvent qu'un seul prompt suffit pour créer un jeu vidéo. Un prompt donne un premier jet ; celui-ci est le fruit d'une méthode. Jordan Goussery, formateur et consultant IA, passionné de jeux de rôle, a fixé l'architecture (des modules natifs sans étape de build, une seule dépendance, un rendu HD-2D écrit pour le jeu), les choix techniques et de game design, et une vérification dans le navigateur à chaque étape. Claude Code a écrit le code sous sa direction, Higgsfield a illustré les personnages d'après ses descriptions.
 
 ## Ce qu'on y apprend
 
@@ -88,7 +88,7 @@ outils/           outils du poste, hors du jeu : vignette.mjs (image de partage)
 
 ## Comment ce village a été construit
 
-Tout le code de ce dépôt a été écrit par Claude Code, du 5 au 7 octobre 2026, à partir d'un plan préparé avant la première ligne : le rendu visé, chiffré, les étapes, et la façon de vérifier chacune. Jordan Goussery a tenu le plan, tranché à chaque étape (direction artistique, histoire, commandes) et relu chaque texte du jeu. Chaque étape a été vérifiée dans un navigateur, mesurée, puis publiée. Le récit détaillé, avec les mesures, est dans [`docs/construction.md`](docs/construction.md).
+Jordan Goussery a écrit le plan avant la première ligne de code : le rendu visé, chiffré, l'architecture, les étapes, et la façon de vérifier chacune. Claude Code a écrit le code sous sa direction, en quelques jours, en octobre 2026. Jordan a tranché à chaque étape (direction artistique, histoire, commandes, architecture) et relu chaque texte du jeu. Chaque étape a été vérifiée dans un navigateur, mesurée, puis publiée. Le récit détaillé, avec les mesures, est dans [`docs/construction.md`](docs/construction.md).
 
 | Étape | Ce qu'elle a apporté |
 |---|---|

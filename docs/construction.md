@@ -899,7 +899,7 @@ Ce qui a résisté :
 | Higgsfield | 24 images, 36 crédits, 115 restants |
 | Console | aucune erreur |
 
-## Version 2.6 en cours : l'auberge, premier décor riche (7 octobre 2026)
+## Version 2.6 en cours : l'auberge et la forge, des décors riches (7 octobre 2026)
 
 La 2.4 et la 2.5 publiées (étiquettes `v2.4` et `v2.5`), Jordan a lancé la richesse des décors en partant d'une seule maison, l'auberge, dedans et dehors, à faire valider avant d'étendre. Un constat d'abord : les petits objets du village étaient des boîtes (le tonneau était un cube), exactement les « gros blocs » à éviter.
 
@@ -914,11 +914,15 @@ Ce qui a résisté :
 - **Le parvis trop sombre** : l'éventail ne se lisait pas dans l'ombre de l'auberge, d'où la rampe plus claire.
 - **Pas de perron surélevé** : la grille n'a pas de case praticable en hauteur, et la hauteur du héros saute d'une case à l'autre. Un vrai perron à marches demandera de lisser cette hauteur ; noté pour la suite.
 
+**La forge**, de la même façon. Dehors, une cour de grandes dalles grises (case `k`, matière `yard` : la texture des dalles d'intérieur sur une rampe plus claire, `cour`), fermée à l'ouest par le muret à chaperon ; contre la façade, un râtelier de quatre épées et une lance, un bouclier rond au-dessus, un tonneau d'épées plantées, des barres de fer sur leurs traverses ; près du foyer, des sacs de charbon de bois, le baquet de trempe et la meule. Dedans, un râtelier contre le mur est, un mannequin d'armure (cuirasse, épaulières, casque à cimier), trois boucliers aux murs, le tonneau d'épées, des sacs, des barres de fer ; deux appliques à l'est, qui restait dans le noir. Nouveaux objets dans `world/furniture.js` : `buildWeaponRack`, `buildArmorStand`, `buildShield`, `buildSwordBarrel`, `buildIronBars`, `buildSacks`.
+
 ### Mesures
 
 | Critère | Résultat |
 |---|---|
 | Rendu devant l'auberge | 117 appels de dessin, 76 800 triangles (73 500 avant) |
 | Rendu dans l'auberge | 58 appels de dessin, 12 300 triangles (8 800 avant) |
+| Rendu dans la cour de la forge | 113 appels de dessin, 77 600 triangles |
+| Rendu dans la forge | 43 appels de dessin, 8 400 triangles |
 | Collisions | bloqué au pied de l'escalier et contre le canapé |
 | Console | aucune erreur |

@@ -42,6 +42,18 @@ export function createHealthBar(colors, { ground = false } = {}) {
   texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestFilter;
 
+  // toDataTexture copie les pixels (retournés) dans la texture : repeindre le
+  // tampon ne suffit pas, il faut recopier dans l'image de la texture. Sans
+  // cela, la jauge restait pleine quel que soit le coup (bug des versions 2.1
+  // à 2.6).
+  const refresh = () => {
+    const row = WIDTH * 4;
+    for (let y = 0; y < HEIGHT; y += 1) {
+      texture.image.data.set(buffer.data.subarray(y * row, (y + 1) * row), (HEIGHT - 1 - y) * row);
+    }
+    texture.needsUpdate = true;
+  };
+
   let object;
   if (ground) {
     const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
@@ -63,7 +75,7 @@ export function createHealthBar(colors, { ground = false } = {}) {
       if (Math.abs(clamped - ratio) < 1e-3) return;
       ratio = clamped;
       paint(buffer, ratio, colors);
-      texture.needsUpdate = true;
+      refresh();
     },
     setVisible(on) {
       object.visible = Boolean(on);

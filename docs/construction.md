@@ -865,3 +865,36 @@ Ce qui a résisté :
 | Rendu devant l'auberge | 118 appels de dessin, 73 650 triangles (63 700 avant les façades) |
 | Maisons | six maisons : volets sur 24 fenêtres, quatre lucarnes, quatre enseignes, cinq lanternes murales |
 | Console | aucune erreur |
+
+## Version 2.5 : des personnages trapus, le dialogue sans boîte (7 octobre 2026)
+
+Le lot est parti de neuf captures de RPG en HD-2D données par Jordan : des dialogues sans cadre, le portrait en grand, une police garalde ; des personnages courts sur pattes, plus petits à l'écran, qui marchent en diagonale ; des intérieurs entourés d'un dehors assombri ; un éclair à chaque coup. Quatre réponses à choix ont cadré le travail : silhouettes de deux têtes et demie et 40 pixels pour tout le monde, cinq vues dessinées et huit directions (les coups restant en quatre), EB Garamond partout et le dialogue sans boîte, un faux dehors bon marché autour des pièces.
+
+**La police.** EB Garamond (licence OFL, fonte variable et italique, 70 Ko) remplace Newsreader partout : interface, diplôme, carte.
+
+**Les personnages.** Les vingt planches sont redessinées. Le héros d'abord, d'après son portrait, en fiche de cinq vues (face, trois-quarts face, profil, trois-quarts dos, dos) sur fond vert, deux variantes, la plus fidèle gardée ; puis ses sept fiches de combat (l'épée à la main en cinq vues, l'élan et la frappe de trois coups en trois vues) d'après cette planche. Les quinze autres (dix habitants, le marchand, la lavandière, l'apprenti, le Mirage et le Fantôme) d'après leur portrait, la planche du héros donnée en seconde référence pour le style et l'échelle. Toutes sont transcrites à 40 pixels de haut (46 pour l'Oracle, le capitaine et la lavandière, dont le chapeau, le plumet ou le battoir dépassent) dans un cadre de 48 × 56. Les poses du héros sont calées sur sa tête : hauteur imposée par vue, puis un décalage par vue calculé d'après la colonne du chapeau, pour qu'il ne saute pas d'une pose à l'autre. Les tenues ne sont plus des fiches dessinées mais des recolorations de la planche du héros (comme la cascade en 2.3).
+
+**Le moteur des planches** (`gfx/sprites.js`). Huit lignes par planche, une par direction (`DIRECTIONS`), la droite en miroir de la gauche ; un cadre propre à chaque personnage (80 × 88 pour le héros et son épée levée, 48 × 56 pour les autres), quinze colonnes seulement pour qui ne se bat pas. `directionOf` choisit la plus proche des huit directions en gardant la direction en cours tant que le mouvement n'en sort pas franchement (pas de tremblement sur une diagonale) ; le héros, les habitants et les Hallucinations s'en servent. Un coup d'épée lancé en diagonale tourne d'abord le héros vers le côté le plus proche (`cardinalOf`), puisque les coups ne sont dessinés que de face, de profil et de dos.
+
+**Le dialogue** (bloc « Version 2.5 » de `styles.css`, rien dans le code). Plus de cadre : le nom puis le texte, en blanc ombré, sur un voile sombre fondu au tiers haut de l'écran, au-dessus des personnages qui parlent ; le portrait debout en grand dans le coin bas gauche ; deux bandes sombres et douces ferment le haut et le bas de l'écran pendant la conversation ; les choix sont des lignes de texte, un filet d'or devant celui qu'on vise. Sur téléphone, le texte passe sous la minimap et le portrait se tient en bas ; en paysage bas, le texte descend sous la barre du haut.
+
+**Le dehors des intérieurs** (`world/beyond.js`). Autour de chaque pièce, le village deviné dans une nuit bleue : des dalles sombres qui s'éteignent avec la distance, des maisons à pignon aux fenêtres parfois allumées, des arbres, une clôture basse, deux lanternes contre les flancs. Des silhouettes non éclairées, deux appels de dessin ; rien de haut au sud, qui cacherait la pièce. La caméra des intérieurs recule un peu (`INTERIOR_FRAMING` 0,62 vers 0,74) pour qu'on les voie.
+
+**Le combat.** Un éclat de lumière (une étoile à huit branches, cœur blanc et rayons dorés, quelques étincelles) jaillit sur chaque Hallucination et chaque mannequin touchés, plus grand au troisième coup (`createImpacts` dans `gfx/weapon.js`). La barre de vie au-dessus des Hallucinations existait déjà.
+
+Ce qui a résisté :
+
+- **Les poches de vert.** Le détourage remplit le fond depuis les bords : le vert enfermé entre un bâton et le corps restait (l'Oracle, le capitaine). Option `--creux 1` de `outils/detourer.mjs` : tout pixel de la couleur du fond s'efface, même enfermé.
+- **Les lumières fondues.** Réduites à dix-huit couleurs, la lueur du bâton de l'Oracle, la fiole de Basile et les yeux du Fantôme se mêlaient aux tons voisins : ces trois-là sont transcrits en vingt-quatre couleurs, pour garder un index de lumière à part.
+- **L'échelle des poses.** Le repère du chapeau donnait des héros de 30 à 57 pixels selon la pose (un chapeau vu de biais, des bras levés devant) : hauteurs imposées par vue, mesurées sur les fiches, puis calage de la tête.
+- **Le dehors hors champ.** La rangée de maisons derrière le mur nord tombe hors de l'écran (la caméra plonge vers le nord) ; ce qu'on voit, ce sont les côtés et le sud. Les lanternes posées au sud, près de la caméra, faisaient de grands poteaux clairs au premier plan : déplacées sur les flancs.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Rendu sur la place | 116 appels de dessin, 73 500 triangles (inchangé) |
+| Rendu dans l'auberge | 53 appels de dessin, 8 800 triangles (5 600 avant le dehors) |
+| Planches | 20 personnages, 8 directions, 48 modules de sprites de moins (les poses dessinées des quatre tenues) |
+| Higgsfield | 24 images, 36 crédits, 115 restants |
+| Console | aucune erreur |

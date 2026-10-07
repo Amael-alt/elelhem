@@ -55,11 +55,11 @@ export function createAreaBanner(element, regions, names, { place = null } = {})
     },
     // L'étiquette permanente : le monde (le village, la lande), et le lieu
     // dedans s'il est fixe (une pièce) ; sinon update le suit.
-    setWorld(world, area = '') {
+    setWorld(world, area = null) {
       if (!place) return;
       place.hidden = !world;
       if (placeWorld.textContent !== world) placeWorld.textContent = world;
-      setArea(area);
+      if (area !== null) setArea(area); // sinon, le lieu déjà affiché (une pièce) reste
     },
     // En entrant dans une pièce (world/rooms.js) : son nom, une fois. En
     // ressortant, le prochain update retrouve le quartier et l'affiche.

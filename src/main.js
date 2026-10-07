@@ -503,7 +503,7 @@ function start() {
       banner.setWorld(inMoor ? textesInterface.lieux.lande : textesInterface.lieux.village);
       if (inMoor) {
         banner.showRoom('lande');
-        banner.setWorld(textesInterface.lieux.lande);
+        banner.setWorld(textesInterface.lieux.lande, '');
         hallucinations.reset();
         combat.setEnemies(hallucinations);
         spots.regrowApple(); // la pomme du verger repousse à chaque sortie

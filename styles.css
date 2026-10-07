@@ -3928,6 +3928,13 @@ body {
   background: radial-gradient(ellipse 46% 64% at 58% 50%, rgb(5 4 12 / 0.9), rgb(5 4 12 / 0.74) 45%, rgb(5 4 12 / 0) 80%);
 }
 
+/* Les deux règles ci-dessus ont la même force que #dialogue[hidden], déclarée
+   plus haut, et passent après elle : sans ce rappel, la conversation finie,
+   le voile, le nom et le texte restaient à l'écran. */
+#dialogue[hidden] {
+  display: none;
+}
+
 #dialogue > * {
   grid-column: 2;
 }

@@ -26,8 +26,8 @@ const TAKE_LESSON = 0;
 // dialogue : la boîte (dialogue.js) ; state : l'état de partie ; texts :
 // data/dialogues.js ; offer : textesInterface.offreLecon ; scrolls :
 // identifiants des parchemins à gagner ; counter : le compteur (scrolls.js) ;
-// overlays : les écrans qui suspendent le jeu quand ils sont ouverts (le
-// diplôme, le grimoire), chacun avec isOpen ; diploma : l'écran du diplôme ;
+// host : l'hôte des panneaux (game/overlays.js), qui sait si un écran
+// suspend le jeu ; diploma : l'écran du diplôme ;
 // wallet : la bourse (wallet.js) et gains, ce que rapporte chaque récompense
 // (data/tokens.js) ; shop : la boutique (shop.js) et shopOffer, sa question
 // (textesInterface.boutique.offre), pour l'habitant qui porte `boutique` ;
@@ -37,7 +37,7 @@ const TAKE_LESSON = 0;
 // (textesInterface.forge.offre), pour l'habitant qui porte `forge`.
 // farewell : le texte du dernier choix de chaque question, qui referme la
 // conversation sans répondre (version 2.6, textesInterface.auRevoir).
-export function createQuest({ dialogue, state, texts, offer, scrolls, counter, overlays, diploma, wallet, gains, shop, shopOffer, credits, forge = null, forgeOffer = null, farewell = 'Au revoir.' }) {
+export function createQuest({ dialogue, state, texts, offer, scrolls, counter, host, diploma, wallet, gains, shop, shopOffer, credits, forge = null, forgeOffer = null, farewell = 'Au revoir.' }) {
   const missing = () => scrolls.filter((id) => !state.parchemins.has(id)).length;
 
   // then : la suite quand on le referme (le générique, à la remise).
@@ -113,7 +113,6 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
 
   return {
     // Les écrans qui suspendent le jeu : main.js y ajoute les siens (la feuille).
-    overlays,
     // Ouvre la conversation avec npc.
     talk(npc) {
       const key = npc.character.dialogue;
@@ -137,7 +136,7 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
     // Vrai tant qu'une conversation, le diplôme ou le grimoire occupe
     // l'écran : le héros ne bouge pas, la bulle ne s'affiche pas.
     get isBusy() {
-      return dialogue.isOpen || overlays.some((overlay) => overlay.isOpen);
+      return dialogue.isOpen || host.isBusy;
     },
   };
 }

@@ -52,7 +52,9 @@ import { MOOR_ENEMIES, SWORDS } from './data/enemies.js';
 import { gains, habiller, tenues } from './data/tokens.js';
 import { createInterior } from './world/interior.js';
 import { ROOMS } from './world/rooms.js';
-import { createGameState, resetGameState, saveGameState } from './game/state.js';
+import { createGameState, discover as noteDiscovery, hasAllScrolls, questStatus, resetGameState, saveGameState } from './game/state.js';
+import { createOverlayHost } from './game/overlays.js';
+import { inRect, MOOR_KEY, PLACE_COUNT, roomKey } from './world/places.js';
 import { loadSettings, saveSettings } from './game/settings.js';
 import { createTitleScreen } from './game/title.js';
 import { createAreaBanner } from './game/banner.js';
@@ -246,18 +248,23 @@ function start() {
   let playing = params.has('autostart');
   let quest = null;
   const canOpenOverlay = () => playing && !quest.isBusy;
+  // Les panneaux posés sur le jeu (game/overlays.js) : Échap, le clic sur le
+  // fond et « le jeu est-il occupé » ne vivent qu'ici.
+  const overlays = createOverlayHost();
   const counter = createScrollCounter(document.getElementById('parchemins'), {
     notions, texts: textesInterface.parchemins, state: gameState, onOpen: () => canOpenOverlay() && grimoire.open(),
     onGain: () => ambience.chime('parchemin'),
   });
-  const grimoire = createGrimoire(document.getElementById('grimoire'), {
+  const grimoireRoot = document.getElementById('grimoire');
+  const grimoire = overlays.attach(createGrimoire(grimoireRoot, {
     ids: counter.ids, notions, texts: dialogues, labels: textesInterface.grimoire, state: gameState, canOpen: canOpenOverlay,
-  });
-  const diploma = createDiploma(document.getElementById('diplome'), { texts: textesInterface.diplome, notions, state: gameState });
+  }), grimoireRoot);
+  const diplomaRoot = document.getElementById('diplome');
+  const diploma = overlays.attach(createDiploma(diplomaRoot, { texts: textesInterface.diplome, notions, state: gameState }), diplomaRoot);
   // Le générique de fin, après le diplôme : les habitants y sont nommés d'après leur fiche.
-  const credits = createCredits(document.getElementById('generique'), {
+  const credits = overlays.attach(createCredits(document.getElementById('generique'), {
     texts: textesInterface.generique, cast: villagers.map((character) => character.nom), state: gameState,
-  });
+  }));
   // La bourse et la boutique de Berthe.
   const wallet = createWallet(document.getElementById('tokens'), { state: gameState, texts: textesInterface.tokens });
   // Les Hallucinations de la lande, et le combat (data/enemies.js, game/enemies.js, game/combat.js).
@@ -267,15 +274,12 @@ function start() {
     onDeath: (enemy) => {
       pickups.drop(enemy.position.x, enemy.position.z, enemy.type.tokens, enemy.type.potion ?? 0);
       gameState.dissipees = (gameState.dissipees ?? 0) + 1;
+      saveGameState(gameState);
     },
   });
   // Dans l'enclos d'entraînement (world/layout.js), l'épée sert aussi : les
   // mannequins prennent les coups (version 2.3, game/spots.js).
-  const inTraining = () => {
-    const [x0, z0, x1, z1] = TRAINING.rect;
-    const { x, z } = player.position;
-    return x >= x0 && x <= x1 && z >= z0 && z <= z1;
-  };
+  const inTraining = () => inRect(TRAINING.rect, player.position.x, player.position.z);
   let spots = null;
   // Les chiffres de dégâts (version 2.6, game/damage.js), posés sur le canvas.
   const damage = createDamageNumbers(document.getElementById('degats'), { camera: follow.camera, canvas, texts: textesInterface.combat.degats });
@@ -303,10 +307,12 @@ function start() {
     },
   });
   // La forge de Ferrand : le menu Forger (game/forge.js), ouvert après ses pages ou à l'enclume.
-  const forge = createForge(document.getElementById('forge'), { swords: SWORDS, texts: textesInterface.forge, state: gameState, wallet });
-  const shop = createShop(document.getElementById('boutique'), {
+  const forgeRoot = document.getElementById('forge');
+  const forge = overlays.attach(createForge(forgeRoot, { swords: SWORDS, texts: textesInterface.forge, state: gameState, wallet }), forgeRoot);
+  const shopRoot = document.getElementById('boutique');
+  const shop = overlays.attach(createShop(shopRoot, {
     outfits: tenues, basePalette: hero.palette, texts: textesInterface.boutique, state: gameState, wallet, onWear: dressHero,
-  });
+  }), shopRoot);
   if (gameState.tenue !== tenues[0].id) dressHero(gameState.tenue);
   // Les étincelles cachées du village (version 2.3) : des éclats posés une
   // fois pour toutes, ramassés en marchant dessus, trois Tokens chacun.
@@ -314,6 +320,7 @@ function start() {
     world: village, sunDirection: village.sunDirection, post: pipeline.spriteHooks, wallet,
     onSpark: (item) => {
       gameState.etincelles.add(item.id);
+      saveGameState(gameState);
       wallet.earn(gains.etincelle);
       counter.say(textesInterface.tokens.etincelle, textesInterface.tokens.etincelleDetail(gameState.etincelles.size, SPARKS.length));
     },
@@ -325,42 +332,38 @@ function start() {
   // La minimap : un point doré pour l'habitant qui a encore une leçon à donner,
   // un point bleu pour Claudette. Un habitant dans une pièce est montré à la
   // porte de sa maison.
-  const markerKind = (npc) => {
-    const key = npc.character.dialogue;
-    const entry = dialogues[key];
-    if (npc.isExtra || !entry) return null;
-    if (entry.guide) return 'guide';
-    if (entry.diplome) return !gameState.choix.has(key) && counter.ids.every((id) => gameState.parchemins.has(id)) ? 'quete' : 'fait';
-    return gameState.parchemins.has(key) ? 'fait' : 'quete';
-  };
+  // Où en est la quête d'un habitant (game/state.js) : la minimap et le point
+  // d'exclamation lisent la même réponse.
+  const statusOf = (npc) => questStatus(gameState, npc.character.dialogue, dialogues[npc.character.dialogue], counter.ids);
   const markers = () => npcs.flatMap((npc) => {
-    const kind = markerKind(npc);
+    const kind = npc.isExtra ? null : statusOf(npc);
     if (!kind) return [];
     if (npc.world === village) return [{ x: npc.position.x, z: npc.position.z, kind }];
     const door = doors?.doors.find((d) => d.interior === npc.world);
     return door ? [{ x: door.x, z: door.z + 0.5, kind }] : [];
   });
-  const minimap = createMinimap(document.getElementById('minimap'), document.getElementById('carte'), {
+  const mapRoot = document.getElementById('carte');
+  const minimap = overlays.attach(createMinimap(document.getElementById('minimap'), mapRoot, {
     map: village.map, trees: TREES, regions: REGIONS, names: textesInterface.lieux, player, markers,
     labels: textesInterface.carte, canOpen: canOpenOverlay,
-  });
+  }), mapRoot);
   quest = createQuest({
     dialogue, state: gameState, texts: dialogues, offer: textesInterface.offreLecon, scrolls: counter.ids, counter,
-    overlays: [diploma, grimoire, minimap, shop, credits, forge], diploma, wallet, gains, shop, shopOffer: textesInterface.boutique.offre, credits,
+    host: overlays, diploma, wallet, gains, shop, shopOffer: textesInterface.boutique.offre, credits,
     forge, forgeOffer: textesInterface.forge.offre, farewell: textesInterface.auRevoir,
   });
   // Les exploits (version 2.3) : six titres, vérifiés deux fois par seconde.
   const exploits = createExploits({
-    state: gameState, texts: textesInterface.exploits, counter, save: () => saveGameState(gameState),
-    goals: { places: REGIONS.length + Object.keys(ROOMS).length + 1, sparks: SPARKS.length, searches: BARRELS.length + CRATES.length + HAYSTACKS.length },
+    state: gameState, texts: textesInterface.exploits, counter,
+    goals: { places: PLACE_COUNT, sparks: SPARKS.length, searches: BARRELS.length + CRATES.length + HAYSTACKS.length },
   });
   // La feuille de personnage (game/sheet.js) : touche F, ou le bouton livre du HUD.
-  const fiche = createSheet(document.getElementById('feuille'), {
+  const sheetRoot = document.getElementById('feuille');
+  const fiche = overlays.attach(createSheet(sheetRoot, {
     button: document.getElementById('fiche'), texts: textesInterface.feuille, notions, ids: counter.ids, state: gameState,
     outfits: tenues, outfitTexts: textesInterface.boutique.tenues, swords: SWORDS, swordTexts: textesInterface.forge.epees, combat,
-    places: REGIONS.length + Object.keys(ROOMS).length + 1, canOpen: canOpenOverlay, exploits,
-  });
-  quest.overlays.push(fiche);
+    places: PLACE_COUNT, canOpen: canOpenOverlay, exploits,
+  }), sheetRoot);
   // La légende des touches (game/keys.js), sur ordinateur seulement.
   const keyGuide = createKeyGuide(document.getElementById('touches'), {
     texts: textesInterface.touches,
@@ -373,10 +376,8 @@ function start() {
 
   // L'exploration paie : un lieu découvert (quartier ou pièce), une fois ; un
   // coffre ouvert, une fois.
-  const discover = (id) => {
-    if (!id || gameState.decouvertes.has(id)) return;
-    gameState.decouvertes.add(id);
-    wallet.earn(gains.decouverte);
+  const discover = (key) => {
+    if (noteDiscovery(gameState, key)) wallet.earn(gains.decouverte);
   };
   function openChests(world) {
     for (const chest of world.chests ?? []) {
@@ -413,7 +414,7 @@ function start() {
   // vœux, le feu et les bancs, les cachettes, la pomme, les fioles, le défi.
   spots = createSpots({
     village, state: gameState, wallet, combat, dialogue, counter,
-    texts: textesInterface.points, tokenTexts: textesInterface.tokens, save: () => saveGameState(gameState),
+    texts: textesInterface.points, tokenTexts: textesInterface.tokens,
     layout: {
       well: WELL, barrels: BARRELS, crates: CRATES, haystacks: HAYSTACKS,
       apple: ORCHARD.apple, vialStall: MARKET_STALLS.find((stall) => stall.goods === 'fioles'), training: TRAINING_SPOT,
@@ -456,7 +457,7 @@ function start() {
   let lastPace = 0;
   let wasRunning = false;
   const RUN_PACE = 1.3; // le facteur de vitesse à partir duquel le héros court (game/player.js)
-  const allScrolls = () => counter.ids.every((id) => gameState.parchemins.has(id));
+  const allScrolls = () => hasAllScrolls(gameState, counter.ids);
   // La lumière du jour (version 2.9), les petites vies, les runes de la place.
   const daylight = createDaylight();
   const critters = createCritters({
@@ -471,13 +472,7 @@ function start() {
   let sparkTimer = 0;
   const MIST = { x: (WATERFALL.x0 + WATERFALL.x1) / 2, z: WATERFALL.z + 0.3, reach: 18 }; // la brume au pied de la cascade
   // Un habitant a-t-il une quête pour le grimoire (son parchemin, ou le diplôme) encore à faire ?
-  const hasQuest = (npc) => {
-    const key = npc.character.dialogue;
-    const entry = dialogues[key];
-    if (!entry || entry.guide || !entry.question) return false;
-    if (entry.diplome) return !gameState.choix.has(key) && counter.ids.every((id) => gameState.parchemins.has(id));
-    return !gameState.parchemins.has(key);
-  };
+  const hasQuest = (npc) => Boolean(dialogues[npc.character.dialogue]?.question) && statusOf(npc) === 'quete';
   const ambience = createAmbience(music, {
     // La rivière : du plateau au nord jusqu'à la plaine au sud.
     river: [[44.5, -30], [44.5, 22.5], [45.5, 23.5], [45.5, 80]],
@@ -488,7 +483,7 @@ function start() {
   }, surfaceAt);
 
   // Écran titre (sauf ?autostart, pour les tests) et bandeau de lieu.
-  const banner = createAreaBanner(document.getElementById('lieu'), REGIONS, textesInterface.lieux, { place: document.getElementById('endroit') });
+  const banner = createAreaBanner(document.getElementById('lieu'), textesInterface.lieux, { place: document.getElementById('endroit') });
   if (playing) banner.setWorld(textesInterface.lieux.village); // ?autostart : pas d'écran titre
 
   // Les portes des maisons : à chaque changement de lieu, les habitants
@@ -499,7 +494,7 @@ function start() {
   const gates = [
     {
       from: village, to: moor, zone: GATE.zone, push: { x: -1, z: 0 }, at: MOOR_SPAWN,
-      allowed: () => (gameState.epee ?? 0) > 0 && gameState.decouvertes.has('lieu:lande'),
+      allowed: () => (gameState.epee ?? 0) > 0 && gameState.decouvertes.has(MOOR_KEY),
     },
     { from: moor, to: village, zone: MOOR_GATE, push: { x: 1, z: 0 }, at: GATE.back },
   ];
@@ -520,7 +515,7 @@ function start() {
       const rocard = dialogues.rocard;
       if ((gameState.epee ?? 0) > 0) {
         dialogue.open(rocard.nom, rocard.porte.avecEpee, () => {
-          discover('lieu:lande');
+          discover(MOOR_KEY);
           doors.travel(gate);
         });
       } else {
@@ -547,7 +542,7 @@ function start() {
       ambience.setIndoors(room || inMoor ? { fires: world.fires } : null);
       if (room) {
         banner.showRoom(world.room.lieu);
-        discover(`piece:${room}`);
+        discover(roomKey(room));
       }
       // Sur la lande : les Hallucinations reviennent toutes, le butin au sol
       // disparaît, le combat les connaît.
@@ -580,7 +575,7 @@ function start() {
       if (depart && npc.world !== worldOf(depart.lieu)) npc.moveTo(worldOf(depart.lieu), depart.x, depart.z, depart.direction);
     }
     const home = Object.keys(ROOMS).find((id) => ROOMS[id].start);
-    gameState.decouvertes.add(`piece:${home}`); // sa propre maison ne se découvre pas
+    noteDiscovery(gameState, roomKey(home)); // sa propre maison ne se découvre pas
     doors.enter(home, { instant: true, at: ROOMS[home].start });
     setTimeout(() => {
       const guide = activeNpcs.find((npc) => npc.character.depart);

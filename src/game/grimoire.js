@@ -94,9 +94,7 @@ export function createGrimoire(root, { ids, notions, texts, labels, state, canOp
   previous.addEventListener('click', () => show(index - 1));
   next.addEventListener('click', () => show(index + 1));
   close.addEventListener('click', hide);
-  root.addEventListener('click', (event) => {
-    if (event.target === root) hide(); // un clic sur le fond referme
-  });
+  // Échap et le clic sur le fond : l'hôte des panneaux (game/overlays.js).
 
   window.addEventListener('keydown', (event) => {
     if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
@@ -105,7 +103,7 @@ export function createGrimoire(root, { ids, notions, texts, labels, state, canOp
       if (event.code === TOGGLE_KEY && canOpen()) openAt();
       return;
     }
-    if (event.code === 'Escape' || event.code === TOGGLE_KEY) hide();
+    if (event.code === TOGGLE_KEY) hide();
     else if (PREVIOUS_KEYS.has(event.code)) show(index - 1);
     else if (NEXT_KEYS.has(event.code)) show(index + 1);
     else return;

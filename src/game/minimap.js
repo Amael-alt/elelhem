@@ -208,13 +208,11 @@ export function createMinimap(small, overlay, { map, trees, regions, names, play
     if (canOpen()) show();
   });
   close.addEventListener('click', hide);
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) hide();
-  });
+  // Échap et le clic sur le fond : l'hôte des panneaux (game/overlays.js).
   window.addEventListener('keydown', (event) => {
     if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
     if (event.target instanceof HTMLInputElement) return;
-    if (open && (event.code === 'Escape' || event.code === TOGGLE_KEY)) {
+    if (open && event.code === TOGGLE_KEY) {
       event.preventDefault();
       hide();
     } else if (!open && event.code === TOGGLE_KEY && visible && canOpen()) {

@@ -84,15 +84,7 @@ export function createShop(root, { outfits, basePalette, texts, state, wallet, o
   }
 
   close.addEventListener('click', hide);
-  root.addEventListener('click', (event) => {
-    if (event.target === root) hide();
-  });
-  window.addEventListener('keydown', (event) => {
-    if (open && event.code === 'Escape') {
-      event.preventDefault();
-      hide();
-    }
-  });
+  // Échap et le clic sur le fond : l'hôte des panneaux (game/overlays.js).
 
   return {
     get isOpen() {

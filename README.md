@@ -41,14 +41,15 @@ Puis ouvrir http://localhost:8080 (ou http://localhost:8080/?debug).
 Arborescence :
 
 ```
+CONTEXT.md        le vocabulaire du jeu : un mot, une définition, le module qui en a la charge
 index.html        page unique : carte d'import, balises de partage, conteneurs de l'interface
 styles.css        interface par-dessus le canvas
 vendor/three/     three.js, avec sa licence
 src/main.js       démarrage, boucle, redimensionnement
 src/core/         rendu, caméra, entrées (clavier, joystick, pincement), garde-fous tactiles
 src/gfx/          pixels, textures, matériaux, sprites, post-traitement, effets
-src/world/        carte, implantation (layout), terrain, maisons, tours, chantier, collisions, la lande (moor.js)
-src/game/         joueur, habitants, dialogues, quête, interface, débogage, combat, Hallucinations, forge, feuille de personnage
+src/world/        carte, implantation (layout), les lieux et leurs clés (places.js), terrain, maisons, tours, chantier, collisions, la lande (moor.js)
+src/game/         joueur, habitants, dialogues, quête, état de partie (state.js), panneaux et leur hôte (overlays.js), interface, débogage, combat, Hallucinations, forge, feuille de personnage
 src/data/         palette, habitants, Hallucinations et épées (enemies.js), textes des dialogues, planches de sprites transcrites (sprites/)
 assets/portraits/ portraits de dialogue, un PNG à palette par habitant qui parle
 assets/ui/        ornements de l'interface : coins, filet, cadres étirables, plaques, cadre rond, icônes, gemmes, parchemin, illustration du titre

@@ -4548,3 +4548,31 @@ label,
     animation: none;
   }
 }
+
+/* --- Version 2.9 : l'iris des portes. ---------------------------------------- */
+
+/* Le noir se referme en cercle sur le héros qui passe la porte, puis se
+   rouvre de la même façon de l'autre côté, comme dans les vieux jeux de rôle. */
+#fondu {
+  opacity: 1;
+  clip-path: circle(0 at var(--iris-x, 50%) var(--iris-y, 50%));
+  transition: clip-path 0.24s ease-in;
+}
+
+#fondu.fondu-noir {
+  clip-path: circle(160% at var(--iris-x, 50%) var(--iris-y, 50%));
+  transition-timing-function: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #fondu {
+    opacity: 0;
+    clip-path: none;
+    transition: opacity 0.24s ease;
+  }
+
+  #fondu.fondu-noir {
+    opacity: 1;
+    clip-path: none;
+  }
+}

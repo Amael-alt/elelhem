@@ -18,7 +18,9 @@ const PUSH = 0.5; // part du geste dirigée vers la porte (au joystick, on pouss
 // z0, z1 }, push: { x, z } (sens du geste qui fait passer), at: { x, z,
 // direction } (où l'on arrive), allowed() (facultatif : faux et le passage
 // reste fermé, onRefused est appelé) }].
-export function createDoors(fade, { village, rooms, houses, player, onChange, gates = [], onRefused = () => {} }) {
+// irisAt() : le point de l'écran (pixels CSS) où l'iris se ferme et se rouvre,
+// le héros sur sa porte (version 2.9) ; sans lui, le fondu part du centre.
+export function createDoors(fade, { village, rooms, houses, player, onChange, gates = [], onRefused = () => {}, irisAt = null }) {
   // La porte de chaque maison qui a un intérieur : au milieu de sa façade sud,
   // décalée comme dans world/props.js.
   const doors = Object.entries(rooms).map(([id, interior]) => {
@@ -48,6 +50,11 @@ export function createDoors(fade, { village, rooms, houses, player, onChange, ga
       return;
     }
     busy = true;
+    const at = irisAt?.();
+    if (at) {
+      fade.style.setProperty('--iris-x', `${Math.round(at.x)}px`);
+      fade.style.setProperty('--iris-y', `${Math.round(at.y)}px`);
+    }
     fade.hidden = false;
     void fade.offsetWidth; // la transition part bien de l'écran clair
     fade.classList.add('fondu-noir');

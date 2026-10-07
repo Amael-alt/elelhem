@@ -944,3 +944,28 @@ Ce qui a résisté : la caméra plonge assez pour que le pan sud du toit du puit
 | Rendu dans la maison du héros | 57 appels de dessin, 8 700 triangles |
 | Collisions | bloqué au pied de l'escalier et contre le canapé |
 | Console | aucune erreur |
+
+## Version 2.7 en cours : la liste de Jordan après sa partie (7 octobre 2026)
+
+Jordan a joué à la 2.6 et rendu une liste de retours, traitée dans l'ordre où elle pouvait l'être en une session. Fait :
+
+- **Les barres de vie ne descendaient pas**, depuis la 2.1 : `toDataTexture` copie les pixels dans la texture, et la jauge repeignait son tampon sans jamais recopier. `gfx/healthbar.js` recopie à chaque changement.
+- **Les dégâts s'affichent** (`game/damage.js`) : un chiffre monte au-dessus de la cible à chaque coup qui porte, en or et avec la mention « Critique ! » pour le troisième coup de l'enchaînement (ses dégâts sont doublés, c'est le coup critique), en rouge au-dessus du héros quand il en reçoit. Du DOM posé sur le canvas par projection, comme les étiquettes de nom.
+- **« Au revoir »** : un dernier choix sur l'offre de leçon et sur chaque question referme la conversation sans répondre et sans compter d'erreur (`game/quest.js`, texte `textesInterface.auRevoir`). La touche Échap faisait déjà la même chose, mais la boîte restait affichée à cause du bug corrigé en 2.6 (`#dialogue[hidden]`).
+- **Le flou du haut de l'écran** monte un cinquième moins vite que celui du bas (`TOP_BLUR_SCALE` dans `gfx/post/dof.js`).
+- **Plus de repos** sur les bancs ni au feu de camp : rien ne le montrait, le héros restait planté.
+- **Le double fond des cadres** : `box-shadow` dessinait un rectangle d'ombre autour de la boîte entière, qui dépassait du filet doré en haut et en bas (les coins du cadre sont transparents). Les cadres illustrés et la légende des touches passent en `drop-shadow`, qui suit le dessin.
+- **Le bandeau de lieu** descend au tiers de l'écran, où il ne passe plus sous les pastilles ; **les annonces** (parchemin, Token, coffre, exploit) vont au milieu du bord gauche ; **le lieu courant** s'affiche sous la minimap, au-dessus du bouton du son : le monde (« Village d'Elelhem », « La Lande des Hallucinations ») et dessous le quartier ou la pièce (`#endroit`, tenu par `game/banner.js`).
+- **Les pigeons** du colombier : un corps fuselé (surface de révolution), cou, tête, bec, queue en éventail, deux ailes à part qui tournent à l'épaule et planent par moments, une fois et demie plus grands. Trois appels de dessin pour la volée.
+- **L'écran titre** sur l'illustration fournie par Jordan (`assets/ui/titre.webp`, 1672 × 941) : l'image porte le titre peint, le menu Continuer / Nouvelle partie, le prénom, la signature, le lien du site (cliquable) et « © 2026, tous droits réservés » sont du HTML posé à droite, sur un cache de papier fondu qui couvre les éléments dessinés (dont une signature mal orthographiée). Sur un écran étroit ou court, le menu passe sous l'image. L'image de partage est refaite par `outils/vignette.mjs` : l'illustration seule. L'ancienne `titre-heros.png` est retirée.
+- Outils de test : `__lia.scene()` et `__lia.objet(nom)` (visible, instances, position du premier, point à l'écran).
+
+À faire, de la même liste : la course de profil (seuls les pieds bougent : les jambes sont cisaillées depuis la hanche, il faut des images dessinées ou un genou qui plie), la finesse du pixel art (l'herbe en touffes de 12 pixels, certains objets), une passe de contraste, puis la revue d'architecture que Jordan lance lui-même.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Combat | un Mirage (3 pv) tombe en deux coups de fer (2 + 2) ; les chiffres s'affichent et s'effacent en une seconde ; le coup reçu ôte une clarté et affiche « -1 » |
+| Écran titre | bureau 1686 × 1199, mobile 375 × 812, paysage 812 × 375 et vignette 1200 × 630 vérifiés |
+| Console | aucune erreur |

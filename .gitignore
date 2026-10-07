@@ -19,3 +19,8 @@ captures/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# L'atelier privé de l'auteur : plan de construction, captures de référence,
+# communication autour du jeu. Il cite des chemins locaux et des projets
+# personnels : il vit à côté du code, jamais dans le dépôt.
+/prive/

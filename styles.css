@@ -131,7 +131,7 @@ body {
   background: var(--parchemin);
   color: var(--encre);
   box-shadow: 0 3px 10px rgb(0 0 0 / 0.45);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
   animation: bulle-apparait 0.18s ease-out;
 }
@@ -192,7 +192,7 @@ body {
   background: rgb(24 17 31 / 0.9);
   box-shadow: 0 12px 34px rgb(0 0 0 / 0.5);
   color: var(--texte);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
   transform: translateX(-50%);
   animation: dialogue-apparait 0.2s ease-out;
@@ -466,7 +466,7 @@ body {
   background:
     radial-gradient(ellipse 72% 78% at 50% 48%, rgb(10 8 20 / 0.5), rgb(10 8 20 / 0.82) 80%),
     linear-gradient(180deg, rgb(10 8 20 / 0.6), transparent 30%, transparent 65%, rgb(10 8 20 / 0.8));
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
   transition: opacity 0.65s ease;
 }
@@ -605,7 +605,7 @@ body {
   text-decoration: underline;
   text-underline-offset: 3px;
   text-shadow: 0 0 3px rgb(0 0 0 / 0.95), 0 2px 8px rgb(0 0 0 / 0.85);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
 }
 
 .titre-nouvelle[hidden] {
@@ -682,7 +682,7 @@ body {
   background: var(--nuit);
   color: var(--or-vif);
   box-shadow: inset 0 0 0 2px rgb(14 13 28 / 0.9), inset 0 0 0 3px rgb(243 208 140 / 0.4), 0 4px 14px rgb(0 0 0 / 0.45);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
 }
 
@@ -739,7 +739,7 @@ body {
   font: 500 clamp(1rem, 0.78rem + 1vw, 1.2rem) / 1.3 var(--police);
   text-align: left;
   text-wrap: pretty;
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
   animation: choix-apparait 0.25s ease-out both;
 }
@@ -788,7 +788,7 @@ body {
   color: rgb(243 230 212 / 0.45);
   text-decoration: line-through;
   text-decoration-color: rgb(243 208 140 / 0.5);
-  cursor: default;
+  cursor: var(--curseur);
 }
 
 .dialogue-choix button.ecarte::before {
@@ -820,7 +820,7 @@ body {
   display: flex;
   margin: 0;
   font: inherit;
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   pointer-events: auto;
   touch-action: manipulation;
   align-items: center;
@@ -1020,7 +1020,7 @@ body {
   background: var(--nuit);
   color: var(--or-vif);
   font: 600 1rem/1 var(--police);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
 }
 
@@ -1197,7 +1197,7 @@ body {
   padding: 0;
   border: 0;
   background: none;
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
 }
 
@@ -1299,13 +1299,13 @@ body {
   background: var(--nuit);
   color: var(--or-vif);
   font: 600 1rem/1 var(--police);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
 }
 
 .grimoire-boutons button:disabled {
   opacity: 0.35;
-  cursor: default;
+  cursor: var(--curseur);
 }
 
 .grimoire-precedente::before {
@@ -1344,7 +1344,7 @@ body {
   border-radius: 6px;
   background: var(--nuit);
   box-shadow: inset 0 0 0 2px rgb(14 13 28 / 0.9), inset 0 0 0 3px rgb(243 208 140 / 0.4), 0 4px 14px rgb(0 0 0 / 0.45);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
 }
 
@@ -1478,7 +1478,7 @@ body {
   background: var(--nuit);
   color: var(--or-vif);
   font: 600 1rem/1 var(--police);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
 }
 
@@ -1718,7 +1718,7 @@ body {
   background: var(--nuit);
   color: var(--or-vif);
   font: 600 0.95rem/1.1 var(--police);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
 }
 
@@ -1730,7 +1730,7 @@ body {
 
 .boutique-tenue button:disabled {
   opacity: 0.55;
-  cursor: default;
+  cursor: var(--curseur);
 }
 
 .boutique-fermer {
@@ -1794,7 +1794,7 @@ body {
   background: var(--nuit);
   color: var(--or-vif);
   box-shadow: inset 0 0 0 3px rgb(14 13 28 / 0.9), inset 0 0 0 4px rgb(243 208 140 / 0.45), 0 6px 18px rgb(0 0 0 / 0.5);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
   transition: scale 0.08s ease-out, opacity 0.2s ease;
 }
@@ -1856,7 +1856,7 @@ body {
   background: rgb(14 13 28 / 0.7);
   color: #e9dcc2;
   font: 500 0.95rem/1.2 var(--police);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
 }
 
@@ -2033,7 +2033,7 @@ body {
   z-index: 18;
   overflow: hidden;
   background: rgb(8 7 16 / 0.9);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
   animation: diplome-entre 0.8s ease-out both;
 }
@@ -2148,7 +2148,7 @@ body {
   color: #e9dcc2;
   font: 500 0.95rem / 1 var(--police);
   white-space: nowrap;
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
   translate: -50% 0;
 }
@@ -2164,7 +2164,7 @@ body {
   overflow-y: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
-  cursor: default;
+  cursor: var(--curseur);
 }
 
 #generique.generique-fixe .generique-defile {
@@ -2598,7 +2598,7 @@ body {
   border-radius: 50%;
   background: var(--nuit) url("assets/ui/icone-livre.png") no-repeat center / 30px auto;
   box-shadow: inset 0 0 0 2px rgb(14 13 28 / 0.9), inset 0 0 0 3px rgb(243 208 140 / 0.4), 0 4px 14px rgb(0 0 0 / 0.45);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   pointer-events: auto;
   touch-action: manipulation;
 }
@@ -2627,7 +2627,7 @@ body {
   border-radius: 50%;
   background: var(--nuit) url("assets/ui/icone-epee.png") no-repeat center / auto 46px;
   box-shadow: inset 0 0 0 3px rgb(14 13 28 / 0.9), inset 0 0 0 4px rgb(243 208 140 / 0.45), 0 6px 18px rgb(0 0 0 / 0.5);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
   transition: scale 0.08s ease-out;
 }
@@ -2763,7 +2763,7 @@ body {
   background: rgb(243 208 140 / 0.08);
   color: var(--or-vif);
   font: 600 0.95rem/1.2 var(--police);
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
 }
 
@@ -2775,7 +2775,7 @@ body {
 
 .forge-epee button:disabled {
   opacity: 0.55;
-  cursor: default;
+  cursor: var(--curseur);
 }
 
 .forge-fermer,
@@ -3538,7 +3538,7 @@ body {
   background:
     radial-gradient(ellipse 85% 75% at 50% 42%, rgb(255 250 238 / 0.9), rgb(255 250 238 / 0) 70%),
     linear-gradient(180deg, #f2e6cc, #e9d8b3 60%, #d9c39a);
-  cursor: default;
+  cursor: var(--curseur);
 }
 
 #titre::before {
@@ -3610,7 +3610,7 @@ body {
   text-transform: none;
   text-decoration: none;
   text-shadow: none;
-  cursor: pointer;
+  cursor: var(--curseur-actif);
   touch-action: manipulation;
   animation: none;
   transition: scale 0.15s ease, filter 0.15s ease;
@@ -4458,17 +4458,37 @@ body:has(#minimap[hidden]) #son {
 
 /* --- Version 2.8 : le curseur du jeu et le retour des boutons. ------------ */
 
-/* Une main gantée qui pointe (assets/ui/curseur.png, dessinée par
-   outils/curseur.mjs), le point chaud au bout de l'index. */
+/* Un gantelet d'acier qui pointe (assets/ui/curseur.png, 32 px, et
+   curseur-2x.png pour les écrans à haute densité, fabriqués par
+   outils/curseur.mjs depuis un dessin généré puis détouré), le point chaud au
+   bout de l'index. La première ligne sert aux navigateurs sans image-set(). */
+:root {
+  --curseur: image-set(url("assets/ui/curseur.png") 1x, url("assets/ui/curseur-2x.png") 2x) 1 1, auto;
+  --curseur-actif: image-set(url("assets/ui/curseur-actif.png") 1x, url("assets/ui/curseur-actif-2x.png") 2x) 1 1, pointer;
+}
+
+@supports not (cursor: image-set(url("assets/ui/curseur.png") 1x) 1 1, auto) {
+  :root {
+    --curseur: url("assets/ui/curseur.png") 1 1, auto;
+    --curseur-actif: url("assets/ui/curseur-actif.png") 1 1, pointer;
+  }
+}
+
 html,
 body,
 #scene,
+input {
+  cursor: var(--curseur);
+}
+
+/* Sur ce qui se clique, le même gantelet avec un éclat d'or : ici, et dans
+   chaque règle du fichier qui disait « pointer » (« default » reprend le
+   gantelet nu). */
 button,
 a,
-input,
 label,
 [role="button"] {
-  cursor: url("assets/ui/curseur.png") 10 0, auto;
+  cursor: var(--curseur-actif);
 }
 
 /* Au survol ou à la sélection d'un bouton de menu : un léger agrandissement

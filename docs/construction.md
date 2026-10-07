@@ -858,16 +858,10 @@ Ce qui a résisté :
 
 - **Les lucarnes invisibles.** Posées au tiers bas de la pente, elles se lisaient comme un troisième rang de fenêtres collé à l'égout : la caméra, très inclinée, aplatit les toits. Remontées à mi-pente (`DORMER.along` 0,55), enfoncées de 10 cm seulement, elles sortent de 75 cm et se voient comme des lucarnes. Vérifié par `__lia.probe` sur leurs faces (couleur d'enduit là où le toit est rouge) avant de les voir à l'œil.
 
-**La place du puits.** Le cœur de la place, douze cases sur huit autour du puits, passe en pavés en éventail (case ), bordé d'une ligne de pierres à fleur de sol () ; une bande de pavés ordinaires reste autour, là où arrivent les rues. Le puits était un carré de boîtes : il devient rond (), une margelle de pierre de taille et son rebord, la paroi intérieure qui descend vers une eau sombre ( sait maintenant tourner ses faces vers l'axe,  fait le dessus de la margelle), deux poteaux, un treuil à manivelle, la corde enroulée et le seau suspendu, un toit de tuiles à deux pans avec ses pignons ; il est posé au milieu d'un rond de dalles bordé de pierres ( dans ), où l'on marche. Autour, quatre massifs fleuris ( : une couronne de pierres dressées, de la terre, un cercle de fleurs, une boule de buis), des bancs à dossier tournés vers le sud, deux jardinières, un panneau d'affichage aux feuilles épinglées (), l'étal de légumes poussé vers l'est avec des sacs et un panier. Les bancs de tout le village gagnent trois lattes, des pieds à montants et traverse, et un dossier en option (). Tout est dans  de .
-
-Ce qui a résisté : la caméra plonge assez pour que le pan sud du toit du puits cache le haut des poteaux, on le voit surtout comme un toit de tuiles posé au-dessus de la margelle. Et un bug trouvé en passant, présent depuis la 2.5 : à la fin d'une conversation, le voile, le nom et le texte restaient à l'écran, parce que la règle du dialogue sans boîte (, ) avait la même force que  et passait après elle. Un rappel de  la suit désormais.
-
 ### Mesures
 
 | Critère | Résultat |
 |---|---|
-| Rendu sur la place, au sud du puits | 122 appels de dessin, 112 500 triangles (119 et 105 000 avant) |
-| Passages sur la place | d'ouest en est au nord et au sud du puits, du nord au sud, de la bibliothèque au sud-ouest : libres |
 | Rendu devant l'auberge | 118 appels de dessin, 73 650 triangles (63 700 avant les façades) |
 | Maisons | six maisons : volets sur 24 fenêtres, quatre lucarnes, quatre enseignes, cinq lanternes murales |
 | Console | aucune erreur |
@@ -928,10 +922,16 @@ Ce qui a résisté :
 
 **La maison du héros.** Deux arbres d'automne plantés devant elle la cachaient à la caméra, et un rocher était posé exactement sur le tronc de l'un d'eux (un doublon ancien) : les arbres reculent (l'un au sud-ouest, l'autre derrière la maison), le rocher s'écarte. Autour, un jardin de chaumière (`HOME_GARDEN`) : une barrière ouverte face à la porte, des pas japonais jusqu'au feu de camp (`buildSteppingStones`), un potager, une corde à linge où sèchent des draps, une chemise bleue et un foulard rouge (`buildClothesline`), le tas de bois contre le mur est, un banc, un tonneau de pluie, deux pots de fleurs à la porte. Les potagers de tout le village (l'auberge, l'apothicairerie) étaient des cubes verts : ce sont maintenant des rangs, un sillon de terre par rang, des choux ronds et des fanes en alternance. Dedans, la pièce gagne un fauteuil tourné vers le feu, deux plantes, des livres sur le pupitre et au pied de la bibliothèque, des sacs près du panier ; la scène d'ouverture garde sa place.
 
+**La place du puits.** Le cœur de la place, douze cases sur huit autour du puits, passe en pavés en éventail (case `e`), bordé d'une ligne de pierres à fleur de sol (`buildKerb`) ; une bande de pavés ordinaires reste autour, là où arrivent les rues. Le puits était un carré de boîtes : il devient rond (`buildWell`), une margelle de pierre de taille et son rebord, la paroi intérieure qui descend vers une eau sombre (`pushRevolution` sait maintenant tourner ses faces vers l'axe, `pushAnnulus` fait le dessus de la margelle), deux poteaux, un treuil à manivelle, la corde enroulée et le seau suspendu, un toit de tuiles à deux pans avec ses pignons ; il est posé au milieu d'un rond de dalles bordé de pierres (`dais` dans `WELL`), où l'on marche. Autour, quatre massifs fleuris (`buildFlowerBed` : une couronne de pierres dressées, de la terre, un cercle de fleurs, une boule de buis), des bancs à dossier tournés vers le sud, deux jardinières, un panneau d'affichage aux feuilles épinglées (`buildNoticeBoard`), l'étal de légumes poussé vers l'est avec des sacs et un panier. Les bancs de tout le village gagnent trois lattes, des pieds à montants et traverse, et un dossier en option (`back`). Tout est dans `SQUARE` de `world/layout.js`.
+
+Ce qui a résisté : la caméra plonge assez pour que le pan sud du toit du puits cache le haut des poteaux ; on le lit surtout comme un toit de tuiles posé au-dessus de la margelle. Et un bug trouvé en passant, présent depuis la 2.5 : à la fin d'une conversation, le voile, le nom et le texte restaient à l'écran, parce que la règle du dialogue sans boîte (`#dialogue.avec-portrait`, `display: grid`) avait la même force que `#dialogue[hidden]` et passait après elle. Un rappel de `#dialogue[hidden]` la suit désormais.
+
 ### Mesures
 
 | Critère | Résultat |
 |---|---|
+| Rendu sur la place, au sud du puits | 122 appels de dessin, 112 500 triangles (119 et 105 000 avant) |
+| Passages sur la place | d'ouest en est au nord et au sud du puits, du nord au sud, de la bibliothèque au sud-ouest : libres |
 | Rendu devant l'auberge | 117 appels de dessin, 76 800 triangles (73 500 avant) |
 | Rendu dans l'auberge | 58 appels de dessin, 12 300 triangles (8 800 avant) |
 | Rendu dans la cour de la forge | 113 appels de dessin, 77 600 triangles |

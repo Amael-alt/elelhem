@@ -187,9 +187,6 @@ export const berthe = {
 
 // Maître Gaspard, le chef de chantier, face à son échafaudage : une règle
 // graduée dans une main, le rouleau des plans sous l'autre bras.
-const regleFace = ['....b...................', '....bB..................'];
-const regleDos = ['...................b....', '..................Bb....'];
-const regleProfil = ['...b....................', '...bB...................'];
 export const gaspard = {
   id: 'gaspard',
   sprite: 'gaspard',

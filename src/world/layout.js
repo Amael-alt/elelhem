@@ -22,14 +22,14 @@
 export const HOUSES = {
   // La forge : basse et large, une cheminée de brique très forte.
   forge: {
-    x: 6, z: 4, sizeX: 5, sizeZ: 3, wall: 3.3, rise: 1.8, ridge: 'x', walls: 'stonewall', roof: 'slate',
+    x: 6, z: 4, sizeX: 5, sizeZ: 3, wall: 3.3, rise: 1.8, ridge: 'x', walls: 'stonewall', roof: 'slate', shutters: 'bleu', sign: 'enclume',
     door: { side: 'south', offset: -0.7 },
     windows: [{ side: 'south', offset: 1.5 }, { side: 'south', offset: 0.4, y: 2.3 }],
     chimney: [0.82, 0.4], chimneySize: 0.9, chimneyRise: 1.4,
   },
   // La bibliothèque : haute, trois rangées de fenêtres.
   bibliotheque: {
-    x: 15, z: 7, sizeX: 5, sizeZ: 4, wall: 5.6, rise: 2.3, ridge: 'x', roof: 'slate', planters: true,
+    x: 15, z: 7, sizeX: 5, sizeZ: 4, wall: 5.6, rise: 2.3, ridge: 'x', roof: 'slate', planters: true, shutters: 'bleu', dormers: [-1.2, 1.2], sign: 'livre',
     door: { side: 'south', offset: 0 },
     // Trois rangées de fenêtres : la plus haute maison du village.
     windows: [
@@ -42,28 +42,28 @@ export const HOUSES = {
   },
   // L'apothicairerie : étroite, ouverte sur son jardin de simples à l'est.
   apothicairerie: {
-    x: 32, z: 8, sizeX: 3, sizeZ: 3, wall: 4.2, rise: 2.0, ridge: 'x', roof: 'thatch', planters: true,
+    x: 32, z: 8, sizeX: 3, sizeZ: 3, wall: 4.2, rise: 2.0, ridge: 'x', roof: 'thatch', planters: true, shutters: 'vert', sign: 'fiole',
     door: { side: 'south', offset: 0 },
     windows: [{ side: 'east', offset: 0 }, { side: 'west', offset: 0 }, { side: 'south', offset: 0, y: 3.2 }, { side: 'east', offset: 0, y: 3.2 }],
     chimney: [0.25, 0.5],
   },
   // La guérite de la porte de la muraille.
   guerite: {
-    x: 4, z: 16, sizeX: 2, sizeZ: 2, wall: 2.9, rise: 1.3, ridge: 'x', walls: 'stonewall', roof: 'slate',
+    x: 4, z: 16, sizeX: 2, sizeZ: 2, wall: 2.9, rise: 1.3, ridge: 'x', walls: 'stonewall', roof: 'slate', lantern: false,
     door: { side: 'south', offset: 0 },
     windows: [{ side: 'east', offset: 0 }],
   },
   // La maison du héros, dans la prairie de l'est, de l'autre côté du pont :
   // petite, chaume et jardinières. La partie commence dedans.
   maison: {
-    x: 49, z: 6, sizeX: 3, sizeZ: 3, wall: 3.4, rise: 2.0, ridge: 'x', roof: 'thatch', planters: true,
+    x: 49, z: 6, sizeX: 3, sizeZ: 3, wall: 3.4, rise: 2.0, ridge: 'x', roof: 'thatch', planters: true, shutters: 'vert',
     door: { side: 'south', offset: 0 },
     windows: [{ side: 'south', offset: 1.0 }, { side: 'west', offset: 0 }, { side: 'south', offset: -0.6, y: 2.3 }],
     chimney: [0.5, 0.25],
   },
   // L'auberge : la plus grande maison, cheminée qui fume.
   auberge: {
-    x: 10, z: 28, sizeX: 6, sizeZ: 4, wall: 4.8, rise: 2.2, ridge: 'x', planters: true,
+    x: 10, z: 28, sizeX: 6, sizeZ: 4, wall: 4.8, rise: 2.2, ridge: 'x', planters: true, shutters: 'rouge', dormers: [-1.6, 1.4], sign: 'chope',
     door: { side: 'south', offset: 0.5 },
     windows: [
       { side: 'south', offset: -1.7 }, { side: 'south', offset: 1.9 }, { side: 'west', offset: 0 },
@@ -137,7 +137,6 @@ export const CRATES = [
   { x: 22.0, z: 13.3 }, { x: 31.5, z: 13.4 }, { x: 30.6, z: 36.0, size: 0.5 }, { x: 22.8, z: 35.6 },
 ];
 export const BENCHES = [{ x: 23.7, z: 16.7 }, { x: 31.2, z: 24.8 }, { x: 11.4, z: 32.6 }, { x: 41.6, z: 27.2 }, { x: 49.4, z: 39.3 }];
-export const SIGN = { x: 15.3, z: 32.0, y: 2.4 };
 export const VEGETABLES = [
   { x0: 37.6, z0: 8.6, x1: 39.4, z1: 12.2 }, // jardin de simples de l'apothicaire
   { x0: 19.5, z0: 29.4, x1: 22.0, z1: 30.3 }, // potager de l'auberge

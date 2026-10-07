@@ -14,12 +14,12 @@ import { createCollider } from './collision.js';
 import { buildHouse, buildLantern, buildTree, LANTERN_FLAME, LANTERN_POST_RADIUS, TREE_TRUNK_RADIUS } from './props.js';
 import {
   buildAnvil, buildAppleTree, buildBarrel, buildBasket, buildBench, buildCampfire, buildCrate, buildDummy, buildFence,
-  buildFlowerPot, buildHaystack, buildHearth, buildLadder, buildMarketStall, buildRock, buildSign, buildSignpost, buildSite,
+  buildFlowerPot, buildHaystack, buildHearth, buildLadder, buildMarketStall, buildRock, buildShopSign, buildSignpost, buildSite,
   buildStall, buildTable, buildTarget, buildTower, buildVegetables, buildWashhouse, buildWell, buildWoodpile,
 } from './landmarks.js';
 import {
   ANVIL, BARRELS, BENCHES, BUNTING, BUSHES, BUTTERFLIES, CAMPFIRE, FENCES, FLOWER_POTS, HAYSTACKS, MEADOWS, ROCKS, SIGNPOSTS,
-  STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, MARKET_STALLS, ORCHARD, SIGN, SITE,
+  STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, MARKET_STALLS, ORCHARD, SITE,
   SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
@@ -47,7 +47,7 @@ import {
   createWindowTextures, createWoodTextures, createAwningTexture, createSlateTextures, createStoneWallTextures, createThatchTextures,
   createFlagstoneTextures, createPaintingTexture, createPanelTextures, createPlankTextures, createRugTexture, RUG_PIXELS_PER_UNIT,
 } from '../gfx/textures.js';
-import { foliageTints, hazeColor, interiorRamps, ironColor, lanternColor, natureRamps } from '../data/palette.js';
+import { buildingRamps, foliageTints, hazeColor, interiorRamps, ironColor, lanternColor, natureRamps } from '../data/palette.js';
 
 const SUN_COLOR = 0xffc07a;
 const SUN_INTENSITY = 6.5;
@@ -110,6 +110,10 @@ function createMaterials() {
     slate: tile(createSlateTextures(101), { normalStrength: 1.0, roughness: 0.7 }),
     thatch: tile(createThatchTextures(103), { normalStrength: 0.9, roughness: 1 }),
     stonewall: tile(createStoneWallTextures(107), { normalStrength: 0.8, roughness: 0.9 }),
+    // Les volets peints des façades (version 2.4) : du bois, en trois couleurs.
+    voletVert: tile(createWoodTextures(141, buildingRamps.voletVert), { normalStrength: 0.4, roughness: 0.85 }),
+    voletBleu: tile(createWoodTextures(143, buildingRamps.voletBleu), { normalStrength: 0.4, roughness: 0.85 }),
+    voletRouge: tile(createWoodTextures(149, buildingRamps.voletRouge), { normalStrength: 0.4, roughness: 0.85 }),
     awning: createPixelMaterial({ ...createAwningTexture(), roughness: 0.9 }),
     // Les intérieurs (version 1.3, world/interior.js) : plancher de lattes,
     // dalles de la forge, lambris, enduit à la chaux, les tableaux, le tapis.
@@ -132,7 +136,7 @@ function createMaterials() {
 function createBuildings(materials, posts) {
   const keys = [
     'plaster', 'stonewall', 'wood', 'roof', 'slate', 'thatch', 'stone', 'brick', 'door', 'window', 'post', 'iron', 'bark',
-    'leaves', 'rock', 'awning',
+    'leaves', 'rock', 'awning', 'voletVert', 'voletBleu', 'voletRouge',
   ];
   const builders = Object.fromEntries(keys.map((key) => [key, createMeshBuilder()]));
   const addPosts = (list) => posts.push(...[list].flat());
@@ -140,6 +144,13 @@ function createBuildings(materials, posts) {
   const houses = Object.values(HOUSES).map((house) => buildHouse(house, builders));
   const chimneys = houses.map((house) => house.chimney).filter(Boolean);
   const planters = houses.flatMap((house) => house.planters);
+  // Les lanternes murales des portes (version 2.4) : des flammes d'ambiance.
+  const wallLanterns = houses.flatMap((house) => house.lanterns);
+  // Les enseignes figurées (version 2.4) : au sud de la façade, à droite de la porte.
+  for (const house of Object.values(HOUSES)) {
+    if (!house.sign) continue;
+    buildShopSign({ x: house.x + house.sizeX / 2 + (house.door?.offset ?? 0) + 1.15, z: house.z + house.sizeZ, y: 2.35, kind: house.sign }, builders);
+  }
   for (const stall of STALLS) addPosts(buildStall(stall, builders));
   // Version 2.3 : le marché, le lavoir, l'enclos d'entraînement et le verger.
   for (const stall of MARKET_STALLS) addPosts(buildMarketStall(stall, builders));
@@ -171,7 +182,6 @@ function createBuildings(materials, posts) {
   for (const barrel of BARRELS) addPosts(buildBarrel(barrel, builders));
   for (const crate of CRATES) addPosts(buildCrate(crate, builders));
   for (const bench of BENCHES) addPosts(buildBench(bench, builders));
-  buildSign(SIGN, builders);
   for (const garden of VEGETABLES) buildVegetables(garden, builders);
   // Couronnes : les grappes de tous les arbres, dessinées ensemble (voir createVillage).
   const clumps = [];
@@ -196,7 +206,7 @@ function createBuildings(materials, posts) {
     posts.push({ x, z, radius: LANTERN_POST_RADIUS });
     return buildLantern(x, z, builders);
   };
-  const flames = { lit: LANTERNS.map(lanternFlame), decor: DECOR_LANTERNS.map(lanternFlame), hearth: [hearth.flame, campfire.flame] };
+  const flames = { lit: LANTERNS.map(lanternFlame), decor: [...DECOR_LANTERNS.map(lanternFlame), ...wallLanterns], hearth: [hearth.flame, campfire.flame] };
 
   const group = new THREE.Group();
   group.name = 'constructions';

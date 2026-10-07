@@ -24,6 +24,10 @@ export const buildingRamps = {
   pierre: ['#4a4440', '#5f5852', '#766e66', '#8d857a', '#a49b8e', '#bcb3a4'],
   toileRouge: ['#5a1414', '#851f1c', '#b03028', '#d0483a'],
   toileCreme: ['#9c8a6c', '#c4b08c', '#e2d0aa', '#f5e8c8'],
+  // Les volets peints des façades (version 2.4) : vert sauge, bleu de Prusse, rouge brique.
+  voletVert: ['#1f3524', '#2d4a31', '#3d6141', '#4f7a52', '#6a9268'],
+  voletBleu: ['#17263a', '#1f3651', '#2a4a6b', '#376086', '#4f7aa3'],
+  voletRouge: ['#4a1a16', '#6b2520', '#8a322a', '#a64438', '#c15a48'],
 };
 
 // Nature et socle : feuillage plus sombre et plus bleu que l'herbe, écorce,

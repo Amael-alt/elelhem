@@ -3893,3 +3893,214 @@ body {
     top: calc(122px + env(safe-area-inset-top));
   }
 }
+
+/* ==== Version 2.5 : le dialogue sans boîte ====================================
+   Comme dans les RPG en HD-2D : plus de cadre. Le nom, puis le texte, posés
+   sur un voile sombre fondu, dans le tiers haut de l'écran (au-dessus des
+   personnages qui parlent) ; le portrait en grand, debout dans le coin bas
+   gauche. Pendant la conversation, deux bandes sombres et douces ferment le
+   haut et le bas de l'écran. Ce bloc annule les cadres des versions
+   précédentes, déclarés plus haut. */
+
+#dialogue,
+#dialogue.avec-portrait {
+  top: calc(17vh + env(safe-area-inset-top));
+  right: 0;
+  bottom: auto;
+  left: 0;
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 720px) 1fr;
+  width: auto;
+  padding: 3.2vh max(24px, env(safe-area-inset-right)) 3.6vh max(24px, env(safe-area-inset-left));
+  border: 0;
+  border-image: none;
+  border-radius: 0;
+  background: radial-gradient(ellipse 52% 64% at 50% 50%, rgb(5 4 12 / 0.9), rgb(5 4 12 / 0.74) 45%, rgb(5 4 12 / 0) 80%);
+  box-shadow: none;
+  filter: none;
+  transform: none;
+  animation: dialogue-fond 0.25s ease-out;
+}
+
+/* Le portrait occupe la gauche : le texte se décale vers la droite. */
+#dialogue.avec-portrait {
+  grid-template-columns: minmax(min(30vw, 470px), 1fr) minmax(0, 700px) 1fr;
+  background: radial-gradient(ellipse 46% 64% at 58% 50%, rgb(5 4 12 / 0.9), rgb(5 4 12 / 0.74) 45%, rgb(5 4 12 / 0) 80%);
+}
+
+#dialogue > * {
+  grid-column: 2;
+}
+
+/* Les deux bandes de cinéma, fondues, qui assombrissent aussi l'interface. */
+#dialogue::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  display: block;
+  width: auto;
+  height: auto;
+  background:
+    linear-gradient(180deg, rgb(3 2 8 / 0.82), rgb(3 2 8 / 0) 20%, rgb(3 2 8 / 0) 76%, rgb(3 2 8 / 0.85)),
+    radial-gradient(ellipse 85% 75% at 50% 50%, rgb(3 2 8 / 0.08), rgb(3 2 8 / 0.5));
+  box-shadow: none;
+  rotate: none;
+  pointer-events: none;
+}
+
+#dialogue::after,
+#dialogue .coins {
+  display: none;
+}
+
+#dialogue .dialogue-nom,
+#dialogue.avec-portrait .dialogue-nom {
+  position: static;
+  margin: 0 0 0.45em;
+  padding: 0;
+  border: 0;
+  border-image: none;
+  background: none;
+  filter: none;
+  color: #f1e2c4;
+  font: 500 clamp(0.98rem, 0.75rem + 0.9vw, 1.2rem) / 1.2 var(--police);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 0.9);
+}
+
+#dialogue .dialogue-texte {
+  min-height: 2.9em;
+  margin: 0;
+  padding: 0 0 0 1.1em;
+  color: #fbf6ec;
+  font: 500 clamp(1.18rem, 0.8rem + 1.45vw, 1.7rem) / 1.45 var(--police);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.95), 0 0 14px rgb(0 0 0 / 0.6);
+}
+
+/* La marque de suite : un petit triangle blanc qui bat, sous la fin du texte. */
+#dialogue .dialogue-suite {
+  position: static;
+  justify-self: end;
+  margin-top: 0.2em;
+  border: 7px solid transparent;
+  border-top: 10px solid #fbf6ec;
+  border-bottom: 0;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9));
+}
+
+#dialogue[data-fin="oui"] .dialogue-suite {
+  background: #fbf6ec;
+}
+
+/* Les choix : des lignes de texte, un filet d'or devant celui qu'on vise. */
+#dialogue .dialogue-choix {
+  margin-top: 0.7em;
+  padding-left: 1.1em;
+}
+
+#dialogue .dialogue-choix button {
+  min-height: 46px;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  background: linear-gradient(90deg, rgb(5 4 12 / 0.55), rgb(5 4 12 / 0) 85%);
+  box-shadow: none;
+  color: #f3e9d6;
+  font-size: clamp(1.02rem, 0.82rem + 0.9vw, 1.35rem);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.9);
+}
+
+#dialogue .dialogue-choix button.choisi,
+#dialogue .dialogue-choix button:focus-visible {
+  border-left-color: var(--or-vif);
+  background: linear-gradient(90deg, rgb(243 208 140 / 0.22), rgb(5 4 12 / 0) 85%);
+  box-shadow: none;
+  color: #fffaf0;
+}
+
+/* Le portrait : debout dans le coin bas gauche, aussi grand que l'écran le permet. */
+#dialogue .dialogue-portrait {
+  position: fixed;
+  right: auto;
+  bottom: 0;
+  left: max(1.5vw, env(safe-area-inset-left));
+  z-index: -1;
+  height: min(76vh, 780px);
+}
+
+#dialogue .dialogue-portrait::before {
+  inset: 10% -25% -4%;
+  background: radial-gradient(ellipse at 50% 65%, rgb(5 4 12 / 0.7), rgb(5 4 12 / 0) 70%);
+}
+
+@keyframes dialogue-fond {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Téléphone en portrait : le texte sur toute la largeur, au tiers haut ; le
+   portrait plus petit, en bas à gauche, sous le texte. */
+@media (max-width: 760px) {
+  #dialogue,
+  #dialogue.avec-portrait {
+    top: calc(205px + env(safe-area-inset-top));
+    grid-template-columns: 0 minmax(0, 1fr) 0;
+    padding: 22px 18px 26px;
+    background: radial-gradient(ellipse 85% 70% at 50% 50%, rgb(5 4 12 / 0.82), rgb(5 4 12 / 0.6) 50%, rgb(5 4 12 / 0) 85%);
+  }
+
+  #dialogue .dialogue-texte {
+    padding-left: 0;
+    font-size: 1.12rem;
+  }
+
+  #dialogue .dialogue-choix {
+    padding-left: 0;
+  }
+
+  #dialogue .dialogue-portrait {
+    left: 0;
+    height: min(44vh, 400px);
+  }
+}
+
+/* Paysage bas (téléphone couché) : le texte en haut, le portrait petit à gauche. */
+@media (max-height: 480px) {
+  #dialogue,
+  #dialogue.avec-portrait {
+    top: calc(58px + env(safe-area-inset-top));
+    padding: 10px 18px 12px;
+  }
+
+  #dialogue.avec-portrait {
+    grid-template-columns: 24vw minmax(0, 1fr) 0.3fr;
+  }
+
+  #dialogue .dialogue-portrait {
+    display: block;
+    height: 72vh;
+  }
+
+  #dialogue .dialogue-texte {
+    min-height: 2.6em;
+    font-size: 1.05rem;
+  }
+
+  #dialogue .dialogue-choix {
+    margin-top: 0.4em;
+  }
+
+  #dialogue .dialogue-choix button {
+    min-height: 40px;
+    font-size: 0.98rem;
+  }
+}
+
+@media (max-height: 480px) and (max-width: 760px) {
+  #dialogue .dialogue-portrait {
+    display: none;
+  }
+}

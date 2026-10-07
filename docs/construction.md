@@ -899,7 +899,7 @@ Ce qui a résisté :
 | Higgsfield | 24 images, 36 crédits, 115 restants |
 | Console | aucune erreur |
 
-## Version 2.6 en cours : l'auberge et la forge, des décors riches (7 octobre 2026)
+## Version 2.6 en cours : l'auberge, la forge et la bibliothèque, des décors riches (7 octobre 2026)
 
 La 2.4 et la 2.5 publiées (étiquettes `v2.4` et `v2.5`), Jordan a lancé la richesse des décors en partant d'une seule maison, l'auberge, dedans et dehors, à faire valider avant d'étendre. Un constat d'abord : les petits objets du village étaient des boîtes (le tonneau était un cube), exactement les « gros blocs » à éviter.
 
@@ -916,6 +916,8 @@ Ce qui a résisté :
 
 **La forge**, de la même façon. Dehors, une cour de grandes dalles grises (case `k`, matière `yard` : la texture des dalles d'intérieur sur une rampe plus claire, `cour`), fermée à l'ouest par le muret à chaperon ; contre la façade, un râtelier de quatre épées et une lance, un bouclier rond au-dessus, un tonneau d'épées plantées, des barres de fer sur leurs traverses ; près du foyer, des sacs de charbon de bois, le baquet de trempe et la meule. Dedans, un râtelier contre le mur est, un mannequin d'armure (cuirasse, épaulières, casque à cimier), trois boucliers aux murs, le tonneau d'épées, des sacs, des barres de fer ; deux appliques à l'est, qui restait dans le noir. Nouveaux objets dans `world/furniture.js` : `buildWeaponRack`, `buildArmorStand`, `buildShield`, `buildSwordBarrel`, `buildIronBars`, `buildSacks`.
 
+**La bibliothèque**, qui n'avait pas d'intérieur : une salle de lecture neuve (`ROOMS.bibliotheque`), la porte s'ouvre d'elle-même puisque la pièce porte le nom de la maison. Des livres du sol au plafond sur trois murs (deux bibliothèques au nord, quatre hautes étagères à l'est et à l'ouest, `buildTallShelf`), l'échelle contre les rayons, le bureau de Dame Marjolaine sous la fenêtre, un lutrin et son grand livre ouvert au milieu du tapis (`buildLectern`), deux tables de lecture avec bougies et livres, un coin de lecture (fauteuil, table basse, plante), un globe sur son pied (`buildGlobe`, les océans dans le bois bleu des volets : la toile rayée en faisait un ballon de plage), des piles de livres (`buildBookStack`). Dehors, un parvis en pavés en éventail sur trois rangs, fermé au sud par le muret coiffé d'auges fleuries (reculé d'une case : le premier parvis serrait Marjolaine contre lui), un cadran solaire (`buildSundial`), un banc et une pile de livres sous la fenêtre ; Dame Marjolaine attend sur le parvis, près de sa porte. L'exploit du cartographe compte un lieu de plus.
+
 ### Mesures
 
 | Critère | Résultat |
@@ -924,5 +926,7 @@ Ce qui a résisté :
 | Rendu dans l'auberge | 58 appels de dessin, 12 300 triangles (8 800 avant) |
 | Rendu dans la cour de la forge | 113 appels de dessin, 77 600 triangles |
 | Rendu dans la forge | 43 appels de dessin, 8 400 triangles |
+| Rendu devant la bibliothèque | 117 appels de dessin, 79 700 triangles |
+| Rendu dans la bibliothèque | 49 appels de dessin, 20 200 triangles |
 | Collisions | bloqué au pied de l'escalier et contre le canapé |
 | Console | aucune erreur |

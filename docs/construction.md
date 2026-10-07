@@ -858,10 +858,16 @@ Ce qui a résisté :
 
 - **Les lucarnes invisibles.** Posées au tiers bas de la pente, elles se lisaient comme un troisième rang de fenêtres collé à l'égout : la caméra, très inclinée, aplatit les toits. Remontées à mi-pente (`DORMER.along` 0,55), enfoncées de 10 cm seulement, elles sortent de 75 cm et se voient comme des lucarnes. Vérifié par `__lia.probe` sur leurs faces (couleur d'enduit là où le toit est rouge) avant de les voir à l'œil.
 
+**La place du puits.** Le cœur de la place, douze cases sur huit autour du puits, passe en pavés en éventail (case ), bordé d'une ligne de pierres à fleur de sol () ; une bande de pavés ordinaires reste autour, là où arrivent les rues. Le puits était un carré de boîtes : il devient rond (), une margelle de pierre de taille et son rebord, la paroi intérieure qui descend vers une eau sombre ( sait maintenant tourner ses faces vers l'axe,  fait le dessus de la margelle), deux poteaux, un treuil à manivelle, la corde enroulée et le seau suspendu, un toit de tuiles à deux pans avec ses pignons ; il est posé au milieu d'un rond de dalles bordé de pierres ( dans ), où l'on marche. Autour, quatre massifs fleuris ( : une couronne de pierres dressées, de la terre, un cercle de fleurs, une boule de buis), des bancs à dossier tournés vers le sud, deux jardinières, un panneau d'affichage aux feuilles épinglées (), l'étal de légumes poussé vers l'est avec des sacs et un panier. Les bancs de tout le village gagnent trois lattes, des pieds à montants et traverse, et un dossier en option (). Tout est dans  de .
+
+Ce qui a résisté : la caméra plonge assez pour que le pan sud du toit du puits cache le haut des poteaux, on le voit surtout comme un toit de tuiles posé au-dessus de la margelle. Et un bug trouvé en passant, présent depuis la 2.5 : à la fin d'une conversation, le voile, le nom et le texte restaient à l'écran, parce que la règle du dialogue sans boîte (, ) avait la même force que  et passait après elle. Un rappel de  la suit désormais.
+
 ### Mesures
 
 | Critère | Résultat |
 |---|---|
+| Rendu sur la place, au sud du puits | 122 appels de dessin, 112 500 triangles (119 et 105 000 avant) |
+| Passages sur la place | d'ouest en est au nord et au sud du puits, du nord au sud, de la bibliothèque au sud-ouest : libres |
 | Rendu devant l'auberge | 118 appels de dessin, 73 650 triangles (63 700 avant les façades) |
 | Maisons | six maisons : volets sur 24 fenêtres, quatre lucarnes, quatre enseignes, cinq lanternes murales |
 | Console | aucune erreur |
@@ -899,7 +905,7 @@ Ce qui a résisté :
 | Higgsfield | 24 images, 36 crédits, 115 restants |
 | Console | aucune erreur |
 
-## Version 2.6 en cours : l'auberge, la forge, la bibliothèque, l'apothicairerie et la maison du héros, des décors riches (7 octobre 2026)
+## Version 2.6 en cours : l'auberge, la forge, la bibliothèque, l'apothicairerie, la maison du héros et la place, des décors riches (7 octobre 2026)
 
 La 2.4 et la 2.5 publiées (étiquettes `v2.4` et `v2.5`), Jordan a lancé la richesse des décors en partant d'une seule maison, l'auberge, dedans et dehors, à faire valider avant d'étendre. Un constat d'abord : les petits objets du village étaient des boîtes (le tonneau était un cube), exactement les « gros blocs » à éviter.
 

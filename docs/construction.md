@@ -899,7 +899,7 @@ Ce qui a résisté :
 | Higgsfield | 24 images, 36 crédits, 115 restants |
 | Console | aucune erreur |
 
-## Version 2.6 en cours : l'auberge, la forge, la bibliothèque et l'apothicairerie, des décors riches (7 octobre 2026)
+## Version 2.6 en cours : l'auberge, la forge, la bibliothèque, l'apothicairerie et la maison du héros, des décors riches (7 octobre 2026)
 
 La 2.4 et la 2.5 publiées (étiquettes `v2.4` et `v2.5`), Jordan a lancé la richesse des décors en partant d'une seule maison, l'auberge, dedans et dehors, à faire valider avant d'étendre. Un constat d'abord : les petits objets du village étaient des boîtes (le tonneau était un cube), exactement les « gros blocs » à éviter.
 
@@ -920,6 +920,8 @@ Ce qui a résisté :
 
 **L'apothicairerie**, elle aussi sans intérieur jusqu'ici : l'officine de Basile (`ROOMS.apothicairerie`). La cheminée et son chaudron, des herbes qui sèchent au-dessus de la fenêtre, une étagère de remèdes sur tout le mur nord (`buildJarShelf` : bocaux de grès et de terre à couvercle de fer, fioles de couleur au long col, quelques-unes dans la matière des fenêtres allumées, qui luisent), le comptoir avec son mortier (`buildMortar`), une bougie et des livres, un séchoir à herbes contre le mur ouest (`buildDryingRack`), un panier et des sacs, l'alambic sur une table ronde (`buildAlembic` : ballon de cuivre, col de cygne, serpentin, ballon de recette qui luit), deux plantes, un tapis. Dehors, un seuil dallé (case `k`), un séchoir à l'ouest de la porte (ses bottes d'herbes étoffées après un premier essai où on ne les voyait pas), une grande plante en pot à l'est, un chaudron sur trépied au bord de l'allée (`buildTripodCauldron`), deux ruches de paille au fond du jardin de simples (`buildBeehive`).
 
+**La maison du héros.** Deux arbres d'automne plantés devant elle la cachaient à la caméra, et un rocher était posé exactement sur le tronc de l'un d'eux (un doublon ancien) : les arbres reculent (l'un au sud-ouest, l'autre derrière la maison), le rocher s'écarte. Autour, un jardin de chaumière (`HOME_GARDEN`) : une barrière ouverte face à la porte, des pas japonais jusqu'au feu de camp (`buildSteppingStones`), un potager, une corde à linge où sèchent des draps, une chemise bleue et un foulard rouge (`buildClothesline`), le tas de bois contre le mur est, un banc, un tonneau de pluie, deux pots de fleurs à la porte. Les potagers de tout le village (l'auberge, l'apothicairerie) étaient des cubes verts : ce sont maintenant des rangs, un sillon de terre par rang, des choux ronds et des fanes en alternance. Dedans, la pièce gagne un fauteuil tourné vers le feu, deux plantes, des livres sur le pupitre et au pied de la bibliothèque, des sacs près du panier ; la scène d'ouverture garde sa place.
+
 ### Mesures
 
 | Critère | Résultat |
@@ -932,5 +934,7 @@ Ce qui a résisté :
 | Rendu dans la bibliothèque | 49 appels de dessin, 20 200 triangles |
 | Rendu devant l'apothicairerie | 117 appels de dessin, 81 600 triangles |
 | Rendu dans l'apothicairerie | 56 appels de dessin, 17 700 triangles |
+| Rendu devant la maison du héros | 113 appels de dessin, 87 400 triangles |
+| Rendu dans la maison du héros | 57 appels de dessin, 8 700 triangles |
 | Collisions | bloqué au pied de l'escalier et contre le canapé |
 | Console | aucune erreur |

@@ -33,6 +33,7 @@ export function createFireflies(anchors, uniforms) {
     vertexShader: /* glsl */`
       attribute vec4 seed;
       uniform float uTime;
+      uniform float uNight;
       varying float vGlow;
       ${POINT_SIZE_GLSL}
       void main() {
@@ -45,7 +46,8 @@ export function createFireflies(anchors, uniforms) {
         gl_Position = projectionMatrix * mvPosition;
         gl_PointSize = pixelPointSize( ${SIZE.toFixed(3)}, mvPosition );
         float pulse = 0.5 + 0.5 * sin( uTime * ( 0.9 + seed.y * 0.6 ) + seed.z * 6.28 );
-        vGlow = smoothstep( 0.35, 1.0, pulse );
+        // Les lucioles n'apparaissent qu'à la nuit tombée (version 2.9).
+        vGlow = smoothstep( 0.35, 1.0, pulse ) * ( 0.12 + 0.88 * uNight );
       }
     `,
     fragmentShader: /* glsl */`

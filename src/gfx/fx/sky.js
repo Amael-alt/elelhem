@@ -22,6 +22,9 @@ export function createSky(sunDirection) {
       uHigh: { value: new THREE.Color(skyColors.haut) },
       uSun: { value: new THREE.Color(skyColors.soleil) },
       uSunDirection: { value: sunDirection },
+      // La nuit (version 2.9, world/daylight.js) : le ciel vire au bleu profond.
+      uNight: { value: 0 },
+      uNightSky: { value: new THREE.Color('#121a36') },
     },
     vertexShader: /* glsl */`
       varying vec3 vDirection;
@@ -35,6 +38,8 @@ export function createSky(sunDirection) {
       uniform vec3 uLow;
       uniform vec3 uHigh;
       uniform vec3 uSun;
+      uniform float uNight;
+      uniform vec3 uNightSky;
       uniform vec3 uSunDirection;
       varying vec3 vDirection;
       void main() {
@@ -44,7 +49,7 @@ export function createSky(sunDirection) {
         float side = max( dot( normalize( direction.xz + 1e-5 ), normalize( uSunDirection.xz ) ), 0.0 );
         float facing = max( dot( direction, uSunDirection ), 0.0 );
         color += uSun * ( pow( side, 3.0 ) * 0.35 + pow( facing, 64.0 ) * 0.8 + step( 0.9995, facing ) * 4.0 );
-        gl_FragColor = vec4( color * ${INTENSITY.toFixed(3)}, 1.0 );
+        gl_FragColor = vec4( mix( color, uNightSky, uNight * 0.85 ) * ${INTENSITY.toFixed(3)}, 1.0 );
         ${FX_OUTPUT_GLSL}
       }
     `,
@@ -55,5 +60,8 @@ export function createSky(sunDirection) {
   mesh.name = 'ciel';
   mesh.frustumCulled = false;
   mesh.renderOrder = -1;
+  mesh.setNight = (night) => {
+    material.uniforms.uNight.value = night;
+  };
   return mesh;
 }

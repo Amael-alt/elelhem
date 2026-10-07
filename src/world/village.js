@@ -321,8 +321,9 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
 
   // Ciel et effets de vie, un appel de dessin chacun.
   const fx = createFxUniforms();
+  const dome = createSky(sunDirection);
   scene.add(
-    createSky(sunDirection),
+    dome,
     createFireflies(FIREFLY_ANCHORS, fx),
     createDust(fx),
     createSmoke(buildings.chimneys, fx),
@@ -425,10 +426,28 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
   });
 
   scene.fog = new THREE.Fog(hazeColor, 30, 100);
+  // La lumière qui tourne (version 2.9, world/daylight.js) : ce que le
+  // village applique d'un état interpolé ; lanternScale multiplie les lanternes.
+  let lanternScale = 1;
+  function setDaylight(light) {
+    sun.color.copy(light.sun);
+    sun.intensity = light.sunPower;
+    sky.color.copy(light.sky);
+    sky.groundColor.copy(light.ground);
+    sky.intensity = light.hemi;
+    scene.fog.color.copy(light.haze);
+    materials.window.emissiveIntensity = light.windows;
+    lanternScale = light.lanterns;
+    fx.uNight.value = light.night;
+    dome.setNight?.(light.night);
+  }
 
   return {
     map,
     scene,
+    setDaylight,
+    // Les uniformes des effets (uTime, uNight...), pour les runes de la place.
+    fx,
     // Les matériaux du village, repris par les intérieurs (world/interior.js).
     materials,
     collider: createCollider(map, posts),
@@ -474,7 +493,7 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
       // Flammes et lanternes vacillent ensemble, doucement.
       flames.update(time);
       for (const { light, seed } of lanterns) {
-        light.intensity = LANTERN_INTENSITY * (1 + 0.06 * Math.sin(time * 7.1 + seed) + 0.04 * Math.sin(time * 13.3 + seed * 2));
+        light.intensity = LANTERN_INTENSITY * lanternScale * (1 + 0.06 * Math.sin(time * 7.1 + seed) + 0.04 * Math.sin(time * 13.3 + seed * 2));
       }
 
       scene.fog.near = cameraDistance + HAZE_START;

@@ -14,7 +14,8 @@ export function createFxUniforms() {
     uTime: { value: 0 },
     uPointScale: { value: 1 }, // hauteur du tampon / (2 tan(champ / 2)) : pixels par unité à distance 1
     uFocus: { value: new THREE.Vector3() },
-    uHero: { value: new THREE.Vector3() }, // la position du héros : l'herbe et les buissons se couchent sur son passage (version 2.8)
+    uHero: { value: new THREE.Vector3() },
+    uNight: { value: 0 }, // la part de nuit, de 0 à 1 (world/daylight.js) : lucioles, runes // la position du héros : l'herbe et les buissons se couchent sur son passage (version 2.8)
   };
 }
 

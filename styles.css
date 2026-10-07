@@ -111,6 +111,13 @@ body {
   display: none;
 }
 
+/* Le nom du fichier refusé, sur l'écran d'échec au chargement (index.html). */
+.message-detail {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
 /* Le bouton de l'écran d'échec au chargement (index.html). */
 .message-recharger {
   min-height: 44px;

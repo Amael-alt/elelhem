@@ -50,16 +50,73 @@
       });
     }
   </script>
-  <!-- Le jeu se charge en environ 150 modules. Si un seul manque (GitHub Pages
-       répond parfois 503 quelques minutes après une mise en ligne), rien ne
-       démarre et l'écran resterait violet. Alors on recharge la page une fois
-       d'elle-même (une réponse 503 n'est pas gardée en cache), puis, si cela
-       échoue encore, on le dit avec un bouton pour réessayer. -->
+  <!-- Le jeu se charge en environ 150 modules. Si un seul manque, rien ne
+       démarre et l'écran resterait violet. Trois causes vues en vrai : GitHub
+       Pages qui répond 503 quelques minutes après une mise en ligne, un ancien
+       module gardé en cache qui réclame un fichier disparu, un bloqueur de
+       publicités qui refuse un nom de fichier. Alors, au premier échec, on
+       redemande chaque module au serveur en contournant le cache (ce qui
+       rafraîchit aussi le cache), puis on recharge la page une fois ; au
+       second, on le dit, avec le nom du fichier refusé et un bouton pour
+       réessayer. -->
   <script type="module">
     const RETRY_KEY = 'elelhem-rechargement';
+    const ENTRIES = ['./src/main.js', './vendor/three/three.module.min.js'];
+    const IMPORT = /(?:from\s*|import\s*\(?\s*)['"](\.{1,2}\/[^'"]+)['"]/g;
+    const shortName = (url) => url.replace(new URL('./', window.location.href).href, '');
+
+    // Parcourt le graphe des modules en les redemandant tous au serveur
+    // (cache: 'reload' remplace la copie gardée) ; renvoie ceux qui échouent.
+    async function refreshModules() {
+      const seen = new Set();
+      const queue = ENTRIES.map((entry) => new URL(entry, window.location.href).href);
+      const broken = [];
+      while (queue.length > 0 && seen.size < 400) {
+        const url = queue.shift();
+        if (seen.has(url)) continue;
+        seen.add(url);
+        try {
+          const response = await fetch(url, { cache: 'reload' });
+          if (!response.ok) {
+            broken.push(`${shortName(url)} (${response.status})`);
+            continue;
+          }
+          const text = await response.text();
+          for (const match of text.matchAll(IMPORT)) queue.push(new URL(match[1], url).href);
+        } catch {
+          broken.push(`${shortName(url)} (refusé)`);
+        }
+      }
+      return broken;
+    }
+
+    function showFailure(broken, error) {
+      const box = document.getElementById('message');
+      box.replaceChildren();
+      const text = document.createElement('p');
+      text.textContent = "Le village n'a pas fini de se charger. La connexion a peut-être hoqueté, ou un bloqueur de publicités retient un fichier : réessaie dans un instant, ou désactive le bloqueur sur cette page.";
+      const detail = document.createElement('p');
+      detail.className = 'message-detail';
+      detail.textContent = broken.length > 0
+        ? `Fichier refusé : ${broken.slice(0, 3).join(', ')}`
+        : `Détail : ${String(error?.message ?? error).slice(0, 160)}`;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'message-recharger';
+      button.textContent = 'Réessayer';
+      button.addEventListener('click', () => {
+        try { sessionStorage.removeItem(RETRY_KEY); } catch {}
+        window.location.reload();
+      });
+      const inner = document.createElement('div');
+      inner.append(text, detail, button);
+      box.append(inner);
+      box.hidden = false;
+    }
+
     import('./src/main.js').then(() => {
       try { sessionStorage.removeItem(RETRY_KEY); } catch {}
-    }).catch((error) => {
+    }).catch(async (error) => {
       console.error(error);
       let retried = false;
       try {
@@ -68,30 +125,13 @@
       } catch {
         retried = true; // sans stockage, pas de boucle de rechargements
       }
+      const broken = await refreshModules();
       if (!retried) {
         window.location.reload();
         return;
       }
-      const show = () => {
-        const box = document.getElementById('message');
-        box.replaceChildren();
-        const text = document.createElement('p');
-        text.textContent = "Le village n'a pas fini de se charger. La connexion a peut-être hoqueté, ou un bloqueur de publicités retient un fichier : réessaie dans un instant, ou désactive le bloqueur sur cette page.";
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'message-recharger';
-        button.textContent = 'Réessayer';
-        button.addEventListener('click', () => {
-          try { sessionStorage.removeItem(RETRY_KEY); } catch {}
-          window.location.reload();
-        });
-        const inner = document.createElement('div');
-        inner.append(text, button);
-        box.append(inner);
-        box.hidden = false;
-      };
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
-      else show();
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => showFailure(broken, error));
+      else showFailure(broken, error);
     });
   </script>
 </head>

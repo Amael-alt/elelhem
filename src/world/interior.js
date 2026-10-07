@@ -16,6 +16,7 @@
 
 import * as THREE from 'three';
 import { createMap } from './map.js';
+import { createBeyond } from './beyond.js';
 import { createTerrain } from './terrain.js';
 import { createCollider } from './collision.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
@@ -160,6 +161,8 @@ export function createInterior(room, { materials }) {
 
   // Le sol, sur un socle peu profond : la façade coupée montre ses fondations.
   scene.add(createTerrain(map, materials, { baseHeight: -BASE_DEPTH }));
+  // Autour, le village deviné dans la nuit (version 2.5).
+  scene.add(createBeyond(map, [...room.lieu].reduce((sum, ch) => sum + ch.charCodeAt(0), 0)));
   for (const [key, builder] of Object.entries(builders)) {
     if (builder.indices.length === 0) continue;
     const mesh = new THREE.Mesh(toGeometry(builder), materialOf[key] ?? materials[key]);

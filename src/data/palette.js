@@ -136,7 +136,8 @@ export const mapColors = {
 // pièce flotte dans l'obscurité, comme dans les RPG en HD-2D), le jour qui entre par les
 // fenêtres, une lumière d'ambiance chaude venue du plafond et du plancher.
 export const interiorColors = {
-  fond: '#0d0908',
+  // Version 2.5 : un fond de nuit bleue, où se fond le dehors (world/beyond.js).
+  fond: '#05070e',
   jour: '#ffd9a8',
   ciel: '#ffe2bd',
   sol: '#3a2a20',
@@ -197,4 +198,11 @@ export const lootColors = {
 export const barColors = {
   hallucination: { cadre: '#1e0907', fond: '#3d1a13', plein: '#cf2726', clair: '#f07a63' },
   clarte: { cadre: '#1e0907', fond: '#3a2a10', plein: '#f3d08c', clair: '#fff6dc' },
+};
+
+// Le dehors des intérieurs (version 2.5, world/beyond.js) : les silhouettes du
+// village dans la nuit, et la lueur des fenêtres et des lanternes.
+export const beyondColors = {
+  silhouette: '#4b577d',
+  lueur: '#ffb45e',
 };

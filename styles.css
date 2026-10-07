@@ -4455,3 +4455,96 @@ body:has(#minimap[hidden]) #son {
 [data-vignette] .titre-scene > .titre-texte {
   display: none;
 }
+
+/* --- Version 2.8 : le curseur du jeu et le retour des boutons. ------------ */
+
+/* Une main gantée qui pointe (assets/ui/curseur.png, dessinée par
+   outils/curseur.mjs), le point chaud au bout de l'index. */
+html,
+body,
+#scene,
+button,
+a,
+input,
+label,
+[role="button"] {
+  cursor: url("assets/ui/curseur.png") 10 0, auto;
+}
+
+/* Au survol ou à la sélection d'un bouton de menu : un léger agrandissement
+   et une étincelle animée à sa droite. */
+.dialogue-choix button,
+.titre-menu button,
+#boutique button,
+#forge button,
+#grimoire button,
+#feuille button,
+#carte button,
+#diplome button {
+  position: relative;
+  transition: scale 0.15s ease, filter 0.15s ease;
+}
+
+.dialogue-choix button:not(.ecarte):hover,
+.dialogue-choix button.choisi,
+.titre-menu button:hover,
+.titre-menu button.choisi,
+#boutique button:not(:disabled):hover,
+#boutique button.choisi,
+#forge button:not(:disabled):hover,
+#forge button.choisi,
+#grimoire button:not(:disabled):hover,
+#feuille button:not(:disabled):hover,
+#carte button:not(:disabled):hover,
+#diplome button:not(:disabled):hover {
+  scale: 1.05;
+}
+
+.dialogue-choix button:not(.ecarte):hover::after,
+.dialogue-choix button.choisi::after,
+.titre-menu button:hover::after,
+.titre-menu button.choisi::after,
+#boutique button:not(:disabled):hover::after,
+#boutique button.choisi::after,
+#forge button:not(:disabled):hover::after,
+#forge button.choisi::after {
+  content: "✦";
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  color: var(--or-vif);
+  font-size: 0.9em;
+  line-height: 1;
+  text-shadow: 0 0 6px rgb(243 208 140 / 0.8);
+  translate: 0 -50%;
+  animation: curseur-scintille 0.8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.titre-menu button:hover::after,
+.titre-menu button.choisi::after {
+  right: -26px;
+}
+
+@keyframes curseur-scintille {
+  from {
+    opacity: 0.55;
+    translate: 0 -50%;
+    rotate: 0deg;
+  }
+
+  to {
+    opacity: 1;
+    translate: -4px -50%;
+    rotate: 45deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogue-choix button::after,
+  .titre-menu button::after,
+  #boutique button::after,
+  #forge button::after {
+    animation: none;
+  }
+}

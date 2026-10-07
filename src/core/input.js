@@ -58,8 +58,8 @@ const ACTION_KEYS = new Set(['KeyE', 'Enter', 'NumpadEnter', 'Space']);
 const CANCEL_KEYS = new Set(['Escape']);
 const RUN_KEYS = new Set(['ShiftLeft', 'ShiftRight']);
 // Touches qui comptent une fois par appui, lues par takeKey : frapper (J ou
-// X), ouvrir la feuille de personnage (F).
-const ONCE_KEYS = new Set(['KeyJ', 'KeyX', 'KeyF']);
+// X), ouvrir la feuille de personnage (F), replier la légende des touches (T).
+const ONCE_KEYS = new Set(['KeyJ', 'KeyX', 'KeyF', 'KeyT']);
 
 // La course : le héros va RUN_FACTOR fois plus vite qu'à la marche. Les
 // entrées renvoient une direction de longueur RUN_FACTOR au plus, le héros

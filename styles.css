@@ -3845,3 +3845,49 @@ body {
 .carte-fermer {
   min-width: 170px;
 }
+
+/* ==== Version 2.3 : la légende repliable, la minimap au-dessus du son =========
+   La touche T replie la légende des touches sur son seul titre (elle prenait
+   un coin d'écran). En haut à droite, la minimap passe au-dessus et le bouton
+   du son se range dessous, à toutes les tailles d'écran. */
+
+#touches[data-replie="oui"] .touches-liste {
+  display: none;
+}
+
+#touches[data-replie="oui"] {
+  padding-bottom: 6px;
+}
+
+#touches[data-replie="oui"] .touches-titre {
+  margin-bottom: 0;
+}
+
+#minimap {
+  top: calc(12px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+}
+
+#son {
+  top: calc(192px + env(safe-area-inset-top));
+}
+
+@media (max-width: 640px) {
+  #minimap {
+    right: calc(12px + env(safe-area-inset-right));
+  }
+
+  #son {
+    top: calc(150px + env(safe-area-inset-top));
+  }
+}
+
+@media (max-height: 480px) {
+  #minimap {
+    right: calc(12px + env(safe-area-inset-right));
+  }
+
+  #son {
+    top: calc(122px + env(safe-area-inset-top));
+  }
+}

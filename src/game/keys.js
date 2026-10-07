@@ -5,8 +5,10 @@
 // à la main. Les lettres des touches de déplacement sont lues sur le clavier
 // réel quand le navigateur le permet (ZQSD sur un AZERTY, WASD ailleurs).
 //
-// Aucune phrase ici : les textes viennent de data/dialogues.js
-// (textesInterface.touches).
+// La touche T la replie sur son seul titre (elle prenait un coin d'écran) et
+// la déplie ; le choix est gardé avec les réglages de l'appareil
+// (game/settings.js). Aucune phrase ici : les textes viennent de
+// data/dialogues.js (textesInterface.touches).
 
 // Les lignes, dans l'ordre : codes physiques des touches, puis le libellé.
 // « move » est remplacé par les quatre lettres du clavier réel.
@@ -20,12 +22,22 @@ const ROWS = [
   { keys: ['KeyC'], label: 'carte' },
   { keys: ['KeyM'], label: 'son' },
   { keys: ['Escape'], label: 'fermer' },
+  { keys: ['KeyT'], label: 'replier' },
 ];
+export const TOGGLE_KEY = 'KeyT';
 const MOVE_CODES = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
 
-// root : #touches ; texts : textesInterface.touches.
-export function createKeyGuide(root, { texts }) {
-  root.querySelector('.touches-titre').textContent = texts.titre;
+// root : #touches ; texts : textesInterface.touches ; collapsed : repliée au
+// départ ; onCollapse(on) : appelé quand le joueur la replie ou la déplie.
+export function createKeyGuide(root, { texts, collapsed = false, onCollapse = () => {} }) {
+  const title = root.querySelector('.touches-titre');
+  let folded = Boolean(collapsed);
+  const renderTitle = () => {
+    // Repliée, le titre dit comment la rouvrir : « Commandes (T) ».
+    title.textContent = folded ? texts.titreReplie : texts.titre;
+    root.dataset.replie = folded ? 'oui' : 'non';
+  };
+  renderTitle();
   const list = root.querySelector('.touches-liste');
   const fightRows = [];
 
@@ -97,6 +109,15 @@ export function createKeyGuide(root, { texts }) {
     // Pendant une conversation ou un panneau, la légende s'efface (CSS lit data-efface).
     setFaded(on) {
       root.dataset.efface = on ? 'oui' : 'non';
+    },
+    // La touche T : repliée sur son titre, ou dépliée.
+    toggle() {
+      folded = !folded;
+      renderTitle();
+      onCollapse(folded);
+    },
+    get isCollapsed() {
+      return folded;
     },
   };
 }

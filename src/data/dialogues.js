@@ -87,6 +87,8 @@ export const textesInterface = {
   // le permet (ZQSD sur un AZERTY, WASD ailleurs), sinon les flèches.
   touches: {
     titre: 'Commandes',
+    titreReplie: 'Commandes (T)',
+    replier: 'Replier ce panneau',
     deplacer: 'Se déplacer',
     courir: 'Courir',
     parler: 'Parler, valider',

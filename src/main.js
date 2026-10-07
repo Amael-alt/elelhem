@@ -36,7 +36,7 @@ import { createEnemies } from './game/enemies.js';
 import { createCombat } from './game/combat.js';
 import { createForge } from './game/forge.js';
 import { createSheet } from './game/sheet.js';
-import { createKeyGuide } from './game/keys.js';
+import { createKeyGuide, TOGGLE_KEY as KEY_GUIDE_TOGGLE } from './game/keys.js';
 import { createPickups } from './game/pickups.js';
 import { createSpots } from './game/spots.js';
 import { createExploits } from './game/exploits.js';
@@ -341,7 +341,14 @@ function start() {
   });
   quest.overlays.push(fiche);
   // La légende des touches (game/keys.js), sur ordinateur seulement.
-  const keyGuide = createKeyGuide(document.getElementById('touches'), { texts: textesInterface.touches });
+  const keyGuide = createKeyGuide(document.getElementById('touches'), {
+    texts: textesInterface.touches,
+    collapsed: settings.touchesRepliees,
+    onCollapse(on) {
+      settings.touchesRepliees = on;
+      saveSettings(settings);
+    },
+  });
 
   // L'exploration paie : un lieu découvert (quartier ou pièce), une fois ; un
   // coffre ouvert, une fois.
@@ -609,6 +616,7 @@ function start() {
       if (keyboard.takeCancel()) dialogue.close();
       interaction.update(dt, keyboard.takeAction());
       if (keyboard.takeKey('KeyF')) fiche.toggle();
+      if (keyboard.takeKey(KEY_GUIDE_TOGGLE)) keyGuide.toggle();
       if (!doors.room && doors.current !== moor) {
         banner.update(player.position);
         discover(banner.current);

@@ -825,6 +825,8 @@ Quatre demandes de Jordan, en reprenant le plan : améliorer le design de la car
 
 **La carte illustrée.** `outils/plan.mjs` dessine le plan exact de la grille en PNG ; donné en référence au générateur avec la consigne de garder la géographie à l'identique bord à bord, il revient en carte de parchemin (encre sépia, lavis, rose des vents, cottages en vue plongeante, pommiers rouges, les mannequins de l'enclos). Deux variantes, la plus fidèle gardée (l'autre inventait une maisonnette dans le potager). `outils/reduire.mjs` la ramène à 1 120 pixels de large en PNG à palette de 255 couleurs (814 Ko), `game/minimap.js` la charge à la première apparition de la minimap et la décode avant de s'en servir (une image chargée mais pas décodée se dessine vide), le plan en aplats restant en attendant. Les repères et les noms de quartier se posent dessus en coordonnées de la grille : tout tombe juste (Marjolaine sur la rue de la bibliothèque, Basile à l'entrée du jardin). Les noms évitent de se chevaucher (un nom gêné descend d'une ligne ou deux, sinon s'efface) et rapetissent sur téléphone.
 
+**Deux retouches de Jordan après sa première partie** : la légende des touches prenait un coin d'écran en permanence, la touche T la replie sur son seul titre (« Commandes (T) ») et la déplie, le choix gardé avec les réglages de l'appareil (`game/settings.js`) ; et en haut à droite, la minimap passe au-dessus du bouton du son, à toutes les tailles d'écran (bureau, téléphone, paysage).
+
 Ce qui a résisté :
 
 - **Le terrain derrière la forge**, invisible : la caméra regarde vers le nord, tout ce qui est au nord d'un bâtiment de cinq unités de haut disparaît derrière son toit. Déplacer la forge, pas la caméra.

@@ -10,6 +10,8 @@ import { repliques } from '../data/dialogues.js';
 import { createCharacterSheet, DIRECTIONS, FRAME_HEIGHT, FRAME_WIDTH } from '../gfx/sprites.js';
 import { figurants, hero, villagers } from '../data/characters.js';
 import { habiller, tenues } from '../data/tokens.js';
+import { MOOR_KEY } from '../world/places.js';
+import { discover, snapshot } from './state.js';
 
 const REFRESH_SECONDS = 0.5;
 
@@ -206,7 +208,7 @@ export function installDebugApi(game) {
     // Version 2.0 : la lande et le combat. lande(true) y va sans fondu, lande(false) en revient.
     lande(on = true) {
       const gate = game.doors.gates.find((g) => (on ? g.to : g.from) === game.moor);
-      if (on) game.gameState.decouvertes.add('lieu:lande');
+      if (on) discover(game.gameState, MOOR_KEY);
       game.doors.travel(gate, { instant: true });
       tick(0);
       return info();
@@ -537,18 +539,7 @@ export function installDebugApi(game) {
       gameState.prenom = String(name).slice(0, 24);
       return gameState.prenom;
     },
-    gameState: () => ({
-      prenom: gameState.prenom,
-      parchemins: [...gameState.parchemins],
-      visites: Object.fromEntries(gameState.visites),
-      choix: Object.fromEntries(gameState.choix),
-      erreurs: Object.fromEntries(gameState.erreurs),
-      tokens: gameState.tokens,
-      tenue: gameState.tenue,
-      tenues: [...gameState.tenues],
-      decouvertes: [...gameState.decouvertes],
-      coffres: [...gameState.coffres],
-    }),
+    gameState: () => snapshot(gameState),
     checkDialogues: () => checkDialogues(texts, npcs.map((npc) => npc.character)),
   };
 }

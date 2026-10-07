@@ -9,6 +9,8 @@
 // Chaque point est un hotspot de game/interaction.js : { world, x, z, y,
 // radius, label, available(), action() }.
 
+import { saveGameState } from './state.js';
+
 const DOUBLE_CHANCE = 0.1; // une fois sur dix, le puits rend le double
 const SEARCH_PATTERN = [2, 0, 1, 0, 3, 0, 0, 2]; // Tokens cachés, dans l'ordre des cachettes
 const MAX_VIALS = 3; // la réserve de fioles
@@ -22,10 +24,11 @@ const CHALLENGE_BONUS = 10; // la prime, une seule fois
 // crates, haystacks, apple, vialStall, training } (positions de
 // world/layout.js) ; state, wallet, combat, dialogue, counter :
 // les modules du jeu ; texts : textesInterface.points ; tokenTexts :
-// textesInterface.tokens ; save() : sauvegarde l'état ; rng : hasard.
+// textesInterface.tokens ; rng : hasard. Qui change l'état sauvegarde (state.js).
 // (Le repos sur les bancs et au feu de camp a été retiré en 2.6 : rien ne le
 // montrait à l'écran.)
-export function createSpots({ village, layout, state, wallet, combat, dialogue, counter, texts, tokenTexts, save, rng = Math.random }) {
+export function createSpots({ village, layout, state, wallet, combat, dialogue, counter, texts, tokenTexts, rng = Math.random }) {
+  const save = () => saveGameState(state);
   let challenge = null; // { remaining, hits }
   let lastHit = null; // le dernier mannequin touché, pour ne pas compter deux fois le même coup
 

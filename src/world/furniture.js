@@ -698,3 +698,133 @@ export function buildStairs({ x0, x1, z0, z1, top = 2.3, landing = 0.6 }, builde
   }
   return { posts: [] };
 }
+
+// --- Version 2.6 : la forge ------------------------------------------------------
+
+// Une épée debout, pointe en bas ou en haut, dans le repère d'un meuble : lame
+// d'acier, garde de fer, poignée de bois, pommeau. (u, w) : sa place ; y0 : le
+// bas de la lame ; up : la pointe en haut.
+function sword(iron, wood, u, w, y0, { length = 0.62, up = false } = {}) {
+  const blade = up ? [y0, y0 + length] : [y0 + 0.24, y0 + 0.24 + length];
+  const guard = up ? y0 - 0.03 : y0 + 0.2;
+  const grip = up ? [y0 - 0.22, y0 - 0.03] : [y0, y0 + 0.2];
+  iron([u - 0.03, blade[0], w - 0.012], [u + 0.03, blade[1], w + 0.012]);
+  iron([u - 0.1, guard, w - 0.025], [u + 0.1, guard + 0.04, w + 0.025]);
+  wood([u - 0.02, grip[0], w - 0.02], [u + 0.02, grip[1], w + 0.02]);
+}
+
+// Râtelier d'armes : deux montants, une traverse basse percée et une traverse
+// haute, quatre épées debout et une lance. facing : le côté où l'on se tient
+// pour prendre une arme (south : contre un mur au nord de lui).
+export function buildWeaponRack({ x, z, facing = 'south', width = 1.1 }, builders) {
+  const wood = orientedBox(builders.wood, x, z, facing);
+  const iron = orientedBox(builders.iron, x, z, facing);
+  const h = width / 2;
+  for (const s of [-1, 1]) wood([s * h - 0.04, 0, -0.14], [s * h + 0.04, 1.3, -0.06]);
+  wood([-h, 0.12, -0.18], [h, 0.2, 0.02]);
+  wood([-h, 1.0, -0.14], [h, 1.07, -0.06]);
+  const count = 4;
+  for (let k = 0; k < count; k += 1) {
+    const u = -h + 0.2 + (k * (width - 0.5)) / (count - 1);
+    sword(iron, wood, u, -0.08, 0.2, { up: true, length: 0.58 });
+  }
+  wood([h - 0.12, 0.2, -0.11], [h - 0.09, 1.55, -0.08]);
+  iron([h - 0.14, 1.55, -0.12], [h - 0.07, 1.72, -0.07]);
+  return { posts: [{ x, z, radius: Math.max(0.3, h * 0.8) }] };
+}
+
+// Mannequin d'armure : un socle, un poteau, une cuirasse aux épaulières
+// arrondies, un casque à cimier.
+export function buildArmorStand({ x, z, facing = 'south' }, builders) {
+  const wood = orientedBox(builders.wood, x, z, facing);
+  const iron = orientedBox(builders.iron, x, z, facing);
+  const helm = createFrame(builders.iron, [x, 0, z]);
+  wood([-0.28, 0, -0.28], [0.28, 0.08, 0.28]);
+  wood([-0.04, 0.08, -0.04], [0.04, 0.95, 0.04]);
+  iron([-0.24, 0.85, -0.14], [0.24, 1.35, 0.14]); // le plastron
+  iron([-0.2, 0.75, -0.13], [0.2, 0.85, 0.13]); // la taille
+  iron([-0.3, 1.24, -0.15], [-0.18, 1.38, 0.15]);
+  iron([0.18, 1.24, -0.15], [0.3, 1.38, 0.15]);
+  iron([-0.17, 0.95, 0.14], [0.17, 1.0, 0.16]); // une arête au plastron
+  wood([-0.05, 1.35, -0.05], [0.05, 1.45, 0.05]);
+  pushRevolution(helm, [[1.45, 0.12], [1.55, 0.14], [1.66, 0.12], [1.72, 0.05]], { sides: 8, groundAo: 1 });
+  iron([-0.015, 1.68, -0.1], [0.015, 1.8, 0.1]); // le cimier
+  return { posts: [{ x, z, radius: 0.3 }] };
+}
+
+// Bouclier rond pendu à un mur : un disque de bois à huit pans, un cercle et
+// un umbo de fer. side : le mur qui le porte, comme pour les tableaux
+// (north : la face regarde le sud ; south : posé sur une façade, il regarde
+// le sud aussi, en avant d'elle).
+export function buildShield({ x, z, y = 1.5, side = 'north', radius = 0.3 }, builders) {
+  const [nx, nz] = { north: [0, 1], south: [0, 1], west: [1, 0], east: [-1, 0] }[side];
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  const along = (a, r, out) => {
+    const u = Math.cos(a) * r;
+    const v = Math.sin(a) * r;
+    // u le long du mur, v vers le haut, out en avant du mur.
+    return nz ? [u, y + v, out * nz] : [out * nx, y + v, u];
+  };
+  const fan = (frame, r, out) => {
+    for (let k = 0; k < 8; k += 1) {
+      const a0 = (k / 8) * Math.PI * 2;
+      const a1 = ((k + 1) / 8) * Math.PI * 2;
+      let tri = [along(0, 0, out), along(a0, r, out), along(a1, r, out)];
+      // La face doit regarder vers l'avant (nx, nz).
+      const [p0, p1, p2] = tri;
+      const cx = (p1[1] - p0[1]) * (p2[2] - p0[2]) - (p1[2] - p0[2]) * (p2[1] - p0[1]);
+      const cz = (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p1[1] - p0[1]) * (p2[0] - p0[0]);
+      if (cx * nx + cz * nz < 0) tri = [p0, p2, p1];
+      frame.polygon(tri, tri.map(() => [0.5, 0.5]));
+    }
+  };
+  fan(iron, radius + 0.03, 0.035);
+  fan(wood, radius, 0.05);
+  fan(iron, radius * 0.28, 0.075);
+  return { posts: [] };
+}
+
+// Tonneau d'épées : un tonneau rond, quatre épées plantées, poignée en haut,
+// un peu penchées.
+export function buildSwordBarrel({ x, z }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  const h = 0.62;
+  pushRevolution(wood, [[0, 0.22], [h * 0.5, 0.26], [h, 0.22]]);
+  pushDisc(wood, h - 0.06, 0.2);
+  for (const [y, r] of [[0.08, 0.235], [h - 0.12, 0.235]]) pushRevolution(iron, [[y, r], [y + 0.05, r]], { groundAo: 1 });
+  for (const [dx, dz, lean] of [[-0.08, -0.05, -0.12], [0.07, -0.07, 0.1], [0.0, 0.08, 0.05], [0.1, 0.06, 0.16]]) {
+    const top = [dx + lean, h + 0.42, dz + lean * 0.4];
+    pushBar(iron, [dx, h - 0.06, dz], [dx + lean * 0.45, h + 0.18, dz + lean * 0.2], 0.04);
+    pushBar(iron, [dx + lean * 0.45 - 0.08, h + 0.19, dz + lean * 0.2], [dx + lean * 0.45 + 0.08, h + 0.21, dz + lean * 0.2], 0.03);
+    pushBar(wood, [dx + lean * 0.45, h + 0.2, dz + lean * 0.2], top, 0.035);
+  }
+  return { posts: [{ x, z, radius: 0.28 }] };
+}
+
+// Barres de fer empilées sur deux traverses de bois, le long de l'axe x.
+export function buildIronBars({ x, z, length = 1.0 }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  const h = length / 2;
+  for (const s of [-1, 1]) pushBox(wood, [s * (h - 0.15) - 0.05, 0, -0.22], [s * (h - 0.15) + 0.05, 0.08, 0.22], { groundAo: 0.6 });
+  const rows = [[0.08, [-0.15, -0.05, 0.05, 0.15]], [0.13, [-0.1, 0.0, 0.1]], [0.18, [-0.05, 0.05]]];
+  for (const [y, zs] of rows) for (const bz of zs) pushBox(iron, [-h, y, bz - 0.04], [h, y + 0.05, bz + 0.04]);
+  return { posts: [{ x: x - h / 2, z, radius: 0.26 }, { x: x + h / 2, z, radius: 0.26 }] };
+}
+
+// Sacs de toile (du charbon de bois) : des sacs ventrus, l'un couché, noués.
+export function buildSacks({ x, z, count = 2 }, builders) {
+  const cloth = createFrame(builders.thatch, [x, 0, z]);
+  const spots = [[0, 0, 1], [0.38, 0.12, 0.9], [-0.3, 0.2, 0.85]].slice(0, count);
+  const posts = [];
+  for (const [dx, dz, s] of spots) {
+    const sack = createFrame(builders.thatch, [x + dx, 0, z + dz]);
+    pushRevolution(sack, [[0, 0.16 * s], [0.12 * s, 0.21 * s], [0.38 * s, 0.19 * s], [0.5 * s, 0.1 * s], [0.56 * s, 0.05 * s]], { sides: 9 });
+    pushRevolution(sack, [[0.56 * s, 0.05 * s], [0.62 * s, 0.08 * s], [0.66 * s, 0.03 * s]], { sides: 6, groundAo: 1 });
+    posts.push({ x: x + dx, z: z + dz, radius: 0.22 * s });
+  }
+  void cloth;
+  return { posts };
+}

@@ -84,6 +84,20 @@ export const SITE = { x: 33, z: 35, sizeX: 4, sizeZ: 3 };
 
 export const WELL = { x: 27.6, z: 20.4 };
 export const HEARTH = { x: 10.6, z: 9.2 };
+// La cour de la forge (version 2.6) : des dalles (case k de world/map.js), un
+// muret à l'ouest, un râtelier d'épées et un bouclier sur la façade, un
+// tonneau d'épées, des barres de fer, des sacs de charbon, le baquet de
+// trempe et la meule près du foyer.
+export const FORGE_YARD = {
+  walls: [[[5.0, 7.3], [5.0, 10.7]]],
+  rack: { x: 6.6, z: 7.32, facing: 'south', width: 1.1 },
+  shield: { x: 6.6, z: 7.0, y: 1.95, side: 'south', radius: 0.32 },
+  swordBarrel: { x: 9.0, z: 7.38 },
+  bars: { x: 10.4, z: 7.5, length: 1.1 },
+  sacks: { x: 11.9, z: 7.7, count: 3 },
+  trough: { x: 12.0, z: 9.5 },
+  grindstone: { x: 6.2, z: 9.9 },
+};
 export const ANVIL = { x: 8.4, z: 10.3 };
 
 // Le lavoir (version 2.3) : son emprise de 4 × 4 cases au bord de la rivière,
@@ -223,7 +237,7 @@ export const TREES = [
   [35.7, 4.9, 1.45], [46.8, 12.3, 1.6, 'automne'], [49.7, 14.0, 1.45, 'automne'], [53.0, 29.2, 1.74, 'automne'],
   [47.3, 29.3, 1.52, 'automne'], [6.3, 24.5, 1.6], [7.0, 30.8, 1.45, 'automne'], [23.1, 37.8, 1.45],
   [36.2, 40.6, 1.67, 'automne'], [6.2, 39.6, 1.31], [39.9, 16.8, 1.31], [16.8, 19.6, 1.16], [5.3, 37.8, 1.52],
-  [4.6, 7.6, 1.3], [40.6, 8.6, 1.4], [47.6, 40.4, 1.2, 'automne'], [8.4, 22.4, 1.2],
+  [3.95, 8.6, 1.3], [40.6, 8.6, 1.4], [47.6, 40.4, 1.2, 'automne'], [8.4, 22.4, 1.2],
 ];
 
 // Buissons : position, taille (1 : à hauteur de genou).

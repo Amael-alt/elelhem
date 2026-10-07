@@ -22,7 +22,7 @@ import { createCollider } from './collision.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
 import { buildAnvil, buildBarrel, buildBench, buildCrate, buildTable, buildWoodpile } from './landmarks.js';
 import {
-  BASE_DEPTH, buildArmchair, buildChair, buildClock, buildLowTable, buildPlant, buildRoundTable, buildSofa, buildStairs, buildBasket, buildBed, buildBookshelf, buildCandle, buildCauldron, buildChandelier, buildChest, buildCoal, buildCounter,
+  BASE_DEPTH, buildArmorStand, buildIronBars, buildSacks, buildShield, buildSwordBarrel, buildWeaponRack, buildArmchair, buildChair, buildClock, buildLowTable, buildPlant, buildRoundTable, buildSofa, buildStairs, buildBasket, buildBed, buildBookshelf, buildCandle, buildCauldron, buildChandelier, buildChest, buildCoal, buildCounter,
   buildCurtain, buildDesk, buildFireplace, buildFurnace, buildGrindstone, buildHerbs, buildHorseshoes, buildKeg, buildPainting, buildRug,
   buildSconce, buildShelf, buildStool, buildTableware, buildTapestry, buildToolRack, buildTrim, buildTrough, buildWalls, buildWardrobe,
   buildWindow, buildWorkbench,
@@ -53,6 +53,12 @@ const DAY_DIRECTION = new THREE.Vector3(-0.5, 0.55, -0.7).normalize();
 const FURNITURE = {
   anvil: buildAnvil,
   armchair: buildArmchair,
+  armorstand: buildArmorStand,
+  ironbars: buildIronBars,
+  sacks: buildSacks,
+  shield: buildShield,
+  swordbarrel: buildSwordBarrel,
+  weaponrack: buildWeaponRack,
   chair: buildChair,
   clock: buildClock,
   lowtable: buildLowTable,

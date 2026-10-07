@@ -20,7 +20,7 @@ import { buildChalkboard, buildLowWall, buildPlanterBox,
 import {
   ANVIL, BARRELS, BENCHES, BUNTING, BUSHES, BUTTERFLIES, CAMPFIRE, FENCES, FLOWER_POTS, HAYSTACKS, MEADOWS, ROCKS, SIGNPOSTS,
   STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, MARKET_STALLS, ORCHARD, SITE,
-  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT,
+  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT, FORGE_YARD,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createFoliage, crownClumps } from '../gfx/foliage.js';
@@ -32,7 +32,7 @@ import { createBunting } from '../gfx/bunting.js';
 import { createLightPools } from '../gfx/lightpools.js';
 import { createButterflies, createFallingLeaves } from '../gfx/fx/leaves.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
-import { buildStool, buildChest } from './furniture.js';
+import { buildGrindstone, buildIronBars, buildSacks, buildShield, buildSwordBarrel, buildTrough, buildWeaponRack, buildStool, buildChest } from './furniture.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
 import { createFxUniforms } from '../gfx/fx/points.js';
@@ -47,7 +47,7 @@ import {
   createWindowTextures, createWoodTextures, createAwningTexture, createSlateTextures, createStoneWallTextures, createThatchTextures,
   createFlagstoneTextures, createPaintingTexture, createPanelTextures, createPlankTextures, createRugTexture, RUG_PIXELS_PER_UNIT,
 } from '../gfx/textures.js';
-import { buildingRamps, foliageTints, hazeColor, interiorRamps, ironColor, lanternColor, natureRamps } from '../data/palette.js';
+import { buildingRamps, foliageTints, hazeColor, interiorRamps, ironColor, lanternColor, natureRamps, terrainRamps } from '../data/palette.js';
 
 const SUN_COLOR = 0xffc07a;
 const SUN_INTENSITY = 6.5;
@@ -98,6 +98,8 @@ function createMaterials() {
     cobble: tile(createCobbleTextures(37), { normalStrength: 0.7, roughness: 0.85 }),
     // Le parvis de l'auberge (version 2.5) : des pavés en éventail.
     fan: tile(createFanCobbleTextures(43), { normalStrength: 0.75, roughness: 0.85 }),
+    // La cour de la forge (version 2.6) : de grandes dalles.
+    yard: tile(createFlagstoneTextures(151, terrainRamps.cour), { normalStrength: 0.9, roughness: 0.95 }),
     water: tile(createWaterTextures(41), { roughness: 0.35 }),
     plaster: tile(createPlasterTextures(53), { normalStrength: 0.4, roughness: 0.95 }),
     wood: tile(createWoodTextures(61), { normalStrength: 0.5, roughness: 0.8 }),
@@ -196,6 +198,15 @@ function createBuildings(materials, posts) {
   }
   addPosts(buildChalkboard(INN_COURT.chalkboard, builders));
   for (const stool of INN_COURT.stools) addPosts(buildStool(stool, builders).posts);
+  // La cour de la forge (version 2.6).
+  for (const wall of FORGE_YARD.walls) addPosts(buildLowWall(wall, builders));
+  addPosts(buildWeaponRack(FORGE_YARD.rack, builders).posts);
+  buildShield(FORGE_YARD.shield, builders);
+  addPosts(buildSwordBarrel(FORGE_YARD.swordBarrel, builders).posts);
+  addPosts(buildIronBars(FORGE_YARD.bars, builders).posts);
+  addPosts(buildSacks(FORGE_YARD.sacks, builders).posts);
+  addPosts(buildTrough(FORGE_YARD.trough, builders).posts);
+  addPosts(buildGrindstone(FORGE_YARD.grindstone, builders).posts);
   for (const garden of VEGETABLES) buildVegetables(garden, builders);
   // Couronnes : les grappes de tous les arbres, dessinées ensemble (voir createVillage).
   const clumps = [];

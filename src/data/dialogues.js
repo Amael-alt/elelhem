@@ -125,6 +125,11 @@ export const textesInterface = {
     pont: 'Le pont',
     prairie: "La prairie de l'est",
     maison: 'Ta maison',
+    // Les lieux de la version 2.3.
+    entrainement: "Le terrain d'entraînement",
+    marche: 'Le marché',
+    lavoir: 'Le lavoir',
+    verger: 'Le verger',
   },
   parchemins: {
     notions: NOTIONS,
@@ -146,6 +151,10 @@ export const textesInterface = {
     gain: (n) => `+${n}`,
     coffre: 'Un coffre !',
     contenu: (n) => `${n} Tokens dedans`,
+    // Le coffre de la cascade (version 2.3) : des Tokens et une tenue.
+    tenueTrouvee: (n, tenue) => `${n} Tokens dedans, et ${tenue.toLowerCase()}`,
+    etincelle: 'Une étincelle !',
+    etincelleDetail: (n, total) => `${n} sur ${total}, 3 Tokens`,
   },
   // La boutique de Berthe : les tenues du héros (data/tokens.js).
   boutique: {
@@ -161,6 +170,7 @@ export const textesInterface = {
       foret: { nom: 'Cape des bois', description: 'Pour se fondre dans la prairie, ou faire la sieste.' },
       nuit: { nom: 'Cape de nuit', description: 'Couleur du ciel quand les lucioles sortent.' },
       mage: { nom: "Habit d'apprenti mage", description: 'Violet et or : de quoi faire sourire l\'Oracle Gépété.' },
+      cascade: { nom: 'Tenue de la cascade', description: "Chapeau et écharpe couleur d'eau vive. Trouvée là où personne ne regarde." },
     },
     acheter: (prix) => `Acheter, ${prix} Tokens`,
     porter: 'Porter',
@@ -217,6 +227,85 @@ export const textesInterface = {
     apprise: 'apprise',
     appriseDuPremierCoup: 'apprise du premier coup',
     fermer: 'Fermer',
+    // Les exploits (version 2.3, game/exploits.js) : six sceaux sur la fiche.
+    exploits: 'Exploits',
+    exploit: (nom, condition) => `${nom} : ${condition}`,
+    fioles: 'Fioles en réserve',
+  },
+  // Les six exploits : un titre et sa condition, dans l'ordre des sceaux.
+  exploits: {
+    obtenu: 'Exploit !',
+    titres: {
+      cartographe: { nom: 'Cartographe', condition: 'découvrir tous les lieux du village' },
+      etincelant: { nom: 'Étincelant', condition: 'ramasser les douze étincelles cachées' },
+      fouineur: { nom: 'Fouineur', condition: 'fouiller tous les tonneaux, caisses et meules' },
+      genereux: { nom: 'Généreux', condition: 'jeter dix Tokens dans le puits' },
+      chasseur: { nom: 'Chasseur de brumes', condition: 'dissiper dix Hallucinations' },
+      bretteur: { nom: 'Bretteur', condition: 'placer quinze coups au défi du mannequin' },
+    },
+  },
+  // Les points d'action du village (version 2.3, game/spots.js).
+  points: {
+    puits: {
+      nom: 'Le puits',
+      action: 'Faire un vœu, 1 Token',
+      sansToken: "Le puits garde le silence. Il faudrait un Token à lui jeter.",
+      double: "Le Token tinte deux fois au fond. Le puits te le rend, et son frère avec. C'est ton jour.",
+      // Les maximes du puits : un mot sur la magie LIA, comme un biscuit chinois.
+      maximes: [
+        'Une incantation claire vaut dix incantations longues.',
+        'Ce que tu donnes à lire à la magie, elle te le rend en mieux ou en pire. Choisis bien.',
+        "La magie LIA parle avec assurance, même quand elle se trompe. L'assurance n'est pas une preuve.",
+        "Un parchemin relu par un humain vaut mieux qu'un parchemin cru sur parole.",
+        'Ce que la magie ne sait pas, elle l\'invente avec un sourire. Vérifie.',
+        "Confie une tâche à la fois, bien bornée. Les apprentis du chantier te le diront.",
+        "Ta mémoire est la sienne : dis-lui qui tu es, elle te répondra pour toi.",
+        "Ne jette jamais un mot de passe dans un puits. Ni dans une incantation.",
+      ],
+    },
+    repos: {
+      action: "S'asseoir un instant",
+      titre: 'Tu reprends ton souffle',
+      detail: 'toutes tes clartés sont revenues',
+      pleine: 'tes clartés étaient au complet, mais la vue est belle',
+    },
+    fouille: {
+      action: 'Fouiller',
+      trouve: 'Quelque chose brille',
+      vide: 'Rien à prendre',
+      rien: [
+        'des pommes de terre, que des pommes de terre',
+        'de la paille, et une souris vexée',
+        'des clous rouillés et un vieux chiffon',
+        'un fond de cidre, mieux vaut le laisser',
+      ],
+    },
+    verger: {
+      action: 'Cueillir une pomme',
+      titre: 'Une pomme bien mûre',
+      detail: 'une clarté de retour',
+      pleine: 'tes clartés étaient déjà au complet, elle était bonne quand même',
+    },
+    marche: {
+      nom: 'Le marchand de fioles',
+      action: (prix) => `Acheter une fiole, ${prix} Tokens`,
+      plein: "Trois fioles, c'est tout ce que ta sacoche peut porter. Reviens quand tu en auras bu une.",
+      manque: (n) => `Il te manque ${n} Token${n > 1 ? 's' : ''}. Je ne fais pas crédit, même aux apprentis mages.`,
+      achetee: 'Une fiole de clarté en réserve',
+      reserve: (n) => `${n} fiole${n > 1 ? 's' : ''} dans la sacoche, bue${n > 1 ? 's' : ''} d'elle-même au besoin`,
+      bue: 'Tu bois une fiole de réserve',
+    },
+    defi: {
+      action: 'Relever le défi du mannequin',
+      debut: 'Le défi commence',
+      consigne: (secondes) => `frappe les mannequins, ${secondes} secondes`,
+      coup: (n) => `${n} coup${n > 1 ? 's' : ''}`,
+      reste: (secondes) => `${secondes} s`,
+      fin: (n) => `Défi terminé : ${n} coup${n > 1 ? 's' : ''}`,
+      gain: (tokens) => (tokens > 0 ? `${tokens} Token${tokens > 1 ? 's' : ''} pour la peine` : ''),
+      prime: (tokens) => `quinze coups ou plus : ${tokens} Tokens, prime comprise`,
+      rate: 'cinq coups au moins pour toucher quelque chose',
+    },
   },
   // La minimap et la carte en grand.
   carte: {
@@ -839,6 +928,15 @@ export const repliques = {
   'apprenti-2': [
     "On m'a confié une seule tâche, bien bornée : ce mur. Je ne sais même pas à quoi ressemble la maison.",
     'Je rends mon mur, le maître le relit, il me le rend. Trois fois. Le métier de sous-agent.',
+  ],
+  // Le marchand de fioles du marché, et la lavandière du lavoir (version 2.3).
+  marchand: [
+    "Fioles de clarté, huit Tokens ! Pour quand la brume de la lande te monte à la tête.",
+    "Une fiole, ça ne remplace pas une bonne nuit. Mais sur la lande, personne ne dort.",
+  ],
+  lavandiere: [
+    "Tu as vu la couleur de l'eau ? Tout ce que la magie LIA sort de travers, je le lave ici.",
+    "Un parchemin, ça se relit. Une tache, ça se frotte. Dans les deux cas, on recommence.",
   ],
   pigeons: [
     'Rou-rou ! Un mot de passe ? Non merci, je ne porte pas ça.',

@@ -38,6 +38,8 @@ import { createForge } from './game/forge.js';
 import { createSheet } from './game/sheet.js';
 import { createKeyGuide } from './game/keys.js';
 import { createPickups } from './game/pickups.js';
+import { createSpots } from './game/spots.js';
+import { createExploits } from './game/exploits.js';
 import { createHealthBar } from './gfx/healthbar.js';
 import { barColors } from './data/palette.js';
 import { createSlash, createSword } from './gfx/weapon.js';
@@ -49,7 +51,10 @@ import { createGameState, resetGameState, saveGameState } from './game/state.js'
 import { loadSettings, saveSettings } from './game/settings.js';
 import { createTitleScreen } from './game/title.js';
 import { createAreaBanner } from './game/banner.js';
-import { ANVIL, CAMPFIRE, HEARTH, HOUSES, PIGEONS, REGIONS, TOWERS, TREES, WATERFALL } from './world/layout.js';
+import {
+  ANVIL, BARRELS, BENCHES, CAMPFIRE, CRATES, GATE, HAYSTACKS, HEARTH, HOUSES, MARKET_STALLS, ORCHARD, PIGEONS, REGIONS, SPARKS,
+  TOWERS, TRAINING, TRAINING_SPOT, TREES, WATERFALL, WELL,
+} from './world/layout.js';
 import { createDebugPanel, installDebugApi, isDebugEnabled } from './game/debug.js';
 import { backgroundColor } from './data/palette.js';
 import { figurants, hero, villagers } from './data/characters.js';
@@ -245,13 +250,29 @@ function start() {
   // Une Hallucination dissipée lâche son butin : des pièces, parfois une fiole (game/pickups.js).
   const hallucinations = createEnemies(MOOR_ENEMIES, {
     world: moor, sunDirection: moor.sunDirection, post: pipeline.spriteHooks,
-    onDeath: (enemy) => pickups.drop(enemy.position.x, enemy.position.z, enemy.type.tokens, enemy.type.potion ?? 0),
+    onDeath: (enemy) => {
+      pickups.drop(enemy.position.x, enemy.position.z, enemy.type.tokens, enemy.type.potion ?? 0);
+      gameState.dissipees = (gameState.dissipees ?? 0) + 1;
+    },
   });
+  // Dans l'enclos d'entraînement (world/layout.js), l'épée sert aussi : les
+  // mannequins prennent les coups (version 2.3, game/spots.js).
+  const inTraining = () => {
+    const [x0, z0, x1, z1] = TRAINING.rect;
+    const { x, z } = player.position;
+    return x >= x0 && x <= x1 && z >= z0 && z <= z1;
+  };
+  let spots = null;
   const combat = createCombat({
     player, sword, slash, state: gameState, hud: document.getElementById('clartes'), texts: textesInterface.combat,
-    canFight: () => doors?.current === moor,
+    canFight: () => doors?.current === moor || (doors?.current === village && inTraining()),
     // Plus de clartés : retour à la porte du village (les clartés reviennent à l'arrivée, voir onChange).
     onDeath: () => doors?.travel(doors.gates.find((gate) => gate.to === village)),
+    // Sauf si une fiole de réserve est là.
+    onEmpty: () => spots?.drinkVial() ?? false,
+    dummies: () => (doors?.current === village ? village.dummies : []),
+    onDummy: (dummy) => spots?.dummyHit(dummy),
+    onStrike: () => spots?.strikeStarted(),
   });
   const pickups = createPickups({
     world: moor, sunDirection: moor.sunDirection, post: pipeline.spriteHooks, wallet,
@@ -266,6 +287,20 @@ function start() {
     outfits: tenues, basePalette: hero.palette, texts: textesInterface.boutique, state: gameState, wallet, onWear: dressHero,
   });
   if (gameState.tenue !== tenues[0].id) dressHero(gameState.tenue);
+  // Les étincelles cachées du village (version 2.3) : des éclats posés une
+  // fois pour toutes, ramassés en marchant dessus, trois Tokens chacun.
+  const sparks = createPickups({
+    world: village, sunDirection: village.sunDirection, post: pipeline.spriteHooks, wallet,
+    onSpark: (item) => {
+      gameState.etincelles.add(item.id);
+      wallet.earn(gains.etincelle);
+      counter.say(textesInterface.tokens.etincelle, textesInterface.tokens.etincelleDetail(gameState.etincelles.size, SPARKS.length));
+    },
+  });
+  SPARKS.forEach(([x, z], i) => {
+    const id = `etincelle:${i}`;
+    if (!gameState.etincelles.has(id)) sparks.place(x, z, id);
+  });
   // La minimap : un point doré pour l'habitant qui a encore une leçon à donner,
   // un point bleu pour Claudette. Un habitant dans une pièce est montré à la
   // porte de sa maison.
@@ -293,11 +328,16 @@ function start() {
     overlays: [diploma, grimoire, minimap, shop, credits, forge], diploma, wallet, gains, shop, shopOffer: textesInterface.boutique.offre, credits,
     forge, forgeOffer: textesInterface.forge.offre,
   });
+  // Les exploits (version 2.3) : six titres, vérifiés deux fois par seconde.
+  const exploits = createExploits({
+    state: gameState, texts: textesInterface.exploits, counter, save: () => saveGameState(gameState),
+    goals: { places: REGIONS.length + Object.keys(ROOMS).length + 1, sparks: SPARKS.length, searches: BARRELS.length + CRATES.length + HAYSTACKS.length },
+  });
   // La feuille de personnage (game/sheet.js) : touche F, ou le bouton livre du HUD.
   const fiche = createSheet(document.getElementById('feuille'), {
     button: document.getElementById('fiche'), texts: textesInterface.feuille, notions, ids: counter.ids, state: gameState,
     outfits: tenues, outfitTexts: textesInterface.boutique.tenues, swords: SWORDS, swordTexts: textesInterface.forge.epees, combat,
-    places: REGIONS.length + Object.keys(ROOMS).length + 1, canOpen: canOpenOverlay,
+    places: REGIONS.length + Object.keys(ROOMS).length + 1, canOpen: canOpenOverlay, exploits,
   });
   quest.overlays.push(fiche);
   // La légende des touches (game/keys.js), sur ordinateur seulement.
@@ -316,7 +356,14 @@ function start() {
       if (Math.hypot(chest.x - player.position.x, chest.z - player.position.z) > CHEST_REACH) continue;
       gameState.coffres.add(chest.id);
       wallet.earn(chest.tokens);
-      counter.say(textesInterface.tokens.coffre, textesInterface.tokens.contenu(chest.tokens));
+      // Le coffre de la cascade (version 2.3) rend aussi une tenue.
+      if (chest.tenue) {
+        gameState.tenues.add(chest.tenue);
+        saveGameState(gameState);
+        counter.say(textesInterface.tokens.coffre, textesInterface.tokens.tenueTrouvee(chest.tokens, textesInterface.boutique.tenues[chest.tenue].nom));
+      } else {
+        counter.say(textesInterface.tokens.coffre, textesInterface.tokens.contenu(chest.tokens));
+      }
     }
   }
   let interaction = null;
@@ -333,6 +380,17 @@ function start() {
       label: textesInterface.forge.enclume, action: () => canOpenOverlay() && forge.open(),
     }],
   });
+  // Les points d'action du village (version 2.3, game/spots.js) : le puits à
+  // vœux, le feu et les bancs, les cachettes, la pomme, les fioles, le défi.
+  spots = createSpots({
+    village, player, state: gameState, wallet, combat, dialogue, counter, follow,
+    texts: textesInterface.points, tokenTexts: textesInterface.tokens, save: () => saveGameState(gameState),
+    layout: {
+      well: WELL, campfire: CAMPFIRE, benches: BENCHES, barrels: BARRELS, crates: CRATES, haystacks: HAYSTACKS,
+      apple: ORCHARD.apple, vialStall: MARKET_STALLS.find((stall) => stall.goods === 'fioles'), training: TRAINING_SPOT,
+    },
+  });
+  interaction.hotspots.push(...spots.hotspots);
   // Frapper : la touche J ou X, un clic de souris sur le village, le bouton épée sur écran tactile.
   const attackButton = document.getElementById('attaque');
   attackButton.setAttribute('aria-label', textesInterface.combat.frapper);
@@ -364,7 +422,7 @@ function start() {
   });
   const ambience = createAmbience(music, {
     // La rivière : du plateau au nord jusqu'à la plaine au sud.
-    river: [[31.5, -30], [31.5, 16.5], [32.5, 17.5], [32.5, 60]],
+    river: [[44.5, -30], [44.5, 22.5], [45.5, 23.5], [45.5, 80]],
     waterfall: [(WATERFALL.x0 + WATERFALL.x1) / 2, WATERFALL.z + 0.3],
     fires: [[HEARTH.x, HEARTH.z], [CAMPFIRE.x, CAMPFIRE.z]],
     anvil: [ANVIL.x, ANVIL.z],
@@ -379,13 +437,12 @@ function start() {
   // Les portes de la lande : la porte ouest de la muraille, dans les deux sens.
   // Sans épée, Rocard barre le passage ; la première fois avec, il laisse un conseil.
   let refusedAt = -Infinity;
-  const villageGateExit = { x: 1.7, z: 14.5, direction: 'right' };
   const gates = [
     {
-      from: village, to: moor, zone: { x0: 0, x1: 1.5, z0: 12.5, z1: 17 }, push: { x: -1, z: 0 }, at: MOOR_SPAWN,
+      from: village, to: moor, zone: GATE.zone, push: { x: -1, z: 0 }, at: MOOR_SPAWN,
       allowed: () => (gameState.epee ?? 0) > 0 && gameState.decouvertes.has('lieu:lande'),
     },
-    { from: moor, to: village, zone: MOOR_GATE, push: { x: 1, z: 0 }, at: villageGateExit },
+    { from: moor, to: village, zone: MOOR_GATE, push: { x: 1, z: 0 }, at: GATE.back },
   ];
   doors = createDoors(document.getElementById('fondu'), {
     village, rooms, houses: HOUSES, player, gates,
@@ -431,6 +488,7 @@ function start() {
         banner.showRoom('lande');
         hallucinations.reset();
         combat.setEnemies(hallucinations);
+        spots.regrowApple(); // la pomme du verger repousse à chaque sortie
       } else {
         combat.setEnemies(null);
       }
@@ -516,7 +574,7 @@ function start() {
     const pushed = controls.direction();
     // autoDirection : direction imposée par les tests scriptés (__lia.walk).
     const wanted = state.autoDirection ?? (pushed.x !== 0 || pushed.z !== 0 ? pushed : keyboard.direction());
-    const frozen = interaction.isTalking || !playing || doors.isBusy;
+    const frozen = interaction.isTalking || !playing || doors.isBusy || spots.isResting;
     // Sur la lande avec une épée, une planche qui la dessine (gfx/sprites.js)
     // montre le héros l'arme à la main ; sinon l'épée est un sprite à part.
     combat.setDrawnSword(heroSheet.armed);
@@ -531,6 +589,9 @@ function start() {
       hallucinations.update(step, state.time, player.position, (enemy) => combat.takeHit(enemy));
       pickups.update(step, state.time, player.position, !doors.isBusy);
     }
+    if (doors.current === village) sparks.update(step, state.time, player.position, !doors.isBusy && playing);
+    spots.update(step);
+    if (playing) exploits.update(step);
     // La barre des clartés sous les pieds, sur la lande seulement, un peu vers le bas de l'écran.
     heroBar.setVisible(doors.current === moor && combat.hasSword);
     if (heroBar.visible) {
@@ -551,6 +612,7 @@ function start() {
       if (!doors.room && doors.current !== moor) {
         banner.update(player.position);
         discover(banner.current);
+        openChests(doors.current); // le coffre de la cascade
       } else if (doors.room) {
         openChests(doors.current);
       }
@@ -573,7 +635,7 @@ function start() {
   installDebugApi({
     renderer, player, follow, tick, state, sheets, focusTarget, npcs, interaction, dialogue, gameState, texts: dialogues, music, ambience,
     counter, diploma, quest, grimoire, chatter, minimap, doors, rooms, wallet, shop, controls, actionButton, setLeftHanded, credits, dressHero,
-    moor, combat, forge, fiche, hallucinations, pickups,
+    moor, combat, forge, fiche, hallucinations, pickups, spots, sparks, exploits,
   });
 
   let last = performance.now();

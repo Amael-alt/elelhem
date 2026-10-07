@@ -3,6 +3,8 @@
 // au sol autour d'elle, qui flottent un peu et que le héros ramasse en
 // marchant dessus. Les pièces vont dans la bourse, la fiole rend une clarté.
 // Les sprites sont dessinés par le code, comme l'épée (gfx/weapon.js).
+// Version 2.3 : les étincelles cachées du village, posées une fois pour
+// toutes à un endroit précis (place), ramassées de la même façon (onSpark).
 
 import * as THREE from 'three';
 import { createPixelBuffer, hexToRgb, setPixel, toDataTexture } from '../gfx/pixels.js';
@@ -77,6 +79,25 @@ function drawVial() {
   return buffer;
 }
 
+// Une étincelle de la magie LIA : une étoile à quatre branches, claire, qui
+// brille même à l'ombre, et deux éclats à côté.
+function drawSpark() {
+  const buffer = createPixelBuffer(SIZE, SIZE);
+  const [dark, mid, light] = lootColors.etincelle.map(hexToRgb);
+  const c = 5;
+  for (let d = -5; d <= 5; d += 1) {
+    const rgb = Math.abs(d) >= 4 ? dark : Math.abs(d) >= 2 ? mid : light;
+    setPixel(buffer, c + d, c, rgb);
+    setPixel(buffer, c, c + d, rgb);
+  }
+  for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) setPixel(buffer, c + dx, c + dy, mid);
+  setPixel(buffer, c, c, hexToRgb('#ffffff'));
+  setPixel(buffer, 9, 1, light);
+  setPixel(buffer, 1, 9, light);
+  setPixel(buffer, 10, 9, mid);
+  return buffer;
+}
+
 function toSheet(buffer, glow) {
   return {
     texture: toDataTexture(buffer, { repeat: false, mipmaps: false }),
@@ -89,10 +110,11 @@ function toSheet(buffer, glow) {
   };
 }
 
-// world : la lande ; sunDirection, post : pour les sprites ; wallet : la
-// bourse ; onPotion() : une fiole ramassée (rend une clarté) ; rng : hasard.
-export function createPickups({ world, sunDirection, post, wallet, onPotion, rng = Math.random }) {
-  const sheets = { piece: toSheet(drawCoin(), true), fiole: toSheet(drawVial(), false) };
+// world : la lande (ou le village pour les étincelles) ; sunDirection, post :
+// pour les sprites ; wallet : la bourse ; onPotion() : une fiole ramassée
+// (rend une clarté) ; onSpark(item) : une étincelle ramassée ; rng : hasard.
+export function createPickups({ world, sunDirection, post, wallet, onPotion = () => {}, onSpark = () => {}, rng = Math.random }) {
+  const sheets = { piece: toSheet(drawCoin(), true), fiole: toSheet(drawVial(), false), etincelle: toSheet(drawSpark(), true) };
   const items = [];
   const point = new THREE.Vector3();
 
@@ -135,6 +157,16 @@ export function createPickups({ world, sunDirection, post, wallet, onPotion, rng
       }
       if (rng() < potionChance) spawn('fiole', 1, x, z);
     },
+    // Une étincelle posée là, déjà au sol, qui ne bouge plus que pour flotter.
+    place(x, z, id) {
+      const sprite = createSprite(sheets.etincelle, sunDirection, post);
+      sprite.object.layers.set(SPRITE_LAYER);
+      sprite.object.castShadow = false;
+      world.scene.add(sprite.object);
+      const item = { kind: 'etincelle', id, value: 0, position: { x, z }, sprite, age: SETTLE_SECONDS, seed: rng() * 10, from: { x, z } };
+      items.push(item);
+      return item;
+    },
     // Tout disparaît (on quitte la lande ou on y revient).
     clear() {
       while (items.length) remove(items[items.length - 1]);
@@ -155,7 +187,8 @@ export function createPickups({ world, sunDirection, post, wallet, onPotion, rng
         item.sprite.object.position.set(x, ground + REST_HEIGHT + hop + bob, z);
         if (collect && settle >= 1 && Math.hypot(player.x - x, player.z - z) < REACH) {
           if (item.kind === 'piece') wallet.earn(item.value);
-          else onPotion();
+          else if (item.kind === 'fiole') onPotion();
+          else onSpark(item);
           remove(item);
         }
       }

@@ -44,8 +44,12 @@ const FACING_VECTOR = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] 
 // player : le héros (position, facing, shove, setVisible, worldPosition) ;
 // sword, slash : gfx/weapon.js ; state : l'état de partie (epee) ; hud : la
 // pastille des clartés (élément #clartes) ; texts : textesInterface.combat ;
-// onDeath() : plus de clartés ; canFight() : on est quelque part où l'on se bat.
-export function createCombat({ player, sword, slash, state, hud, texts, onDeath, canFight }) {
+// onDeath() : plus de clartés ; onEmpty() : appelé juste avant, vrai si quelque
+// chose a sauvé le héros (une fiole de réserve bue, game/spots.js) ;
+// canFight() : on est quelque part où l'on se bat ; dummies() : les mannequins
+// à portée de coups (points { x, z }, version 2.3) et onDummy(dummy) quand l'un
+// d'eux est touché ; onStrike() : un coup part.
+export function createCombat({ player, sword, slash, state, hud, texts, onDeath, canFight, onEmpty = () => false, dummies = () => [], onDummy = () => {}, onStrike = () => {} }) {
   let clartes = HERO_COMBAT.clartes;
   let invulnerable = 0;
   let blink = 0;
@@ -70,6 +74,7 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
 
   function startHit(index) {
     attack = { hit: index, t: 0, queued: false, struck: new Set(), slashed: false };
+    onStrike();
   }
 
   // Place l'épée (si la planche ne la dessine pas) et, au bon moment, lance
@@ -120,8 +125,24 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
     }
   }
 
-  // Les Hallucinations devant le héros, à portée, prennent le coup.
+  // Devant le héros, à portée : (dx, dz) vers la cible, vrai si la lame porte.
+  function inReach(dx, dz, spec) {
+    const [fx, fz] = FACING_VECTOR[player.facing];
+    const d = Math.hypot(dx, dz);
+    if (d > spec.reach) return false;
+    const cos = (dx * fx + dz * fz) / (d || 1);
+    return !(cos < Math.cos(ARC) && d > 0.45);
+  }
+
+  // Les Hallucinations devant le héros, à portée, prennent le coup ; les
+  // mannequins de l'enclos aussi, pour le défi.
   function strike(spec) {
+    for (const dummy of dummies()) {
+      if (attack.struck.has(dummy)) continue;
+      if (!inReach(dummy.x - player.position.x, dummy.z - player.position.z, spec)) continue;
+      attack.struck.add(dummy);
+      onDummy(dummy);
+    }
     if (!enemies) return;
     const [fx, fz] = FACING_VECTOR[player.facing];
     const damage = swordDamage() * spec.factor;
@@ -211,6 +232,13 @@ export function createCombat({ player, sword, slash, state, hud, texts, onDeath,
       renderHud();
       if (clartes <= 0) {
         clartes = 0;
+        // Une fiole de réserve, bue d'elle-même : le héros reste debout.
+        if (onEmpty()) {
+          clartes = HERO_COMBAT.clartes;
+          invulnerable = HERO_COMBAT.invulnerable * 2;
+          renderHud();
+          return;
+        }
         onDeath();
       }
     },

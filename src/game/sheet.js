@@ -12,8 +12,12 @@ import { onTap } from '../core/input.js';
 // (textesInterface.forge.epees) ; combat : clartes et maxClartes ; places :
 // nombre de lieux à découvrir ; canOpen() : rien d'autre n'occupe l'écran.
 // button : le bouton livre du HUD (#fiche), qui ouvre et ferme la feuille.
-export function createSheet(root, { button, texts, notions, ids, state, outfits, outfitTexts, swords, swordTexts, combat, places, canOpen }) {
+// exploits : game/exploits.js (version 2.3), ses sceaux en bas de la fiche.
+export function createSheet(root, { button, texts, notions, ids, state, outfits, outfitTexts, swords, swordTexts, combat, places, canOpen, exploits = null }) {
   const close = root.querySelector('.feuille-fermer');
+  const seals = root.querySelector('.feuille-exploits');
+  const sealsTitle = root.querySelector('.feuille-exploits-titre');
+  if (sealsTitle) sealsTitle.textContent = texts.exploits;
   const name = root.querySelector('.feuille-prenom');
   const subtitle = root.querySelector('.feuille-sous-titre');
   const stats = root.querySelector('.feuille-stats');
@@ -46,7 +50,27 @@ export function createSheet(root, { button, texts, notions, ids, state, outfits,
       stat(texts.clartes, `${combat.clartes} / ${combat.maxClartes}`),
       stat(texts.epee, sword ? swordTexts[sword.id].nom : texts.sansEpee),
       stat(texts.lieux, `${state.decouvertes.size} / ${places}`),
+      stat(texts.fioles, String(state.fioles ?? 0)),
     );
+    if (seals && exploits) {
+      seals.replaceChildren(...exploits.list().map((title) => {
+        const item = document.createElement('li');
+        item.dataset.obtenu = title.obtenu ? 'oui' : 'non';
+        item.title = texts.exploit(title.nom, title.condition);
+        const seal = document.createElement('span');
+        seal.className = 'feuille-sceau';
+        seal.setAttribute('aria-hidden', 'true');
+        seal.textContent = title.nom.charAt(0);
+        const name = document.createElement('span');
+        name.className = 'feuille-exploit-nom';
+        name.textContent = title.nom;
+        const condition = document.createElement('span');
+        condition.className = 'feuille-exploit-condition';
+        condition.textContent = title.condition;
+        item.append(seal, name, condition);
+        return item;
+      }));
+    }
     list.replaceChildren(...ids.map((id) => {
       const item = document.createElement('li');
       const learned = state.parchemins.has(id);

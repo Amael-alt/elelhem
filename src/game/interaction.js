@@ -15,8 +15,10 @@ const LABEL_LIFT = 52; // pixels : l'étiquette passe au-dessus de la bulle
 // de la bulle pour un lecteur d'écran ; button : le bouton d'action (ui.js),
 // et idleLabel son texte quand personne n'est à portée.
 // hotspots : [{ world (le lieu, ou null pour partout), x, z, y (hauteur de
-// l'indicateur), radius, label, action() }] : des points où l'action fait
-// autre chose que parler (l'enclume de la forge ouvre le menu Forger).
+// l'indicateur), radius, label, action(), available() (facultatif : faux et
+// le point ne répond plus, un tonneau déjà fouillé) }] : des points où
+// l'action fait autre chose que parler (l'enclume de la forge ouvre le menu
+// Forger, le puits reçoit un vœu, voir game/spots.js).
 // currentWorld() : le lieu où l'on est.
 export function createInteraction({ player, npcs, hint, label, dialogue, quest, talkLabel, camera, canvas, button, idleLabel, hotspots = [], currentWorld = () => null }) {
   const head = new THREE.Vector3();
@@ -49,6 +51,7 @@ export function createInteraction({ player, npcs, hint, label, dialogue, quest, 
   }
 
   return {
+    hotspots,
     // Conversation ou diplôme à l'écran : le héros reste immobile.
     get isTalking() {
       return quest.isBusy;
@@ -82,6 +85,7 @@ export function createInteraction({ player, npcs, hint, label, dialogue, quest, 
       // Un point d'action à portée, s'il n'y a personne à qui parler.
       const world = currentWorld();
       const spot = quest.isBusy || target ? null : hotspots.find((h) => (h.world === null || h.world === world)
+        && (!h.available || h.available())
         && Math.hypot(h.x - player.position.x, h.z - player.position.z) <= h.radius);
       if (spot) {
         if (wanted) {

@@ -18,6 +18,15 @@
 //   - coffres     : coffres déjà ouverts
 // Ajouté en version 2.0 (le combat, data/enemies.js) :
 //   - epee        : niveau de l'épée forgée chez Ferrand (0 : aucune, 1 bois, 2 fer, 3 acier)
+// Ajoutés en version 2.3 (game/spots.js, game/exploits.js) :
+//   - voeux       : Tokens jetés dans le puits
+//   - fouilles    : cachettes déjà fouillées (tonneaux, caisses, meules)
+//   - etincelles  : étincelles cachées déjà ramassées
+//   - fioles      : fioles de clarté en réserve (0 à 3), bues d'elles-mêmes
+//   - pomme       : la pomme du verger est cueillie (elle repousse après la lande)
+//   - dissipees   : Hallucinations dissipées, en tout
+//   - defiRecord  : meilleur nombre de coups au défi du mannequin, defiPrime : la prime touchée
+//   - exploits    : titres déjà décrochés
 //
 // Sauvegarde dans localStorage, entourée de try/catch : en navigation privée
 // ou avec les données de site bloquées, il peut être absent ou lancer. Le jeu
@@ -41,6 +50,15 @@ function emptyState() {
     decouvertes: new Set(),
     coffres: new Set(),
     epee: 0,
+    voeux: 0,
+    fouilles: new Set(),
+    etincelles: new Set(),
+    fioles: 0,
+    pomme: false,
+    dissipees: 0,
+    defiRecord: 0,
+    defiPrime: false,
+    exploits: new Set(),
   };
 }
 
@@ -67,6 +85,15 @@ function write(state) {
       decouvertes: [...state.decouvertes],
       coffres: [...state.coffres],
       epee: state.epee,
+      voeux: state.voeux,
+      fouilles: [...state.fouilles],
+      etincelles: [...state.etincelles],
+      fioles: state.fioles,
+      pomme: state.pomme,
+      dissipees: state.dissipees,
+      defiRecord: state.defiRecord,
+      defiPrime: state.defiPrime,
+      exploits: [...state.exploits],
     }));
   } catch {
     // Pas de sauvegarde possible : on joue quand même.
@@ -93,6 +120,16 @@ export function createGameState({ restore = true } = {}) {
     if (Array.isArray(saved.decouvertes)) state.decouvertes = new Set(strings(saved.decouvertes));
     if (Array.isArray(saved.coffres)) state.coffres = new Set(strings(saved.coffres));
     if (Number.isInteger(saved.epee) && saved.epee >= 0 && saved.epee <= 3) state.epee = saved.epee;
+    const count = (value) => (Number.isInteger(value) && value >= 0 ? value : 0);
+    state.voeux = count(saved.voeux);
+    if (Array.isArray(saved.fouilles)) state.fouilles = new Set(strings(saved.fouilles));
+    if (Array.isArray(saved.etincelles)) state.etincelles = new Set(strings(saved.etincelles));
+    state.fioles = Math.min(3, count(saved.fioles));
+    state.pomme = saved.pomme === true;
+    state.dissipees = count(saved.dissipees);
+    state.defiRecord = count(saved.defiRecord);
+    state.defiPrime = saved.defiPrime === true;
+    if (Array.isArray(saved.exploits)) state.exploits = new Set(strings(saved.exploits));
   }
   if (!restore) {
     try {

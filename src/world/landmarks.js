@@ -316,13 +316,63 @@ export function buildSite({ x, z, sizeX, sizeZ }, builders) {
 }
 
 // Potager : quelques rangs de choux (petits blocs de feuillage) et de piquets.
+// Version 2.6 : des rangs plutôt que des cubes. Chaque rang a son sillon de
+// terre ; on y plante, en alternance, des choux ronds et des fanes de carottes.
 export function buildVegetables({ x0, z0, x1, z1 }, builders) {
   const leaves = createFrame(builders.leaves, [0, 0, 0]);
-  for (let px = x0; px <= x1; px += 0.9) {
-    for (let pz = z0; pz <= z1; pz += 0.9) {
-      pushBox(leaves, [px - 0.2, 0, pz - 0.2], [px + 0.2, 0.3, pz + 0.2], { groundAo: 0.6 });
+  const soil = createFrame(builders.bark, [0, 0, 0]);
+  let row = 0;
+  for (let pz = z0; pz <= z1 + 1e-6; pz += 0.6) {
+    pushBox(soil, [x0 - 0.25, 0, pz - 0.16], [x1 + 0.25, 0.07, pz + 0.16], { groundAo: 0.7 });
+    let k = 0;
+    for (let px = x0; px <= x1 + 1e-6; px += 0.45) {
+      if ((row + k) % 2 === 0) {
+        // Un chou : des feuilles en dôme, tourné d'un cran à chaque plant.
+        const cabbage = createFrame(builders.leaves, [px, 0, pz]);
+        pushRevolution(cabbage, [[0.05, 0.1], [0.11, 0.17], [0.2, 0.16], [0.27, 0.09], [0.3, 0.001]], { sides: 7, groundAo: 0.7, phase: (k * 0.7 + row) % 1.5 });
+      } else {
+        // Des fanes : trois tiges qui s'écartent.
+        for (const [dx, dz] of [[-0.06, 0.02], [0.05, -0.03], [0.01, 0.05]]) pushBar(leaves, [px, 0.07, pz], [px + dx * 2.2, 0.36, pz + dz * 2.2], 0.035);
+      }
+      k += 1;
     }
+    row += 1;
   }
+}
+
+// Corde à linge (version 2.6, le jardin de la maison) : deux poteaux, une
+// corde, du linge qui pend (des draps clairs, une chemise bleue, un foulard
+// rouge). La corde suit l'axe x, de x0 à x1.
+export function buildClothesline({ x0, x1, z }, builders) {
+  const wood = createFrame(builders.wood, [0, 0, z]);
+  const rope = createFrame(builders.thatch, [0, 0, z]);
+  const top = 1.55;
+  for (const px of [x0, x1]) {
+    pushBox(wood, [px - 0.05, 0, -0.05], [px + 0.05, top + 0.12, 0.05], { groundAo: 0.6 });
+    pushBox(wood, [px - 0.05, top, -0.22], [px + 0.05, top + 0.06, 0.22]);
+  }
+  pushBar(rope, [x0, top - 0.02, 0], [x1, top - 0.02, 0], 0.02);
+  const cloths = [['plaster', 0.55, 0.6], ['voletBleu', 0.4, 0.45], ['plaster', 0.5, 0.7], ['voletRouge', 0.3, 0.32]];
+  let px = x0 + 0.25;
+  for (const [matter, width, height] of cloths) {
+    if (px + width > x1 - 0.15) break;
+    const cloth = createFrame(builders[matter], [0, 0, z]);
+    pushBox(cloth, [px, top - 0.03 - height, -0.015], [px + width, top - 0.01, 0.015]);
+    px += width + 0.18;
+  }
+  return [{ x: x0, z, radius: 0.12 }, { x: x1, z, radius: 0.12 }];
+}
+
+// Pas japonais (version 2.6) : des dalles de pierre plates, irrégulières,
+// posées dans l'herbe le long d'une suite de points.
+export function buildSteppingStones(points, builders) {
+  const stone = createFrame(builders.stone, [0, 0, 0]);
+  points.forEach(([x, z], i) => {
+    const w = 0.42 + ((i * 37) % 5) * 0.03;
+    const d = 0.32 + ((i * 53) % 4) * 0.03;
+    const dx = (((i * 29) % 5) - 2) * 0.04;
+    pushBox(stone, [x + dx - w / 2, 0, z - d / 2], [x + dx + w / 2, 0.035, z + d / 2], { groundAo: 0.8 });
+  });
 }
 
 // Étal de marché : comptoir, quatre poteaux, auvent de toile rayée en pente

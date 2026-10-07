@@ -12,7 +12,7 @@ import { createMap } from './map.js';
 import { createTerrain } from './terrain.js';
 import { createCollider } from './collision.js';
 import { buildHouse, buildLantern, buildTree, LANTERN_FLAME, LANTERN_POST_RADIUS, TREE_TRUNK_RADIUS } from './props.js';
-import { buildSundial, buildChalkboard, buildLowWall, buildPlanterBox,
+import { buildClothesline, buildSteppingStones, buildSundial, buildChalkboard, buildLowWall, buildPlanterBox,
   buildAnvil, buildAppleTree, buildBarrel, buildBasket, buildBench, buildCampfire, buildCrate, buildDummy, buildFence,
   buildFlowerPot, buildHaystack, buildHearth, buildLadder, buildMarketStall, buildRock, buildShopSign, buildSignpost, buildSite,
   buildStall, buildTable, buildTarget, buildTower, buildVegetables, buildWashhouse, buildWell, buildWoodpile,
@@ -20,7 +20,7 @@ import { buildSundial, buildChalkboard, buildLowWall, buildPlanterBox,
 import {
   ANVIL, BARRELS, BENCHES, BUNTING, BUSHES, BUTTERFLIES, CAMPFIRE, FENCES, FLOWER_POTS, HAYSTACKS, MEADOWS, ROCKS, SIGNPOSTS,
   STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, MARKET_STALLS, ORCHARD, SITE,
-  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT, FORGE_YARD, LIBRARY_COURT, APOTHECARY_YARD,
+  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT, FORGE_YARD, LIBRARY_COURT, APOTHECARY_YARD, HOME_GARDEN,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createFoliage, crownClumps } from '../gfx/foliage.js';
@@ -207,6 +207,19 @@ function createBuildings(materials, posts) {
   }
   addPosts(buildSundial(LIBRARY_COURT.sundial, builders));
   buildBookStack(LIBRARY_COURT.books, builders);
+  // Le jardin de la maison du héros (version 2.6).
+  for (const fence of HOME_GARDEN.fences) addPosts(buildFence(fence, builders));
+  buildSteppingStones(HOME_GARDEN.stones, builders);
+  buildVegetables(HOME_GARDEN.vegetables, builders);
+  addPosts(buildClothesline(HOME_GARDEN.clothesline, builders));
+  addPosts(buildWoodpile(HOME_GARDEN.woodpile, builders));
+  addPosts(buildBench(HOME_GARDEN.bench, builders));
+  addPosts(buildBarrel(HOME_GARDEN.barrel, builders));
+  for (const spot of HOME_GARDEN.pots) {
+    const pot = buildFlowerPot(spot, builders);
+    addPosts(pot.obstacle);
+    planters.push(pot.flowers);
+  }
   // Les abords de l'apothicairerie (version 2.6).
   addPosts(buildDryingRack(APOTHECARY_YARD.rack, builders).posts);
   addPosts(buildPlant(APOTHECARY_YARD.plant, builders).posts);

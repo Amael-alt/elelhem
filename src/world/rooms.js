@@ -70,6 +70,15 @@ export const ROOMS = {
       // Au mur nord, au-dessus de la tête du lit : les murs est et ouest sont
       // vus de profil par la caméra, un tableau n'y serait qu'un trait.
       { type: 'painting', x: 1.7, z: 1, y: 1.5 },
+      // Version 2.6 : un fauteuil tourné vers le feu, des plantes, des livres
+      // sur le pupitre, une pile au pied de la bibliothèque, des sacs près du
+      // panier.
+      { type: 'armchair', x: 5.9, z: 2.75, facing: 'north' },
+      { type: 'plant', x: 8.5, z: 6.6 },
+      { type: 'plant', x: 4.75, z: 1.45, size: 0.6 },
+      { type: 'bookstack', x: 6.95, z: 4.55, y: 0.78, count: 3 },
+      { type: 'bookstack', x: 8.6, z: 1.6, count: 4 },
+      { type: 'sacks', x: 1.9, z: 6.75, count: 2 },
     ],
   },
 

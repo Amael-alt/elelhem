@@ -105,6 +105,23 @@ export const APOTHECARY_YARD = {
   cauldron: { x: 34.9, z: 13.7 },
   hives: [{ x: 40.3, z: 9.0 }, { x: 40.3, z: 10.6 }],
 };
+// Le jardin de la maison du héros (version 2.6) : une barrière autour, ouverte
+// face à la porte, des pas japonais jusqu'au feu de camp, un potager, une
+// corde à linge, un tas de bois contre le mur est, un banc et un tonneau
+// de pluie.
+export const HOME_GARDEN = {
+  fences: [
+    [[46.6, 7.6], [46.6, 12.6], [49.8, 12.6]],
+    [[51.2, 12.6], [53.5, 12.6], [53.5, 9.9]],
+  ],
+  stones: [[50.5, 9.7], [50.45, 10.4], [50.6, 11.1], [50.5, 11.8], [50.4, 12.6], [50.55, 13.4], [50.4, 14.2], [50.5, 15.0]],
+  vegetables: { x0: 51.9, z0: 10.5, x1: 52.8, z1: 11.7 },
+  clothesline: { x0: 47.1, x1: 49.4, z: 11.1 },
+  woodpile: { x: 52.95, z: 7.7 },
+  bench: { x: 47.75, z: 9.6 },
+  barrel: { x: 52.35, z: 9.45 },
+  pots: [{ x: 49.75, z: 9.45 }, { x: 51.25, z: 9.45 }],
+};
 export const HEARTH = { x: 10.6, z: 9.2 };
 // La cour de la forge (version 2.6) : des dalles (case k de world/map.js), un
 // muret à l'ouest, un râtelier d'épées et un bouclier sur la façade, un
@@ -191,7 +208,7 @@ export const FENCES = [
 export const HAYSTACKS = [{ x: 49.4, z: 25.2 }, { x: 51.4, z: 27.4 }, { x: 52.6, z: 18.4 }];
 export const ROCKS = [
   { x: 53.2, z: 39.6, size: 1.1 }, { x: 39.9, z: 40.4 }, { x: 4.6, z: 3.6, size: 1.2 }, { x: 21.3, z: 39.6, size: 0.8 },
-  { x: 46.8, z: 12.3 }, { x: 11.2, z: 23.2, size: 0.7 }, { x: 33.9, z: 6.4, size: 0.8 }, { x: 44.6, z: 32.2, size: 0.9 },
+  { x: 47.9, z: 13.7 }, { x: 11.2, z: 23.2, size: 0.7 }, { x: 33.9, z: 6.4, size: 0.8 }, { x: 44.6, z: 32.2, size: 0.9 },
 ];
 export const CAMPFIRE = { x: 50.4, z: 16.2 };
 
@@ -256,7 +273,7 @@ export const DECOR_LANTERNS = [
 // 'automne' pour les roux de la prairie de l'est et du sud).
 export const TREES = [
   [14.0, 4.6, 1.6], [14.4, 9.0, 1.31], [24.2, 10.6, 1.38], [30.8, 5.6, 1.6],
-  [35.7, 4.9, 1.45], [46.8, 12.3, 1.6, 'automne'], [49.7, 14.0, 1.45, 'automne'], [53.0, 29.2, 1.74, 'automne'],
+  [35.7, 4.9, 1.45], [48.3, 17.7, 1.6, 'automne'], [53.1, 5.0, 1.45, 'automne'], [53.0, 29.2, 1.74, 'automne'],
   [47.3, 29.3, 1.52, 'automne'], [6.3, 24.5, 1.6], [7.0, 30.8, 1.45, 'automne'], [23.1, 37.8, 1.45],
   [36.2, 40.6, 1.67, 'automne'], [6.2, 39.6, 1.31], [39.9, 16.8, 1.31], [16.8, 19.6, 1.16], [5.3, 37.8, 1.52],
   [3.95, 8.6, 1.3], [40.6, 8.6, 1.4], [47.6, 40.4, 1.2, 'automne'], [8.4, 22.4, 1.2],
@@ -266,7 +283,7 @@ export const TREES = [
 export const BUSHES = [
   [13.2, 15.2, 1], [5.2, 13.2, 0.9], [23.0, 12.0, 1], [13.3, 11.7, 0.8], [29.6, 13.4, 0.9], [36.4, 6.2, 1],
   [9.2, 26.0, 1.1], [19.0, 27.4, 0.9], [7.6, 33.0, 1], [35.6, 30.2, 0.9], [37.4, 22.6, 0.8], [42.0, 29.4, 1],
-  [46.2, 15.4, 1.1], [51.1, 17.5, 0.9], [46.4, 25.4, 1], [38.6, 40.6, 1.1], [24.6, 36.4, 0.9], [15.4, 38.6, 1],
+  [47.3, 16.1, 1.1], [51.1, 17.5, 0.9], [46.4, 25.4, 1], [38.6, 40.6, 1.1], [24.6, 36.4, 0.9], [15.4, 38.6, 1],
   [3.6, 39.2, 1], [13.6, 3.4, 0.9], [19.6, 4.8, 1], [38.6, 4.5, 1], [22.4, 7.8, 0.9], [41.8, 24.0, 0.9],
 ];
 

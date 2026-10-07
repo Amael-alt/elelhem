@@ -27,7 +27,8 @@ export function createShop(root, { outfits, basePalette, texts, state, wallet, o
 
   function render() {
     balance.textContent = texts.bourse(state.tokens);
-    list.replaceChildren(...outfits.map((outfit) => {
+    // Une tenue secrète (trouvée dans un coffre) ne s'affiche qu'une fois à soi.
+    list.replaceChildren(...outfits.filter((outfit) => !outfit.secret || state.tenues.has(outfit.id)).map((outfit) => {
       const owned = state.tenues.has(outfit.id);
       const worn = state.tenue === outfit.id;
       const text = texts.tenues[outfit.id];

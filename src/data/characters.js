@@ -56,7 +56,7 @@ export const claudette = {
     accent: ['#6b4e10', '#a67c1c', '#d9a935', '#ffd96a'],
     cheveux: ['#4a1e12', '#6e2e1a', '#94431f', '#b8612e'],
   },
-  position: { x: 17.4, z: 15.0 },
+  position: { x: 24.4, z: 21.0 },
   direction: 'down',
   depart: { lieu: 'maison', x: 5.0, z: 3.5, direction: 'left' },
   dialogue: 'claudette',
@@ -76,7 +76,7 @@ export const gepeto = {
     accent: ['#2a1a4a', '#40296e', '#5c3f96', '#7d5fbd'],
     cheveux: ['#8f8f9c', '#b8b8c6', '#dcdce6', '#f7f7fb'],
   },
-  position: { x: 21.4, z: 15.7 },
+  position: { x: 30.0, z: 22.0 },
   direction: 'down',
   dialogue: 'gepeto',
 };
@@ -93,7 +93,7 @@ export const ferrand = {
     accent: ['#2a2d35', '#43485a', '#69708a', '#96a0b8'],
     cheveux: ['#1b1411', '#2a1d17', '#3a2a20', '#4d382a'],
   },
-  position: { x: 7.4, z: 12.7 },
+  position: { x: 9.6, z: 11.4 },
   direction: 'up',
   dialogue: 'ferrand',
 };
@@ -110,7 +110,7 @@ export const marjolaine = {
     accent: ['#10343a', '#1a5560', '#2a7a85', '#4aa3ad'],
     cheveux: ['#4a4048', '#6b5f67', '#8f828b', '#b5a8b0'],
   },
-  position: { x: 12.2, z: 10.3 },
+  position: { x: 16.4, z: 14.4 },
   direction: 'down',
   dialogue: 'marjolaine',
 };
@@ -127,7 +127,7 @@ export const basile = {
     accent: ['#1b6b3a', '#2fae5b', '#65e082', '#b6ffbf'],
     cheveux: ['#5a5a5e', '#807f84', '#a9a8ad', '#d2d1d6'],
   },
-  position: { x: 26.6, z: 10.5 },
+  position: { x: 37.2, z: 14.7 },
   direction: 'down',
   dialogue: 'basile',
 };
@@ -144,7 +144,7 @@ export const pepin = {
     accent: ['#4a5468', '#6f7b92', '#9aa6bd', '#d0d8e6'],
     cheveux: ['#5a3a1f', '#7d5230', '#a06f43', '#c3935f'],
   },
-  position: { x: 25.4, z: 20.3 },
+  position: { x: 38.8, z: 27.3 },
   direction: 'up',
   dialogue: 'pepin',
 };
@@ -161,7 +161,7 @@ export const rocard = {
     accent: ['#3b4048', '#5d646f', '#8a929f', '#bcc4d0'],
     cheveux: ['#1d1815', '#2e2520', '#43372f', '#5a4a3f'],
   },
-  position: { x: 4.3, z: 12.7 },
+  position: { x: 5.4, z: 19.2 },
   direction: 'down',
   dialogue: 'rocard',
 };
@@ -200,7 +200,7 @@ export const gaspard = {
     accent: ['#8c7c5c', '#b8a67e', '#dcca9c', '#f5e8c4'],
     cheveux: ['#2f2118', '#47321f', '#63472d', '#81603d'],
   },
-  position: { x: 24.4, z: 23.8 },
+  position: { x: 31.4, z: 35.4 },
   direction: 'right',
   dialogue: 'gaspard',
 };
@@ -217,9 +217,45 @@ export const clodomir = {
     accent: ['#6b4e10', '#a67c1c', '#d9a935', '#ffd96a'],
     cheveux: ['#8a8a99', '#b0b0c0', '#d4d4e2', '#f2f2fa'],
   },
-  position: { x: 19.5, z: 6.4 },
+  position: { x: 27.3, z: 9.0 },
   direction: 'down',
   dialogue: 'clodomir',
+};
+
+// Le marchand de fioles du marché et la lavandière du lavoir (version 2.3) :
+// des figurants qui ne bougent pas, se tournent vers le héros et lancent une
+// réplique quand on passe (data/dialogues.js, repliques). L'étal du marchand
+// vend les fioles par un point d'action (game/spots.js), pas par un dialogue.
+export const marchand = {
+  id: 'marchand',
+  sprite: 'marchand',
+  nom: 'Marchand',
+  palette: {
+    peau: ['#8a5a44', '#b67c5d', '#d9a07c', '#efc29b'],
+    vetement: ['#7a4e12', '#a86f1c', '#d19a2c', '#e8b84a'],
+    accent: ['#3a2a1a', '#5a4028', '#7a5636', '#9a7048'],
+    cheveux: ['#6a6a66', '#8a8a86', '#aaaaa6', '#cacac6'],
+  },
+  position: { x: 33.1, z: 30.4 },
+  direction: 'left',
+  dialogue: null,
+  figurant: true,
+};
+
+export const lavandiere = {
+  id: 'lavandiere',
+  sprite: 'lavandiere',
+  nom: 'Lavandière',
+  palette: {
+    peau: ['#9a6650', '#c48a6a', '#e2ab88', '#f5cba8'],
+    vetement: ['#1f4a52', '#2e6a72', '#3f8a92', '#5aaab0'],
+    accent: ['#6a7a90', '#8a9ab0', '#aab8c8', '#d0dce8'],
+    cheveux: ['#5a2a14', '#8a4420', '#b45e2e', '#d07a44'],
+  },
+  position: { x: 39.3, z: 37.6 },
+  direction: 'right',
+  dialogue: null,
+  figurant: true,
 };
 
 // Les apprentis du chantier : figurants qui font des allers-retours le long de
@@ -242,19 +278,21 @@ export const figurants = [
     vetement: ['#3b3a2a', '#575540', '#7a7758', '#a09c72'],
     accent: ['#4a2a28', '#6e3b31', '#93533f', '#b56f4f'],
     cheveux: ['#2a1d18', '#3f2b22', '#58402f', '#73563f'],
-  }, [[23.4, 21.6], [23.4, 26.2]]),
+  }, [[30.4, 36.0], [30.4, 40.0]]),
   apprenti('apprenti-2', {
     peau: ['#a9755c', '#cf9a7c', '#ebb999', '#f8d3b8'],
     vetement: ['#4a2f2a', '#6e4439', '#966252', '#bd8570'],
     accent: ['#1f2944', '#2d3d60', '#3f557d', '#5a7199'],
     cheveux: ['#7a5a2a', '#a07c3a', '#c7a352', '#e3c677'],
-  }, [[24.6, 26.8], [29.4, 26.8]]),
+  }, [[32.2, 38.8], [38.8, 38.8]]),
   apprenti('apprenti-3', {
     peau: ['#7c4f3a', '#a56f52', '#c99172', '#e3b190'],
     vetement: ['#233a44', '#35566a', '#4d7a93', '#6ea0ba'],
     accent: ['#4a2a28', '#6e3b31', '#93533f', '#b56f4f'],
     cheveux: ['#1b1411', '#2a1d17', '#3a2a20', '#4d382a'],
-  }, [[6.5, 14.6], [12.0, 14.6]]),
+  }, [[9.1, 20.4], [16.8, 20.4]]),
+  marchand,
+  lavandiere,
 ];
 
 // Les habitants du village, dans l'ordre où ils sont posés.

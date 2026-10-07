@@ -90,7 +90,9 @@ export function createNpc({ character, sheet, village, sunDirection, post, at = 
     id: character.id,
     character,
     position,
-    isExtra: Boolean(route),
+    // Un figurant : il a un trajet, ou le dit (figurant : vrai, le marchand et
+    // la lavandière de la version 2.3, qui restent à leur poste).
+    isExtra: Boolean(route) || character.figurant === true,
     objects: [sprite.object, shadow],
     get facing() {
       return facing;

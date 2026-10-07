@@ -11,6 +11,7 @@ export const gains = {
   diplome: 20,
   decouverte: 2,
   coffre: 5,
+  etincelle: 3, // une étincelle cachée du village (version 2.3)
 };
 
 // Habille le héros d'une tenue : sa fiche (data/characters.js) prend la planche
@@ -72,5 +73,19 @@ export const tenues = [
     },
     // Robe violette à liserés d'or, et un chapeau pointu à ruban d'or et à
     // étoile, plus petit que celui de l'Oracle.
+  },
+  // La tenue de la cascade (version 2.3) : la tenue de voyage aux couleurs de
+  // l'eau (chapeau et écharpe bleu-vert), trouvée dans le coffre caché
+  // derrière la cascade, jamais vendue (secret : Berthe ne la montre qu'une
+  // fois trouvée, pour la porter). Sa planche est celle du héros, recolorée.
+  {
+    id: 'cascade',
+    sprite: 'heros_cascade',
+    prix: 0,
+    secret: true,
+    palette: {
+      accent: ['#0f3a5a', '#155a7a', '#1f7fa0', '#38a8c8'],
+      vetement: ['#6e6252', '#9a8c78', '#c4b59c', '#e8dcc3'],
+    },
   },
 ];

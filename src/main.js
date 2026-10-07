@@ -41,6 +41,7 @@ import { createPickups } from './game/pickups.js';
 import { createSpots } from './game/spots.js';
 import { createExploits } from './game/exploits.js';
 import { createHealthBar } from './gfx/healthbar.js';
+import { createDamageNumbers } from './game/damage.js';
 import { barColors } from './data/palette.js';
 import { createImpacts, createSlash, createSword } from './gfx/weapon.js';
 import { MOOR_ENEMIES, SWORDS } from './data/enemies.js';
@@ -52,7 +53,7 @@ import { loadSettings, saveSettings } from './game/settings.js';
 import { createTitleScreen } from './game/title.js';
 import { createAreaBanner } from './game/banner.js';
 import {
-  ANVIL, BARRELS, BENCHES, CAMPFIRE, CRATES, GATE, HAYSTACKS, HEARTH, HOUSES, MARKET_STALLS, ORCHARD, PIGEONS, REGIONS, SPARKS,
+  ANVIL, BARRELS, CAMPFIRE, CRATES, GATE, HAYSTACKS, HEARTH, HOUSES, MARKET_STALLS, ORCHARD, PIGEONS, REGIONS, SPARKS,
   TOWERS, TRAINING, TRAINING_SPOT, TREES, WATERFALL, WELL,
 } from './world/layout.js';
 import { createDebugPanel, installDebugApi, isDebugEnabled } from './game/debug.js';
@@ -264,6 +265,8 @@ function start() {
     return x >= x0 && x <= x1 && z >= z0 && z <= z1;
   };
   let spots = null;
+  // Les chiffres de dégâts (version 2.6, game/damage.js), posés sur le canvas.
+  const damage = createDamageNumbers(document.getElementById('degats'), { camera: follow.camera, canvas, texts: textesInterface.combat.degats });
   const combat = createCombat({
     player, sword, slash, impacts, state: gameState, hud: document.getElementById('clartes'), texts: textesInterface.combat,
     canFight: () => doors?.current === moor || (doors?.current === village && inTraining()),
@@ -274,6 +277,10 @@ function start() {
     dummies: () => (doors?.current === village ? village.dummies : []),
     onDummy: (dummy) => spots?.dummyHit(dummy),
     onStrike: () => spots?.strikeStarted(),
+    onDamage: (enemy, amount, kind) => {
+      if (enemy) damage.show({ x: enemy.position.x, y: enemy.sprite.object.position.y + enemy.headHeight * 0.9, z: enemy.position.z }, amount, kind);
+      else damage.show(player.worldPosition(focusTarget).clone().setY(focusTarget.y + 1.0), amount, kind);
+    },
   });
   const pickups = createPickups({
     world: moor, sunDirection: moor.sunDirection, post: pipeline.spriteHooks, wallet,
@@ -327,7 +334,7 @@ function start() {
   quest = createQuest({
     dialogue, state: gameState, texts: dialogues, offer: textesInterface.offreLecon, scrolls: counter.ids, counter,
     overlays: [diploma, grimoire, minimap, shop, credits, forge], diploma, wallet, gains, shop, shopOffer: textesInterface.boutique.offre, credits,
-    forge, forgeOffer: textesInterface.forge.offre,
+    forge, forgeOffer: textesInterface.forge.offre, farewell: textesInterface.auRevoir,
   });
   // Les exploits (version 2.3) : six titres, vérifiés deux fois par seconde.
   const exploits = createExploits({
@@ -391,10 +398,10 @@ function start() {
   // Les points d'action du village (version 2.3, game/spots.js) : le puits à
   // vœux, le feu et les bancs, les cachettes, la pomme, les fioles, le défi.
   spots = createSpots({
-    village, player, state: gameState, wallet, combat, dialogue, counter, follow,
+    village, state: gameState, wallet, combat, dialogue, counter,
     texts: textesInterface.points, tokenTexts: textesInterface.tokens, save: () => saveGameState(gameState),
     layout: {
-      well: WELL, campfire: CAMPFIRE, benches: BENCHES, barrels: BARRELS, crates: CRATES, haystacks: HAYSTACKS,
+      well: WELL, barrels: BARRELS, crates: CRATES, haystacks: HAYSTACKS,
       apple: ORCHARD.apple, vialStall: MARKET_STALLS.find((stall) => stall.goods === 'fioles'), training: TRAINING_SPOT,
     },
   });
@@ -438,7 +445,8 @@ function start() {
   }, (x, z) => (doors?.current ?? village).map.cellAt(Math.floor(x), Math.floor(z))?.matter ?? 'grass');
 
   // Écran titre (sauf ?autostart, pour les tests) et bandeau de lieu.
-  const banner = createAreaBanner(document.getElementById('lieu'), REGIONS, textesInterface.lieux);
+  const banner = createAreaBanner(document.getElementById('lieu'), REGIONS, textesInterface.lieux, { place: document.getElementById('endroit') });
+  if (playing) banner.setWorld(textesInterface.lieux.village); // ?autostart : pas d'écran titre
 
   // Les portes des maisons : à chaque changement de lieu, les habitants
   // présents, la caméra, la minimap, les sons et le bandeau suivent.
@@ -492,8 +500,10 @@ function start() {
       // Sur la lande : les Hallucinations reviennent toutes, le butin au sol
       // disparaît, le combat les connaît.
       pickups.clear();
+      banner.setWorld(inMoor ? textesInterface.lieux.lande : textesInterface.lieux.village);
       if (inMoor) {
         banner.showRoom('lande');
+        banner.setWorld(textesInterface.lieux.lande);
         hallucinations.reset();
         combat.setEnemies(hallucinations);
         spots.regrowApple(); // la pomme du verger repousse à chaque sortie
@@ -553,6 +563,9 @@ function start() {
         keyboard.takeAction();
         playing = true;
         music.start();
+        // L'étiquette du lieu courant (version 2.6) : le village, sauf si une
+        // porte a déjà dit autre chose (la partie commence dans la maison).
+        if (doors.current === village && !doors.room) banner.setWorld(textesInterface.lieux.village);
         // Les portraits de dialogue se chargent en tâche de fond, le jeu lancé :
         // la page elle-même ne demande aucune image avant ce geste.
         for (const who of villagers) {
@@ -582,7 +595,7 @@ function start() {
     const pushed = controls.direction();
     // autoDirection : direction imposée par les tests scriptés (__lia.walk).
     const wanted = state.autoDirection ?? (pushed.x !== 0 || pushed.z !== 0 ? pushed : keyboard.direction());
-    const frozen = interaction.isTalking || !playing || doors.isBusy || spots.isResting;
+    const frozen = interaction.isTalking || !playing || doors.isBusy;
     // Sur la lande avec une épée, une planche qui la dessine (gfx/sprites.js)
     // montre le héros l'arme à la main ; sinon l'épée est un sprite à part.
     combat.setDrawnSword(heroSheet.armed);
@@ -611,6 +624,7 @@ function start() {
     keyGuide.setFighting(doors.current === moor && combat.hasSword);
     keyGuide.setFaded(interaction.isTalking || quest.isBusy);
     follow.follow(player.worldPosition(focusTarget), step);
+    damage.update(dt);
     // Après la caméra : la bulle se pose sur l'image qui va être dessinée.
     // Le temps de la conversation est réel : le gel du temps ne fige pas le texte.
     if (playing) {

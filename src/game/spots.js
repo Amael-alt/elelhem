@@ -1,7 +1,6 @@
 // Les points d'action du village (version 2.3) : des endroits où le bouton
 // d'action fait autre chose que parler. Le puits à vœux (un Token jeté, une
-// maxime rendue, parfois le double), le feu de camp et les bancs (s'asseoir
-// pour reprendre ses clartés), les tonneaux, caisses et meules à fouiller (une
+// maxime rendue, parfois le double), les tonneaux, caisses et meules à fouiller (une
 // fois chacun, quelques Tokens cachés), la pomme du verger (une clarté, une
 // fois par visite de la lande), l'étal du marchand de fioles, et le défi du
 // mannequin sur le terrain d'entraînement. Les textes sont dans
@@ -10,8 +9,6 @@
 // Chaque point est un hotspot de game/interaction.js : { world, x, z, y,
 // radius, label, available(), action() }.
 
-const REST_SECONDS = 3.6; // le temps de s'asseoir, avant que les clartés reviennent
-const REST_ZOOM = 0.72; // la caméra recule d'autant pendant le repos
 const DOUBLE_CHANCE = 0.1; // une fois sur dix, le puits rend le double
 const SEARCH_PATTERN = [2, 0, 1, 0, 3, 0, 0, 2]; // Tokens cachés, dans l'ordre des cachettes
 const MAX_VIALS = 3; // la réserve de fioles
@@ -21,13 +18,14 @@ const CHALLENGE_GOAL = 15; // coups à placer pour la prime
 const CHALLENGE_TOKENS_PER = 5; // un Token tous les cinq coups
 const CHALLENGE_BONUS = 10; // la prime, une seule fois
 
-// village : le monde du dehors ; layout : { well, campfire, benches, barrels,
+// village : le monde du dehors ; layout : { well, barrels,
 // crates, haystacks, apple, vialStall, training } (positions de
-// world/layout.js) ; player, state, wallet, combat, dialogue, counter, follow :
+// world/layout.js) ; state, wallet, combat, dialogue, counter :
 // les modules du jeu ; texts : textesInterface.points ; tokenTexts :
 // textesInterface.tokens ; save() : sauvegarde l'état ; rng : hasard.
-export function createSpots({ village, layout, player, state, wallet, combat, dialogue, counter, follow, texts, tokenTexts, save, rng = Math.random }) {
-  let rest = null; // { remaining, zoomStart }
+// (Le repos sur les bancs et au feu de camp a été retiré en 2.6 : rien ne le
+// montrait à l'écran.)
+export function createSpots({ village, layout, state, wallet, combat, dialogue, counter, texts, tokenTexts, save, rng = Math.random }) {
   let challenge = null; // { remaining, hits }
   let lastHit = null; // le dernier mannequin touché, pour ne pas compter deux fois le même coup
 
@@ -45,13 +43,6 @@ export function createSpots({ village, layout, player, state, wallet, combat, di
     }
     const maxims = texts.puits.maximes;
     dialogue.open(texts.puits.nom, [maxims[Math.floor(rng() * maxims.length)]]);
-  }
-
-  // --- S'asseoir ---------------------------------------------------------------
-  function sit() {
-    if (rest) return;
-    rest = { remaining: REST_SECONDS, zoomStart: follow.zoom };
-    player.face('down');
   }
 
   // --- Fouiller ----------------------------------------------------------------
@@ -122,11 +113,9 @@ export function createSpots({ village, layout, player, state, wallet, combat, di
     counter.say(texts.defi.fin(hits), detail);
   }
 
-  const { well, campfire, benches, barrels, crates, haystacks, apple, vialStall, training } = layout;
+  const { well, barrels, crates, haystacks, apple, vialStall, training } = layout;
   const hotspots = [
     { world: village, x: well.x, z: well.z, y: 2.1, radius: 1.9, label: texts.puits.action, action: wish },
-    { world: village, x: campfire.x, z: campfire.z, y: 1.0, radius: 1.5, label: texts.repos.action, action: sit },
-    ...benches.map((bench) => ({ world: village, x: bench.x, z: bench.z, y: 1.0, radius: 1.3, label: texts.repos.action, action: sit })),
     ...barrels.map((spot, i) => searchSpot(`tonneau:${i}`, i, spot)),
     ...crates.map((spot, i) => searchSpot(`caisse:${i}`, barrels.length + i, spot)),
     ...haystacks.map((spot, i) => searchSpot(`meule:${i}`, barrels.length + crates.length + i, spot)),
@@ -143,10 +132,6 @@ export function createSpots({ village, layout, player, state, wallet, combat, di
 
   return {
     hotspots,
-    // Le héros est assis : il ne bouge pas.
-    get isResting() {
-      return rest !== null;
-    },
     get isChallenging() {
       return challenge !== null;
     },
@@ -181,19 +166,6 @@ export function createSpots({ village, layout, player, state, wallet, combat, di
       return true;
     },
     update(dt) {
-      if (rest) {
-        rest.remaining -= dt;
-        // La caméra recule doucement, puis revient.
-        const progress = 1 - Math.max(0, rest.remaining) / REST_SECONDS;
-        const wanted = rest.zoomStart * (1 - (1 - REST_ZOOM) * Math.sin(progress * Math.PI));
-        follow.zoomByFactor(wanted / follow.zoom);
-        if (rest.remaining <= 0) {
-          follow.zoomByFactor(rest.zoomStart / follow.zoom);
-          rest = null;
-          const healed = combat.heal(combat.maxClartes);
-          counter.say(texts.repos.titre, healed ? texts.repos.detail : texts.repos.pleine);
-        }
-      }
       if (challenge) {
         challenge.remaining -= dt;
         if (challenge.remaining <= 0) endChallenge();

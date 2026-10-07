@@ -243,6 +243,21 @@ export function installDebugApi(game) {
       else game.fiche.close();
       return game.fiche.isOpen;
     },
+    // La scène du lieu courant, pour fouiller dans la console.
+    scene: () => game.doors.current.scene,
+    // Un objet de la scène courante, par son nom : visible, nombre d'instances, rayon.
+    objet(name) {
+      const o = game.doors.current.scene.getObjectByName(name);
+      if (!o) return null;
+      const first = new THREE.Vector3();
+      if (o.count) {
+        const m = new THREE.Matrix4();
+        o.getMatrixAt(0, m);
+        first.setFromMatrixPosition(m);
+      }
+      const screen = first.clone().project(follow.camera);
+      return { visible: o.visible, count: o.count ?? null, position: o.position.toArray().map((v) => Number(v.toFixed(2))), rayon: o.geometry?.boundingSphere?.radius ?? null, triangles: o.geometry ? o.geometry.index.count / 3 : null, premier: first.toArray().map((v) => Number(v.toFixed(2))), ecran: [Number(((screen.x * 0.5 + 0.5) * renderer.domElement.clientWidth).toFixed(0)), Number(((0.5 - screen.y * 0.5) * renderer.domElement.clientHeight).toFixed(0))] };
+    },
     hallucinations() {
       return game.hallucinations.list.map((e) => ({ id: e.id, hp: e.hp, state: e.state, x: Number(e.position.x.toFixed(2)), z: Number(e.position.z.toFixed(2)) }));
     },

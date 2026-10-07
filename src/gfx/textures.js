@@ -1,5 +1,8 @@
-// Générateurs de tuiles du décor. Chaque tuile fait 64 × 64 pixels et couvre
-// 4 × 4 unités du monde (16 texels par unité). Elles sont périodiques : posées
+// Générateurs de tuiles du décor. Chaque tuile fait 128 × 128 pixels et couvre
+// 4 × 4 unités du monde (32 texels par unité depuis la version 2.7, 16 avant :
+// les motifs dessinés en pixels, rangs de briques, lattes, tuiles, sont
+// multipliés par K pour garder leur taille dans le monde, avec deux fois
+// plus de détail). Elles sont périodiques : posées
 // côte à côte, aucune couture ne se voit. Chaque générateur rend une texture
 // de couleur et, quand le relief compte, une texture de normales.
 
@@ -8,8 +11,10 @@ import {
   createPixelBuffer, createRamp, createRng, fbm, hash2, hexToRgb, rampIndex, setPixel, sobelNormals, toDataTexture, voronoi,
 } from './pixels.js';
 
-export const TILE_PIXELS = 64;
+export const TILE_PIXELS = 128;
 export const TILE_UNITS = 4;
+// Facteur de finesse : 1 quand la tuile faisait 64 pixels.
+const K = TILE_PIXELS / 64;
 
 const SIZE = TILE_PIXELS;
 const wrap = (v) => ((v % SIZE) + SIZE) % SIZE;
@@ -50,10 +55,10 @@ export function createGrassTextures(seed) {
       heights[y * SIZE + x] = p * 0.5 + g * 0.5;
     }
   }
-  for (let n = 0; n < 170; n += 1) {
+  for (let n = 0; n < 170 * K * K; n += 1) {
     const x = Math.floor(rng() * SIZE);
     const y = Math.floor(rng() * SIZE);
-    const length = 2 + Math.floor(rng() * 2);
+    const length = (2 + Math.floor(rng() * 2)) * K;
     tones[wrap(y + 1) * SIZE + x] -= 0.1;
     for (let k = 0; k < length; k += 1) {
       const i = wrap(y - k) * SIZE + x;
@@ -119,9 +124,9 @@ export function createFanCobbleTextures(seed) {
   const grain = fbm(seed + 17, SIZE, 16, 2);
   const tones = new Float32Array(SIZE * SIZE);
   const heights = new Float32Array(SIZE * SIZE);
-  const R = 16;
-  const RING = 4;
-  const JOINT = 0.9;
+  const R = 16 * K;
+  const RING = 4 * K;
+  const JOINT = 0.9 * K;
   for (let y = 0; y < SIZE; y += 1) {
     for (let x = 0; x < SIZE; x += 1) {
       const i = y * SIZE + x;
@@ -147,19 +152,19 @@ export function createFanCobbleTextures(seed) {
       const ring = Math.min(3, Math.floor(best.d / RING));
       const inRing = best.d - ring * RING;
       const angle = Math.atan2(best.cy - py, px - best.cx); // 0 à droite, π à gauche
-      const count = Math.max(2, Math.round((Math.PI * (ring + 0.5) * RING) / 4.6));
+      const count = Math.max(2, Math.round((Math.PI * (ring + 0.5) * RING) / (4.6 * K)));
       const along = (angle / Math.PI) * count;
       const stone = Math.floor(along);
       const arc = (along - stone) * ((Math.PI * (ring + 0.5) * RING) / count);
       const arcLength = (Math.PI * (ring + 0.5) * RING) / count;
-      const edge = Math.min(inRing, RING - inRing, arc, arcLength - arc, R * 1.06 - best.d + 0.4);
+      const edge = Math.min(inRing, RING - inRing, arc, arcLength - arc, R * 1.06 - best.d + 0.4 * K);
       if (edge < JOINT) {
         tones[i] = 0.08 + grain(x, y) * 0.08;
         heights[i] = 0;
         continue;
       }
       const id = hash2(((best.k % 2) + 2) % 2 * 97 + ((best.row % 2) + 2) % 2 * 31 + ring * 7, stone, seed);
-      const dome = Math.min(1, (edge - JOINT) / 1.4);
+      const dome = Math.min(1, (edge - JOINT) / (1.4 * K));
       tones[i] = 0.4 + id * 0.3 + dome * 0.16 + (grain(x, y) - 0.5) * 0.1;
       heights[i] = Math.sqrt(dome) * 0.9 + grain(x, y) * 0.1;
     }
@@ -227,12 +232,12 @@ export function createRoofTextures(seed) {
   const heights = new Float32Array(SIZE * SIZE);
   for (let y = 0; y < SIZE; y += 1) {
     for (let x = 0; x < SIZE; x += 1) {
-      const column = Math.floor(x / 4);
-      const across = ((x % 4) + 0.5) / 4;
+      const column = Math.floor(x / (4 * K));
+      const across = ((x % (4 * K)) + 0.5) / (4 * K);
       const cover = column % 2 === 1;
-      const offset = (column * 3) % 8;
-      const along = ((y + offset) % 8) / 8;
-      const row = Math.floor((y + offset) / 8) % 8;
+      const offset = ((column * 3) % 8) * K;
+      const along = ((y + offset) % (8 * K)) / (8 * K);
+      const row = Math.floor((y + offset) / (8 * K)) % 8;
       const bulge = Math.sin(Math.PI * across);
       const relief = cover ? bulge : 0.35 * (1 - bulge);
       const lip = along > 0.8 ? 1 : 0;
@@ -252,17 +257,17 @@ export function createSlateTextures(seed) {
   const grain = fbm(seed + 3, SIZE, 16, 2);
   const tones = new Float32Array(SIZE * SIZE);
   const heights = new Float32Array(SIZE * SIZE);
-  const ROW = 6;
+  const ROW = 6 * K;
   for (let y = 0; y < SIZE; y += 1) {
     const row = Math.floor(y / ROW);
     const inRow = y % ROW;
     for (let x = 0; x < SIZE; x += 1) {
-      const width = 8;
-      const shifted = wrap(x + (row % 2) * 4 + (row % 3));
+      const width = 8 * K;
+      const shifted = wrap(x + (row % 2) * 4 * K + (row % 3) * K);
       const plate = Math.floor(shifted / width);
-      const seam = shifted % width === 0;
+      const seam = shifted % width < K;
       const i = y * SIZE + x;
-      const edge = inRow === 0 ? 1 : 0; // bas de la plaque (v croît vers le faîtage)
+      const edge = inRow < K ? 1 : 0; // bas de la plaque (v croît vers le faîtage)
       tones[i] = seam ? 0.08 : 0.28 + hash2(plate, row, seed) * 0.32 + edge * 0.18 - (inRow / ROW) * 0.12 + (grain(x, y) - 0.5) * 0.1;
       heights[i] = seam ? 0 : 0.6 + edge * 0.4 - (inRow / ROW) * 0.3;
     }
@@ -277,13 +282,13 @@ export function createThatchTextures(seed) {
   const patches = fbm(seed + 7, SIZE, 4, 3);
   const tones = new Float32Array(SIZE * SIZE);
   const heights = new Float32Array(SIZE * SIZE);
-  const LAYER = 10;
+  const LAYER = 10 * K;
   for (let y = 0; y < SIZE; y += 1) {
     const inLayer = y % LAYER;
     for (let x = 0; x < SIZE; x += 1) {
       const i = y * SIZE + x;
-      const strand = Math.abs(Math.sin((x + strands(x, y) * 6) * 1.9));
-      const shade = inLayer < 2 ? -0.22 : 0;
+      const strand = Math.abs(Math.sin(((x + strands(x, y) * 6 * K) * 1.9) / K));
+      const shade = inLayer < 2 * K ? -0.22 : 0;
       tones[i] = 0.3 + strand * 0.3 + (patches(x, y) - 0.5) * 0.3 + shade + (inLayer / LAYER) * 0.12;
       heights[i] = strand * 0.5 + inLayer / LAYER * 0.5;
     }
@@ -298,11 +303,11 @@ export function createStoneWallTextures(seed) {
   const tones = new Float32Array(SIZE * SIZE);
   const heights = new Float32Array(SIZE * SIZE);
   for (let y = 0; y < SIZE; y += 1) {
-    const course = Math.floor(y / 8);
+    const course = Math.floor(y / (8 * K));
     for (let x = 0; x < SIZE; x += 1) {
-      const shifted = wrap(x + (course % 2) * 6);
-      const block = Math.floor(shifted / 16);
-      const joint = y % 8 === 0 || shifted % 16 === 0;
+      const shifted = wrap(x + (course % 2) * 6 * K);
+      const block = Math.floor(shifted / (16 * K));
+      const joint = y % (8 * K) < K || shifted % (16 * K) < K;
       const i = y * SIZE + x;
       tones[i] = joint ? 0.72 : 0.22 + hash2(block, course, seed) * 0.3 + (grain(x, y) - 0.5) * 0.25;
       heights[i] = joint ? 0 : 0.6 + grain(x, y) * 0.4;
@@ -318,8 +323,8 @@ export function createAwningTexture() {
   const cream = createRamp(buildingRamps.toileCreme);
   for (let y = 0; y < SIZE; y += 1) {
     for (let x = 0; x < SIZE; x += 1) {
-      const stripe = Math.floor(x / 8) % 2 === 0 ? red : cream;
-      const fold = 0.5 + 0.5 * Math.cos(((x % 8) / 8) * Math.PI * 2);
+      const stripe = Math.floor(x / (8 * K)) % 2 === 0 ? red : cream;
+      const fold = 0.5 + 0.5 * Math.cos(((x % (8 * K)) / (8 * K)) * Math.PI * 2);
       const tone = 0.35 + fold * 0.45 + (y / SIZE) * 0.15;
       setPixel(buffer, x, y, stripe[rampIndex(tone, stripe.length, x, y)]);
     }
@@ -334,74 +339,83 @@ export function createBrickTextures(seed) {
   const heights = new Float32Array(SIZE * SIZE);
   for (let y = 0; y < SIZE; y += 1) {
     for (let x = 0; x < SIZE; x += 1) {
-      const course = Math.floor(y / 4);
-      const shift = course % 2 ? 4 : 0;
-      const brick = Math.floor((x + shift) / 8) % 8;
-      const joint = y % 4 === 3 || (x + shift) % 8 === 7;
+      const course = Math.floor(y / (4 * K));
+      const shift = course % 2 ? 4 * K : 0;
+      const brick = Math.floor((x + shift) / (8 * K)) % 8;
+      const joint = y % (4 * K) >= 4 * K - K || (x + shift) % (8 * K) >= 8 * K - K;
       const i = y * SIZE + x;
       tones[i] = joint
         ? 0.05 + grain(x, y) * 0.08
-        : 0.3 + hash2(brick, course, seed) * 0.35 + (grain(x, y) - 0.5) * 0.15 + (y % 4 === 0 ? 0.1 : 0);
+        : 0.3 + hash2(brick, course, seed) * 0.35 + (grain(x, y) - 0.5) * 0.15 + (y % (4 * K) < K ? 0.1 : 0);
       heights[i] = joint ? 0 : 0.8;
     }
   }
   return finish(buildingRamps.briques, tones, heights, 1.2);
 }
 
-// Porte : 16 × 32 pixels pour 1 × 2 unités. Planches vertes, deux pentures,
-// une poignée, un arc en plein cintre découpé dans l'enduit.
+// Porte : 16K × 32K pixels pour 1 × 2 unités (32 × 64 depuis la version 2.7).
+// Planches vertes, deux pentures, une poignée, un arc en plein cintre découpé
+// dans l'enduit. Les mesures sont données à l'ancienne échelle (16 × 32) et
+// multipliées par K.
+export const DOOR_PIXELS = [16 * K, 32 * K];
 export function createDoorTexture() {
-  const width = 16;
-  const height = 32;
+  const [width, height] = DOOR_PIXELS;
   const wood = createRamp(buildingRamps.porte);
   const frame = createRamp(buildingRamps.bois);
   const plaster = createRamp(buildingRamps.enduit);
   const iron = hexToRgb(ironColor);
   const buffer = createPixelBuffer(width, height);
-  const archY = 7;
+  const archY = 7 * K;
+  const band = (v, from, to) => v >= from * K && v < to * K; // v dans [from, to[ à l'ancienne échelle
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const dx = x + 0.5 - width / 2;
-      const dy = y + 0.5 - archY;
+      const dx = (x + 0.5 - width / 2) / K;
+      const dy = (y + 0.5 - archY) / K;
       const inArch = y >= archY || dx * dx + dy * dy <= 7.5 * 7.5;
+      const plank = Math.floor(x / K); // colonne à l'ancienne échelle
       let rgb;
       if (!inArch) rgb = plaster[3];
-      else if (x === 0 || x === width - 1 || (y < archY && dx * dx + dy * dy > 6.3 * 6.3)) rgb = frame[1];
-      else if (y === 10 || y === 24) rgb = iron;
-      else if ((x === 11 || x === 12) && y === 17) rgb = iron;
-      else if ((x - 1) % 4 === 0) rgb = wood[0];
-      else rgb = wood[(x - 1) % 4 === 1 ? 3 : 2 - (hash2(x, y >> 2, 5) > 0.75 ? 1 : 0)];
+      else if (x < K || x >= width - K || (y < archY && dx * dx + dy * dy > 6.3 * 6.3)) rgb = frame[1];
+      else if (band(y, 10, 11) || band(y, 24, 25)) rgb = iron;
+      else if (band(x, 11, 13) && band(y, 17, 18)) rgb = iron;
+      else if ((plank - 1) % 4 === 0) rgb = wood[0];
+      else rgb = wood[(plank - 1) % 4 === 1 ? 3 : 2 - (hash2(plank, y >> (2 + K - 1), 5) > 0.75 ? 1 : 0)];
       setPixel(buffer, x, y, rgb);
     }
   }
   return toDataTexture(buffer, { repeat: false, mipmaps: false });
 }
 
-// Fenêtre : 16 × 16 pixels pour une unité. Cadre de bois, croisée, quatre
-// carreaux éclairés de l'intérieur, appui d'enduit. La texture d'émission
-// reprend les carreaux seuls : c'est elle qui fera briller la fenêtre.
+// Fenêtre : 16K × 16K pixels pour une unité (32 × 32 depuis la version 2.7).
+// Cadre de bois, croisée, quatre carreaux éclairés de l'intérieur, appui
+// d'enduit. La texture d'émission reprend les carreaux seuls : c'est elle
+// qui fera briller la fenêtre. Mesures à l'ancienne échelle, fois K.
+export const WINDOW_PIXELS = [16 * K, 16 * K];
 export function createWindowTextures() {
-  const size = 16;
+  const [size] = WINDOW_PIXELS;
   const frame = createRamp(buildingRamps.bois);
   const glass = createRamp(buildingRamps.vitre);
   const plaster = createRamp(buildingRamps.enduit);
   const map = createPixelBuffer(size, size);
   const glow = createPixelBuffer(size, size);
+  const band = (v, from, to) => v >= from * K && v < to * K;
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
-      const border = x < 2 || x > 13 || y < 2 || y > 13;
-      const mullion = x === 7 || x === 8 || y === 7 || y === 8;
-      if (y === size - 1) {
+      const border = x < 2 * K || x >= 14 * K || y < 2 * K || y >= 14 * K;
+      const mullion = band(x, 7, 9) || band(y, 7, 9);
+      if (y >= size - K) {
         setPixel(map, x, y, plaster[4]);
         setPixel(glow, x, y, [0, 0, 0]);
       } else if (border || mullion) {
-        const lit = x === 0 || y === 0 || x === 9 || y === 9;
-        const dark = x === 13 || y === 13 || x === 6 || y === 6;
+        const lit = band(x, 0, 1) || band(y, 0, 1) || band(x, 9, 10) || band(y, 9, 10);
+        const dark = band(x, 13, 14) || band(y, 13, 14) || band(x, 6, 7) || band(y, 6, 7);
         setPixel(map, x, y, frame[lit ? 3 : dark ? 1 : 2]);
         setPixel(glow, x, y, [0, 0, 0]);
       } else {
-        const reflection = x - y > 3 && x - y < 6 ? 0.18 : 0;
-        const t = 0.3 + (y / 15) * 0.35 + (1 - Math.abs(x - 7.5) / 6) * 0.25 + reflection;
+        const ox = x / K;
+        const oy = y / K;
+        const reflection = ox - oy > 3 && ox - oy < 6 ? 0.18 : 0;
+        const t = 0.3 + (oy / 15) * 0.35 + (1 - Math.abs(ox - 7.5) / 6) * 0.25 + reflection;
         const rgb = glass[rampIndex(t, glass.length, x, y)];
         setPixel(map, x, y, rgb);
         setPixel(glow, x, y, rgb);
@@ -448,7 +462,7 @@ export function createRockTextures(seed) {
     for (let x = 0; x < SIZE; x += 1) {
       const i = y * SIZE + x;
       const g = grain(x, y);
-      const strata = Math.sin(((y + g * 6) / SIZE) * Math.PI * 2 * 4);
+      const strata = Math.sin(((y + g * 6 * K) / SIZE) * Math.PI * 2 * 4);
       const { f1, f2 } = cracks(x, y);
       const crack = f2 - f1 < 0.05 ? 1 : 0;
       tones[i] = 0.3 + strata * 0.15 + (g - 0.5) * 0.35 - crack * 0.25;
@@ -462,7 +476,7 @@ export function createRockTextures(seed) {
 
 // Partitions de 64 pixels en lattes de 16 à 48 : une par rangée, pour que la
 // tuile se raccorde à sa voisine.
-const PLANK_RUNS = [[24, 40], [40, 24], [32, 32], [16, 48], [48, 16], [24, 16, 24], [16, 24, 24], [24, 24, 16]];
+const PLANK_RUNS = [[24, 40], [40, 24], [32, 32], [16, 48], [48, 16], [24, 16, 24], [16, 24, 24], [24, 24, 16]].map((runs) => runs.map((run) => run * K));
 
 // Plancher : des lattes de 8 pixels de large (une demi-unité) qui courent
 // d'est en ouest, longues d'une à trois unités, décalées d'une rangée à
@@ -473,10 +487,10 @@ export function createPlankTextures(seed, ramp = interiorRamps.plancher) {
   const fibers = fbm(seed + 2, SIZE, 4, 2, 0.5);
   const tones = new Float32Array(SIZE * SIZE);
   const heights = new Float32Array(SIZE * SIZE);
-  const ROW = 8;
+  const ROW = 8 * K;
   for (let y = 0; y < SIZE; y += 1) {
     const row = Math.floor(y / ROW);
-    const ly = y % ROW;
+    const ly = Math.floor((y % ROW) / K); // ligne dans la latte, à l'ancienne échelle
     const runs = PLANK_RUNS[Math.floor(hash2(row, 1, seed) * PLANK_RUNS.length)];
     const offset = Math.floor(hash2(row, 2, seed) * SIZE);
     for (let x = 0; x < SIZE; x += 1) {
@@ -488,7 +502,8 @@ export function createPlankTextures(seed, ramp = interiorRamps.plancher) {
         along -= runs[plank];
         plank += 1;
       }
-      const length = runs[plank];
+      const length = runs[plank] / K;
+      along = Math.floor(along / K);
       if (ly === 0 || along === 0) {
         tones[i] = 0.04 + hash2(x, y, seed) * 0.06;
         heights[i] = 0;
@@ -503,7 +518,7 @@ export function createPlankTextures(seed, ramp = interiorRamps.plancher) {
         tone += 0.12;
         height += 0.1;
       }
-      if (ly === ROW - 1) {
+      if (ly === ROW / K - 1) {
         tone -= 0.1;
         height -= 0.15;
       }
@@ -570,8 +585,8 @@ export function createPanelTextures(seed, ramp = interiorRamps.lambris) {
   for (let y = 0; y < SIZE; y += 1) {
     for (let x = 0; x < SIZE; x += 1) {
       const i = y * SIZE + x;
-      const lx = x % 8;
-      const board = Math.floor(x / 8);
+      const lx = Math.floor((x % (8 * K)) / K);
+      const board = Math.floor(x / (8 * K));
       if (lx === 0) {
         tones[i] = 0.05 + grain(x, y) * 0.06;
         heights[i] = 0;
@@ -595,7 +610,7 @@ export function createPanelTextures(seed, ramp = interiorRamps.lambris) {
   return finish(ramp, tones, heights, 0.8);
 }
 
-export const RUG_PIXELS_PER_UNIT = 16;
+export const RUG_PIXELS_PER_UNIT = 16 * K;
 
 // Tapis : une seule image à la taille du tapis (pas de répétition), 16 pixels
 // par unité. Fond de laine rouge chiné, bordure crème entre deux filets
@@ -604,7 +619,7 @@ export const RUG_PIXELS_PER_UNIT = 16;
 export function createRugTexture(width, depth, seed = 7) {
   const buffer = createPixelBuffer(width, depth);
   const c = Object.fromEntries(Object.entries(rugColors).map(([key, hex]) => [key, hexToRgb(hex)]));
-  const FRINGE = 2;
+  const FRINGE = 2 * K;
   const y0 = FRINGE;
   const y1 = depth - 1 - FRINGE;
   const count = Math.max(1, Math.round((depth - 2 * FRINGE) / width));
@@ -614,9 +629,9 @@ export function createRugTexture(width, depth, seed = 7) {
     for (let x = 0; x < width; x += 1) {
       let rgb;
       if (y < y0 || y > y1) {
-        rgb = x % 2 === 0 ? c.frange : c.filet;
+        rgb = Math.floor(x / K) % 2 === 0 ? c.frange : c.filet;
       } else {
-        const b = Math.min(x, width - 1 - x, y - y0, y1 - y);
+        const b = Math.floor(Math.min(x, width - 1 - x, y - y0, y1 - y) / K);
         if (b === 0 || b === 4) rgb = c.filet;
         else if (b < 4) rgb = c.bordure;
         else {

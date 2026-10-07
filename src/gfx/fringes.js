@@ -12,10 +12,10 @@
 
 import * as THREE from 'three';
 import { createPixelBuffer, createRng, bayer4, toDataTexture } from './pixels.js';
-import { TILE_UNITS } from './textures.js';
+import { TILE_PIXELS, TILE_UNITS } from './textures.js';
 import { SHARP_SAMPLE_GLSL } from './materials.js';
 
-const MASK_PIXELS = 16;
+const MASK_PIXELS = 32; // version 2.7 : 32 texels par unité, comme le sol
 const MASK_VARIANTS = 4;
 const PER_EDGE = 4;
 const WEAR_CHANCE = 0.1; // taches d'herbe au milieu d'un chemin
@@ -27,10 +27,12 @@ function createMaskTexture(seed) {
   const size = MASK_PIXELS;
   const buffer = createPixelBuffer(size * MASK_VARIANTS, size);
   for (let v = 0; v < MASK_VARIANTS; v += 1) {
-    const blobs = [{ x: 8, y: 8, r: 4.6 }];
+    const h = size / 2;
+    const blobs = [{ x: h, y: h, r: 0.2875 * size }];
     for (let i = 0; i < 4; i += 1) {
       const a = rng() * Math.PI * 2;
-      blobs.push({ x: 8 + Math.cos(a) * (2 + rng() * 3), y: 8 + Math.sin(a) * (2 + rng() * 3), r: 1.6 + rng() * 2.2 });
+      const reach = (0.125 + rng() * 0.1875) * size;
+      blobs.push({ x: h + Math.cos(a) * reach, y: h + Math.sin(a) * reach, r: (0.1 + rng() * 0.1375) * size });
     }
     for (let y = 0; y < size; y += 1) {
       for (let x = 0; x < size; x += 1) {
@@ -62,7 +64,7 @@ function createFringeMaterial(grass, mask) {
     polygonOffsetFactor: -1,
     polygonOffsetUnits: -1,
   });
-  const texSize = new THREE.Vector2(64, 64);
+  const texSize = new THREE.Vector2(TILE_PIXELS, TILE_PIXELS);
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTexSize = { value: texSize };
     shader.vertexShader = shader.vertexShader

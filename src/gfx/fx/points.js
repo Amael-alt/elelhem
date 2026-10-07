@@ -6,7 +6,7 @@
 
 import * as THREE from 'three';
 
-export const ART_PIXELS_PER_UNIT = 16;
+export const ART_PIXELS_PER_UNIT = 32; // version 2.7 : des particules deux fois plus fines
 
 // Uniformes partagés par tous les effets, mis à jour une fois par image.
 export function createFxUniforms() {

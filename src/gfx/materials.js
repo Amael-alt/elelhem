@@ -70,10 +70,11 @@ export function createNoPointShadowMaterial() {
 }
 
 // Matériau du décor : lumières, ombres, brume de three.js, échantillonnage net
-// et occlusion cuite. texSize : taille de la texture en pixels.
+// et occlusion cuite. texSize : taille de la texture en pixels, lue sur
+// l'image de la carte quand elle n'est pas donnée (une tuile du décor).
 export function createPixelMaterial({
   map, normalMap = null, normalStrength = 1, emissiveMap = null, emissiveIntensity = 0,
-  roughness = 0.9, texSize = [64, 64],
+  roughness = 0.9, texSize = map?.image ? [map.image.width, map.image.height] : [64, 64],
 }) {
   const material = new THREE.MeshStandardMaterial({
     map,

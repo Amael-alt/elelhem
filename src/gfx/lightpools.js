@@ -9,7 +9,7 @@ import { lanternColor } from '../data/palette.js';
 
 const STRENGTH = 0.36; // intensité au centre, en HDR
 const RINGS = 5; // paliers de la lumière, comme du pixel art
-const PIXELS_PER_UNIT = 16;
+const PIXELS_PER_UNIT = 32; // version 2.7 : la grille de pixels du décor
 
 // pools : liste de { x, y, z, radius, strength? }.
 export function createLightPools(pools) {

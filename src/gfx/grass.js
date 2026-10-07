@@ -13,12 +13,12 @@ import { createPixelBuffer, createRamp, createRng, hexToRgb, setPixel, toDataTex
 import { injectSharpSampling } from './materials.js';
 import { flowerColors, terrainRamps } from '../data/palette.js';
 
-const TUFT_PIXELS = 12;
+const TUFT_PIXELS = 24; // version 2.7 : 32 texels par unité (12 pixels à 16 avant)
 const GRASS_VARIANTS = 3; // touffes d'herbe seule
 export const FLOWER_VARIANTS = 4; // touffes fleuries
 export const FIRST_FLOWER_VARIANT = GRASS_VARIANTS;
 export const TUFT_VARIANTS = GRASS_VARIANTS + FLOWER_VARIANTS;
-const PIXELS_PER_UNIT = 16;
+const PIXELS_PER_UNIT = 32;
 const SWAY = 0.07;
 const SWAY_RATE = 2.1;
 
@@ -43,12 +43,12 @@ function createTuftTexture(seed) {
   for (let v = 0; v < TUFT_VARIANTS; v += 1) {
     const ox = v * TUFT_PIXELS;
     const flowers = v >= GRASS_VARIANTS;
-    const blades = flowers ? 5 : 7 + Math.floor(rng() * 3);
+    const blades = flowers ? 9 : 13 + Math.floor(rng() * 5); // deux fois plus de brins, deux fois plus fins
     const tips = [];
     for (let b = 0; b < blades; b += 1) {
-      const x0 = 2 + rng() * 8;
-      const height = flowers ? 4 + Math.floor(rng() * 4) : 5 + Math.floor(rng() * 6);
-      const lean = (x0 - 6) * 0.45 + (rng() - 0.5) * 2;
+      const x0 = 4 + rng() * 16;
+      const height = flowers ? 8 + Math.floor(rng() * 8) : 10 + Math.floor(rng() * 12);
+      const lean = (x0 - 12) * 0.45 + (rng() - 0.5) * 4;
       blade(buffer, ramp, ox, x0, height, lean);
       tips.push([Math.round(x0 + lean), TUFT_PIXELS - height]);
     }
@@ -57,11 +57,15 @@ function createTuftTexture(seed) {
     // trois brins.
     const petal = petals[(v - GRASS_VARIANTS) % petals.length];
     const heart = [255, 236, 170];
+    // Une fleur : un disque de cinq pixels de large, le cœur de deux par deux.
     for (const [x, y] of tips.slice(0, 3)) {
-      const cx = Math.min(TUFT_PIXELS - 2, Math.max(1, x));
-      const cy = Math.max(1, y);
-      for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) setPixel(buffer, ox + cx + dx, cy + dy, petal);
-      setPixel(buffer, ox + cx, cy, heart);
+      const cx = Math.min(TUFT_PIXELS - 3, Math.max(2, x));
+      const cy = Math.max(2, y);
+      for (let dy = -2; dy <= 2; dy += 1) for (let dx = -2; dx <= 2; dx += 1) {
+        if (Math.abs(dx) + Math.abs(dy) > 3 || (Math.abs(dx) === 2 && Math.abs(dy) === 2)) continue;
+        setPixel(buffer, ox + cx + dx, cy + dy, petal);
+      }
+      for (const [dx, dy] of [[0, 0], [-1, 0], [0, -1], [-1, -1]]) setPixel(buffer, ox + cx + dx, cy + dy, heart);
     }
   }
   return toDataTexture(buffer, { repeat: false, mipmaps: false });

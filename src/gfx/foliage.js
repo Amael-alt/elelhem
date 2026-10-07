@@ -16,7 +16,7 @@ import { createPixelBuffer, createRamp, createRng, setPixel, toDataTexture, baye
 import { createNoPointShadowMaterial, injectSharpSampling } from './materials.js';
 import { foliageGreys, outlineColor } from '../data/palette.js';
 
-const CLUMP_PIXELS = 24; // côté d'une grappe dans l'image
+const CLUMP_PIXELS = 48; // côté d'une grappe dans l'image (version 2.7 : le double, des feuilles plus fines)
 const VARIANTS = 4; // formes de grappes différentes, côte à côte dans l'image
 const SWAY = 0.05; // amplitude du vent, en unités, au sommet de la grappe
 const SWAY_RATE = 1.5; // radians par seconde
@@ -35,12 +35,14 @@ function createClumpTexture(seed) {
   const outline = createRamp([outlineColor])[0];
   const rng = createRng(seed);
   for (let v = 0; v < VARIANTS; v += 1) {
-    const blobs = [{ x: 12, y: 13, r: 7.5 }];
-    const count = 5 + Math.floor(rng() * 3);
+    // Les touffes, en part du côté de l'image : les mêmes formes à toute finesse.
+    const u = size / 24;
+    const blobs = [{ x: 12 * u, y: 13 * u, r: 7.5 * u }];
+    const count = 7 + Math.floor(rng() * 4);
     for (let i = 0; i < count; i += 1) {
       const angle = rng() * Math.PI * 2;
-      const distance = 3 + rng() * 4.5;
-      blobs.push({ x: 12 + Math.cos(angle) * distance, y: 12.5 + Math.sin(angle) * distance * 0.85, r: 2.6 + rng() * 2.4 });
+      const distance = (3 + rng() * 4.5) * u;
+      blobs.push({ x: 12 * u + Math.cos(angle) * distance, y: 12.5 * u + Math.sin(angle) * distance * 0.85, r: (2.2 + rng() * 2.4) * u });
     }
     const inside = new Uint8Array(size * size);
     const tone = new Float32Array(size * size);

@@ -5,7 +5,7 @@
 
 import * as THREE from 'three';
 import { createMeshBuilder, pushPolygon, toGeometry } from '../../world/builder.js';
-import { TILE_UNITS } from '../textures.js';
+import { TILE_PIXELS, TILE_UNITS } from '../textures.js';
 import { createRng } from '../pixels.js';
 import { FX_OUTPUT_GLSL, PIXEL_DISC_GLSL, POINT_SIZE_GLSL } from './points.js';
 import { effectColors } from '../../data/palette.js';
@@ -98,7 +98,7 @@ export function createWaterfall({ x0, x1, z, top, bottom }, waterMap, uniforms) 
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <map_fragment>', `#include <map_fragment>
         // Filets d'écume : certaines colonnes de texels plus claires que d'autres.
-        float column = floor( vMapUv.x * 64.0 );
+        float column = floor( vMapUv.x * ${TILE_PIXELS.toFixed(1)} );
         float streak = step( 0.62, fract( sin( column * 12.9898 ) * 43758.5453 ) );
         diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.86, 0.93, 1.0 ), ${WHITEN.toFixed(2)} + streak * ${STREAKS.toFixed(2)} );`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>

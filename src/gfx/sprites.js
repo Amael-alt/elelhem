@@ -73,6 +73,8 @@ const ROBE_BOOTS = 4; // sous une robe, les quatre dernières lignes (les bottes
 const ARM_SHARE = 0.45; // part du buste (depuis les hanches) où les bras balancent
 const ARM_WIDTH = 3; // pixels du bord du buste qui suivent le bras
 const BACK_LEG_SHADE = 0.72; // la jambe arrière, de profil, est plus sombre
+const SIDE_SHIFT = 0.4; // de profil, part de la foulée qui déplace la jambe entière
+const SIDE_SHEAR = 0.7; // et part qui l'incline depuis la hanche
 
 // --- Directions ---------------------------------------------------------------
 
@@ -324,10 +326,14 @@ function sideFrame(cells, info, pose) {
     stamp(frame, cells, { rows: [hips, bottom], keep: inLegs });
     if (bob < 0) stamp(frame, cells, { rows: [hips, hips], dy: -1, keep: inLegs });
   } else {
-    // On regarde vers la gauche : l'avant est à gauche (x négatif).
-    const shear = (direction) => (y) => Math.round((direction * stride * (y - hips)) / span);
-    stamp(frame, cells, { rows: [hips, bottom], shade: 1, shear: shear(1), keep: inLegs });
-    stamp(frame, cells, { rows: [hips, bottom], dy: -lift, shear: shear(-1), keep: inLegs });
+    // On regarde vers la gauche : l'avant est à gauche (x négatif). Chaque
+    // jambe se déplace d'un bloc (shift : la cuisse bouge aussi, pas seulement
+    // le pied) et se cisaille depuis la hanche (version 2.7 : les jambes sont
+    // courtes, le cisaillement seul ne bougeait que les pieds).
+    const shift = Math.sign(stride) * Math.max(1, Math.round(Math.abs(stride) * SIDE_SHIFT));
+    const shear = (direction) => (y) => Math.round((direction * stride * SIDE_SHEAR * (y - hips)) / span);
+    stamp(frame, cells, { rows: [hips, bottom], shade: 1, dx: shift, shear: shear(1), keep: inLegs });
+    stamp(frame, cells, { rows: [hips, bottom], dx: -shift, dy: -lift, shear: shear(-1), keep: inLegs });
     if (bob < 0) stamp(frame, cells, { rows: [hips, hips], dy: -1, keep: inLegs });
   }
   // Le buste penche vers l'avant (la gauche) : d'autant plus qu'on monte.

@@ -34,7 +34,9 @@ const DIGIT = /^(?:Digit|Numpad)([1-9])$/;
 const NBSP = String.fromCharCode(0xa0);
 export const nonBreaking = (text) => text.replace(/ (?=[:;!?»])/g, NBSP).replace(/(?<=«) /g, NBSP);
 
-export function createDialogueBox(root, { onClose = () => {}, portraitOf = () => null } = {}) {
+// onType(nom) : une lettre vient de s'écrire (une sur deux, hors espaces),
+// pour le bip de la frappe (version 2.8).
+export function createDialogueBox(root, { onClose = () => {}, portraitOf = () => null, onType = () => {} } = {}) {
   const nameElement = root.querySelector('.dialogue-nom');
   const seen = root.querySelector('.vu');
   const rest = root.querySelector('.reste');
@@ -223,7 +225,13 @@ export function createDialogueBox(root, { onClose = () => {}, portraitOf = () =>
       if (!open || !typing()) return;
       const before = Math.floor(typed);
       typed += TYPING_SPEED * dt;
-      if (Math.floor(typed) !== before) render();
+      const after = Math.min(Math.floor(typed), characters.length);
+      if (after !== before) {
+        render();
+        for (let i = before; i < after; i += 1) {
+          if (i % 2 === 0 && characters[i] !== ' ' && characters[i] !== NBSP) onType(nameElement.textContent);
+        }
+      }
     },
     // Pour les tests scriptés (window.__lia).
     snapshot() {

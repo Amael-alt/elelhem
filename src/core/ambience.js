@@ -14,7 +14,9 @@ const PAN_SPREAD = 9; // unités : au-delà, le son est tout à gauche ou à dro
 const UPDATE_SECONDS = 0.1; // les volumes suivent le héros dix fois par seconde
 const SMOOTHING = 0.25; // constante de temps des changements de volume
 
+const BLIP_BASE = 540; // hertz, la voix moyenne des dialogues
 const LEVELS = {
+  bip: 0.045, // la frappe du texte des dialogues
   riviere: 0.16,
   cascade: 0.22,
   feu: 0.2,
@@ -129,6 +131,10 @@ export function createAmbience(audio, sources, surfaceAt) {
     if (indoors) shelter.gain.value = INDOOR_WIND;
   });
 
+  // Chaque son ponctuel part d'une hauteur un peu différente, entre 95 et
+  // 105 % (version 2.8) : deux pas ne sonnent jamais tout à fait pareil.
+  const pitch = () => 0.95 + Math.random() * 0.1;
+
   // Un son ponctuel : enveloppe d'attaque et de chute, panoramique.
   function voice(pan, level) {
     const { context, destination } = engine;
@@ -145,7 +151,7 @@ export function createAmbience(audio, sources, surfaceAt) {
     const { context } = engine;
     const { gain, now, level } = voice(pan, LEVELS.oiseau * (0.6 + Math.random() * 0.6));
     const notes = 2 + Math.floor(Math.random() * 4);
-    const base = 2300 + Math.random() * 1600;
+    const base = (2300 + Math.random() * 1600) * pitch();
     const osc = context.createOscillator();
     osc.type = 'sine';
     osc.connect(gain);
@@ -173,10 +179,11 @@ export function createAmbience(audio, sources, surfaceAt) {
     wobbleDepth.gain.value = 14;
     wobble.connect(wobbleDepth).connect(osc.frequency);
     osc.connect(gain);
+    const shift = pitch();
     for (const [offset, from, to] of [[0, 430, 390], [0.42, 410, 360]]) {
       const t = now + offset;
-      osc.frequency.setValueAtTime(from, t);
-      osc.frequency.linearRampToValueAtTime(to, t + 0.32);
+      osc.frequency.setValueAtTime(from * shift, t);
+      osc.frequency.linearRampToValueAtTime(to * shift, t + 0.32);
       gain.gain.setValueAtTime(0, t);
       gain.gain.linearRampToValueAtTime(volume, t + 0.06);
       gain.gain.linearRampToValueAtTime(0, t + 0.34);
@@ -193,9 +200,10 @@ export function createAmbience(audio, sources, surfaceAt) {
     const { gain, now } = voice(pan, 0);
     gain.gain.setValueAtTime(volume, now);
     gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.7);
+    const shift = pitch();
     for (const [frequency, share] of [[1160, 0.6], [2930, 0.3], [4410, 0.12]]) {
       const osc = context.createOscillator();
-      osc.frequency.value = frequency * (0.99 + Math.random() * 0.02);
+      osc.frequency.value = frequency * shift;
       const partial = context.createGain();
       partial.gain.value = share;
       osc.connect(partial).connect(gain);
@@ -229,6 +237,7 @@ export function createAmbience(audio, sources, surfaceAt) {
     gain.gain.exponentialRampToValueAtTime(0.0005, now + duration);
     const source = context.createBufferSource();
     source.buffer = noise;
+    source.playbackRate.value = pitch();
     const filter = context.createBiquadFilter();
     filter.type = type;
     filter.frequency.value = frequency * (0.9 + Math.random() * 0.2);
@@ -238,6 +247,24 @@ export function createAmbience(audio, sources, surfaceAt) {
     source.stop(now + duration + 0.02);
   }
 
+  // Le bip d'une lettre qui s'écrit dans un dialogue (version 2.8) : une note
+  // brève, dont la hauteur tient de l'habitant (voix, 1 pour une voix
+  // moyenne, moins pour une voix grave) et varie d'une lettre à l'autre.
+  function blip(voix = 1) {
+    if (!engine || engine.context.state !== 'running') return;
+    const { context } = engine;
+    const { gain, now } = voice(0, 0);
+    const osc = context.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = BLIP_BASE * voix * (0.9 + Math.random() * 0.2);
+    osc.connect(gain);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(LEVELS.bip, now + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.045);
+    osc.start(now);
+    osc.stop(now + 0.06);
+  }
+
   const setLevel = (channel, level, pan) => {
     const now = engine.context.currentTime;
     channel.gain.gain.setTargetAtTime(level, now, SMOOTHING);
@@ -245,6 +272,7 @@ export function createAmbience(audio, sources, surfaceAt) {
   };
 
   return {
+    blip,
     // position : { x, z } du héros ; dt : durée de l'image (temps réel).
     update(position, dt) {
       if (!engine || engine.context.state !== 'running') return;

@@ -48,6 +48,7 @@ export const hero = {
 // cheval auburn, robe vert sauge, une sacoche en bandoulière avec son fermoir.
 export const claudette = {
   id: 'claudette',
+  voix: 1.2, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'claudette',
   nom: 'Claudette',
   palette: {
@@ -68,6 +69,7 @@ export const claudette = {
 // lumière de la magie (lettre l : elle brille, même à l'ombre).
 export const gepeto = {
   id: 'gepeto',
+  voix: 0.72, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'gepeto',
   nom: "L'Oracle Gépété",
   palette: {
@@ -85,6 +87,7 @@ export const gepeto = {
 // cuir, et son marteau posé sur l'épaule.
 export const ferrand = {
   id: 'ferrand',
+  voix: 0.62, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'ferrand',
   nom: 'Maître Ferrand',
   palette: {
@@ -102,6 +105,7 @@ export const ferrand = {
 // livre tenu à deux mains.
 export const marjolaine = {
   id: 'marjolaine',
+  voix: 1.08, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'marjolaine',
   nom: 'Dame Marjolaine',
   palette: {
@@ -119,6 +123,7 @@ export const marjolaine = {
 // remède luit d'un vert douteux.
 export const basile = {
   id: 'basile',
+  voix: 0.95, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'basile',
   nom: 'Basile',
   palette: {
@@ -136,6 +141,7 @@ export const basile = {
 // la courroie de sa sacoche en travers de la poitrine.
 export const pepin = {
   id: 'pepin',
+  voix: 1.3, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'pepin',
   nom: 'Pépin',
   palette: {
@@ -153,6 +159,7 @@ export const pepin = {
 // rouge et à joues, hallebarde tenue droite.
 export const rocard = {
   id: 'rocard',
+  voix: 0.78, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'rocard',
   nom: 'Capitaine Rocard',
   palette: {
@@ -170,6 +177,7 @@ export const rocard = {
 // cheveux et une cruche à la main.
 export const berthe = {
   id: 'berthe',
+  voix: 1, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'berthe',
   nom: 'Berthe',
   palette: {
@@ -189,6 +197,7 @@ export const berthe = {
 // graduée dans une main, le rouleau des plans sous l'autre bras.
 export const gaspard = {
   id: 'gaspard',
+  voix: 0.85, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'gaspard',
   nom: 'Maître Gaspard',
   palette: {
@@ -206,6 +215,7 @@ export const gaspard = {
 // grand compas d'or ouvert dans la main.
 export const clodomir = {
   id: 'clodomir',
+  voix: 0.8, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'clodomir',
   nom: 'Clodomir',
   palette: {
@@ -225,6 +235,7 @@ export const clodomir = {
 // vend les fioles par un point d'action (game/spots.js), pas par un dialogue.
 export const marchand = {
   id: 'marchand',
+  voix: 0.92, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'marchand',
   nom: 'Marchand',
   palette: {
@@ -241,6 +252,7 @@ export const marchand = {
 
 export const lavandiere = {
   id: 'lavandiere',
+  voix: 1.15, // hauteur de sa voix dans les dialogues (1 : moyenne)
   sprite: 'lavandiere',
   nom: 'Lavandière',
   palette: {

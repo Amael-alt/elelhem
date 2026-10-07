@@ -960,12 +960,23 @@ Jordan a joué à la 2.6 et rendu une liste de retours, traitée dans l'ordre o�
 - **L'écran titre** sur l'illustration fournie par Jordan (`assets/ui/titre.webp`, 1672 × 941) : l'image porte le titre peint, le menu Continuer / Nouvelle partie, le prénom, la signature, le lien du site (cliquable) et « © 2026, tous droits réservés » sont du HTML posé à droite, sur un cache de papier fondu qui couvre les éléments dessinés (dont une signature mal orthographiée). Sur un écran étroit ou court, le menu passe sous l'image. L'image de partage est refaite par `outils/vignette.mjs` : l'illustration seule. L'ancienne `titre-heros.png` est retirée.
 - Outils de test : `__lia.scene()` et `__lia.objet(nom)` (visible, instances, position du premier, point à l'écran).
 
-À faire, de la même liste : la course de profil (seuls les pieds bougent : les jambes sont cisaillées depuis la hanche, il faut des images dessinées ou un genou qui plie), la finesse du pixel art (l'herbe en touffes de 12 pixels, certains objets), une passe de contraste, puis la revue d'architecture que Jordan lance lui-même.
+**L'illustration définitive** du titre (le nom du jeu bien écrit) a remplacé la première, l'image de partage est refaite.
+
+**La marche et la course de profil, dessinées.** Le cisaillement des jambes depuis la hanche ne bougeait que les pieds : sur un personnage de 40 pixels, la jambe en fait six. Quatre fiches générées (0,25 crédit l'image, deux variantes chacune) sur fond vert, avec la planche du héros en référence : six images de marche, six de course, puis les mêmes l'épée à la main. Chaque fiche est détourée (`detourer.mjs`), découpée en six images (un petit script du scratchpad, les colonnes vides séparent les silhouettes), et chaque image transcrite comme une vue `profil` avec la palette du héros (`--reference`, `--repere 57ac` pour caler le chapeau, `--hauteurs profil=40` pour la marche et 36 pour la course : la largeur du chapeau variait trop d'une image à l'autre pour donner l'échelle). Vingt-quatre modules `heros_marche1..6`, `heros_course1..6`, `heros_marche_arme1..6`, `heros_course_arme1..6`, branchés dans `heros.js` (`marche`, `course`, `armeMarche`, `armeCourse`) ; `gfx/sprites.js` les pose aux colonnes de marche et de course de la vue de profil (et de son miroir, la droite), les vues de face, de dos et les diagonales restent fabriquées. Budget : 2 crédits, 113 restants.
+
+**Le décor deux fois plus fin.** Tout le décor était dessiné à 16 texels par unité. Les tuiles passent de 64 à 128 pixels (`TILE_PIXELS`, facteur `K` dans `gfx/textures.js`) : les motifs en pixels absolus (colonnes de tuiles, rangs d'ardoise, assises de pierre, briques, lattes, lambris, éventails de pavés, brins d'herbe) sont multipliés par K pour garder leur taille dans le monde avec deux fois plus de détail, les bruits (fbm, Voronoï) gardent leurs fréquences par tuile. Portes et fenêtres redessinées en 32 × 64 et 32 × 32 avec le même facteur. Touffes d'herbe en 24 pixels, deux fois plus de brins, fleurs à cinq pixels de large ; grappes de feuillage en 48 pixels avec plus de touffes ; taches des lisières en 32 ; flaques de lumière, particules et tapis sur la même grille ; les colonnes de la cascade suivent la tuile. `createPixelMaterial` lit la taille de sa texture sur l'image, plus d'écriture en dur. Pas de changement d'appels de dessin ni de triangles (123 et 113 800 sur la place) ; la mémoire des textures quadruple, sans effet mesurable dans le navigateur intégré.
+
+**Passe de contraste** (mesurée sur les styles calculés, rapport WCAG entre la couleur du texte et le fond réel derrière lui) : lieu courant 16,9, bandeau de lieu 14,8, annonces 14,8, légende des touches 11,3 à 13,5, dialogue 13 à 15,4, étiquette de nom 12,6, écran titre 8,1 à 9,6, grimoire sur parchemin 5,1 (le plus bas, au-dessus des 4,5 demandés). Les chiffres de dégâts portent un contour sombre de deux pixels. Rien à corriger.
+
+À faire : la revue d'architecture (`/anthropic-skills:improve-codebase-architecture`, lancée par Jordan dans une conversation à part), puis le push et les étiquettes `v2.6` et `v2.7`.
 
 ### Mesures
 
 | Critère | Résultat |
 |---|---|
 | Combat | un Mirage (3 pv) tombe en deux coups de fer (2 + 2) ; les chiffres s'affichent et s'effacent en une seconde ; le coup reçu ôte une clarté et affiche « -1 » |
+| Pas de profil | marche 23 à 25 × 40, course 26 à 30 × 36 ; galerie des quatre rangées vérifiée, puis en jeu vers la gauche et la droite |
+| Décor à 32 texels | place : 123 appels de dessin, 113 800 triangles (122 et 112 500 à 16 texels) |
+| Contraste | le plus bas : 5,1 (texte sépia du grimoire sur parchemin) |
 | Écran titre | bureau 1686 × 1199, mobile 375 × 812, paysage 812 × 375 et vignette 1200 × 630 vérifiés |
 | Console | aucune erreur |

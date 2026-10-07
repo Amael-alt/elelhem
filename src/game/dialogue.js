@@ -19,7 +19,7 @@
 import { onTap } from '../core/input.js';
 
 const TYPING_SPEED = 55; // caractères par seconde
-const FONTS = ['500 1em Newsreader', '600 1em Newsreader'];
+const FONTS = ['500 1em "EB Garamond"', '600 1em "EB Garamond"'];
 
 // Touches de la question, lues par position physique (event.code) comme le
 // déplacement : KeyW et KeyS sont Z et S sur un AZERTY.

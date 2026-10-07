@@ -84,7 +84,7 @@ Tout le code de ce dépôt a été écrit par Claude Code, les 5 et 6 octobre 20
 
 **Ce que le code fabrique** : les textures (des pixels posés dans des palettes de quelques tons, avec un tramage), les personnages (des planches transcrites en grilles de code d'après des fiches dessinées, que le code anime : respiration, marche et course à six images, quatre directions, et pour le héros et ses tenues les mêmes l'épée à la main, puis six poses de coup figées), les barres de vie et le butin de la lande (des pixels posés par le code), le village (une grille de caractères), le ciel, la lumière et les effets (des shaders), les sons d'ambiance (Web Audio : rivière, cascade, oiseaux, feu, marteau, pas), le diplôme et la minimap (un canvas 2D, posé depuis la version 2.3 sur la carte illustrée : le plan exact du village repeint en parchemin par un générateur d'images), le favicon (un SVG écrit dans la page) et l'image de partage (`outils/vignette.mjs`).
 
-**Ce qui ne l'est pas** : la musique, la police Newsreader, three.js, et depuis la version 1.4 les portraits de dialogue et les fiches pixel art des personnages, puis (1.5 et 2.1) les ornements de l'interface et l'illustration de l'écran titre, tous illustrés avec Higgsfield d'après une description (les fiches sont ensuite transcrites en code, les portraits cadrés, les ornements détourés et découpés par les scripts du dépôt). La flamme de cette illustration est celle du logo Maintenant Vous Savez, redessinée en lumière.
+**Ce qui ne l'est pas** : la musique, la police EB Garamond, three.js, et depuis la version 1.4 les portraits de dialogue et les fiches pixel art des personnages, puis (1.5 et 2.1) les ornements de l'interface et l'illustration de l'écran titre, tous illustrés avec Higgsfield d'après une description (les fiches sont ensuite transcrites en code, les portraits cadrés, les ornements détourés et découpés par les scripts du dépôt). La flamme de cette illustration est celle du logo Maintenant Vous Savez, redessinée en lumière.
 
 **Ce qui a résisté** :
 
@@ -131,7 +131,7 @@ three.js : © three.js authors, licence MIT.
 
 Musique : « The Village Bell », composée par Jordan Goussery avec Suno. Exclue de la licence MIT.
 
-Police Newsreader : © The Newsreader Project Authors, licence SIL Open Font 1.1, voir [`assets/fonts/OFL.txt`](assets/fonts/OFL.txt).
+Police EB Garamond : © The EB Garamond Project Authors, licence SIL Open Font 1.1, voir [`assets/fonts/OFL.txt`](assets/fonts/OFL.txt).
 
 ## Licence
 

@@ -373,7 +373,7 @@ export const textesInterface = {
       { role: 'Décors, lumière, silhouettes et sons', noms: ['Générés par le code'], note: 'aucune image chargée, hors les portraits' },
       { role: 'Portraits et fiches des personnages', noms: ['Illustrés avec Higgsfield'], note: 'puis transcrits ou cadrés par le code' },
       { role: 'Moteur 3D', noms: ['three.js'], note: 'licence MIT' },
-      { role: 'Police', noms: ['Newsreader'], note: 'licence SIL Open Font' },
+      { role: 'Police', noms: ['EB Garamond'], note: 'licence SIL Open Font' },
     ],
     merci: (prenom) => `Merci d'avoir joué${prenom ? `, ${prenom}` : ''} !`,
     site: 'maintenant-vous-savez.com',

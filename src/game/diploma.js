@@ -23,8 +23,8 @@ const FILE_DELAY_MS = 250; // attente après une frappe du prénom avant de refa
 // un téléphone.
 const IMAGE_TYPE = 'image/jpeg';
 const IMAGE_QUALITY = 0.92;
-const FONT = 'Newsreader, Georgia, serif';
-const FONTS = ['500 40px Newsreader', '600 40px Newsreader'];
+const FONT = '"EB Garamond", Georgia, serif';
+const FONTS = ['500 40px "EB Garamond"', '600 40px "EB Garamond"'];
 
 // « rgb(r g b / a) » depuis une couleur hexadécimale de la palette.
 function withAlpha(hex, alpha) {

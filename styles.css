@@ -2,22 +2,24 @@
    Garde-fous de base : la page ne défile pas, ne rebondit pas et ne laisse
    pas le navigateur interpréter les gestes. Le jeu reçoit tout. */
 
-/* Une seule police, Newsreader (licence OFL, voir assets/fonts/OFL.txt), en
-   deux graisses, avec Georgia en repli le temps du chargement. */
+/* Une seule police, EB Garamond (licence OFL, voir assets/fonts/OFL.txt) :
+   une fonte variable pour toutes les graisses, plus l'italique, avec Georgia
+   en repli le temps du chargement. Choisie en version 2.5 pour sa parenté
+   avec les garaldes des RPG en HD-2D. */
 @font-face {
-  font-family: Newsreader;
-  font-weight: 500;
+  font-family: "EB Garamond";
+  font-weight: 400 800;
   font-style: normal;
   font-display: swap;
-  src: url("assets/fonts/newsreader-latin-500-normal.woff2") format("woff2");
+  src: url("assets/fonts/eb-garamond-latin-variable-normal.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: Newsreader;
-  font-weight: 600;
-  font-style: normal;
+  font-family: "EB Garamond";
+  font-weight: 400;
+  font-style: italic;
   font-display: swap;
-  src: url("assets/fonts/newsreader-latin-600-normal.woff2") format("woff2");
+  src: url("assets/fonts/eb-garamond-latin-400-italic.woff2") format("woff2");
 }
 
 :root {
@@ -25,7 +27,7 @@
   --fond: #231b2b;
   --texte: #f3e6d4;
   --panneau: rgb(10 8 14 / 0.62);
-  --police: Newsreader, Georgia, "Times New Roman", serif;
+  --police: "EB Garamond", Georgia, "Times New Roman", serif;
   --parchemin: #f3dfb8;
   --encre: #2a1d2e;
   --or: #ffd08a;

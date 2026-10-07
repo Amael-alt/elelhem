@@ -20,7 +20,10 @@ const LABEL_SIZE = 15; // taille des noms de quartier sur la carte, en pixels CS
 const LABEL_MIN_SIZE = 9.5; // sur un téléphone, la carte fait 320 pixels de large
 const LABEL_WIDE = 720; // largeur de carte (pixels CSS) où les noms ont leur taille pleine
 // Pointe de la flèche du héros selon son regard (vers le haut de l'écran = nord).
-const HEADINGS = { up: -Math.PI / 2, down: Math.PI / 2, left: Math.PI, right: 0 };
+const HEADINGS = {
+  up: -Math.PI / 2, down: Math.PI / 2, left: Math.PI, right: 0,
+  upright: -Math.PI / 4, downright: Math.PI / 4, downleft: (3 * Math.PI) / 4, upleft: (-3 * Math.PI) / 4,
+};
 
 // Le plan de référence : cases, toits des bâtiments, couronnes des arbres.
 function paintPlan(map, trees) {
@@ -150,7 +153,7 @@ export function createMinimap(small, overlay, { map, trees, regions, names, play
       // chevaucheraient : le second descend d'une ligne, ou deux, ou s'efface.
       const size = Math.max(LABEL_MIN_SIZE, Math.min(LABEL_SIZE, (LABEL_SIZE * canvas.clientWidth) / LABEL_WIDE));
       const line = size * ratio;
-      context.font = `600 ${Math.round(line)}px Newsreader, Georgia, serif`;
+      context.font = `600 ${Math.round(line)}px "EB Garamond", Georgia, serif`;
       context.textAlign = 'center';
       context.textBaseline = 'middle';
       context.lineJoin = 'round';

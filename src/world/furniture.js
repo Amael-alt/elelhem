@@ -828,3 +828,99 @@ export function buildSacks({ x, z, count = 2 }, builders) {
   void cloth;
   return { posts };
 }
+
+// --- Version 2.6 : la bibliothèque ---------------------------------------------
+
+// Une rangée de livres de x0 à x1 (repère d'un meuble tourné), posée en y, de
+// hauteurs et d'épaisseurs variées, quelques-uns penchés en fin de rangée.
+function bookRow(builders, x, z, facing, u0, u1, y, w0, w1, seed) {
+  let u = u0;
+  let n = seed;
+  while (u < u1 - 0.1) {
+    const width = 0.06 + ((n * 7) % 4) * 0.018;
+    const height = 0.24 + ((n * 5) % 5) * 0.035;
+    const book = orientedBox(builders[BOOK_MATTERS[n % BOOK_MATTERS.length]], x, z, facing);
+    book([u, y, w0], [u + width, y + height, w1]);
+    u += width + 0.012;
+    n += 1;
+    if (n % 11 === 0) u += 0.14; // un vide, un livre manquant
+  }
+}
+
+// Haute bibliothèque contre un mur (facing : le côté des livres ; east contre
+// le mur ouest) : montants, fond, corniche, six rayons pleins de livres.
+export function buildTallShelf({ x, z, facing = 'south', width = 1.5, height = 2.35 }, builders) {
+  const wood = orientedBox(builders.wood, x, z, facing);
+  const h = width / 2;
+  const depth = 0.4;
+  wood([-h, 0, -0.2], [h, height, -0.17]); // le fond, contre le mur
+  for (const s of [-1, 1]) wood([s * h - 0.05, 0, -0.2], [s * h + 0.05, height, depth - 0.2]);
+  wood([-h - 0.06, height, -0.2], [h + 0.06, height + 0.08, depth - 0.16]);
+  wood([-h, 0, -0.2], [h, 0.1, depth - 0.2]);
+  const shelves = [0.1, 0.48, 0.86, 1.24, 1.62, 1.98];
+  shelves.forEach((y, row) => {
+    if (row > 0) wood([-h, y, -0.2], [h, y + 0.04, depth - 0.2]);
+    if (y + 0.3 < height) bookRow(builders, x, z, facing, -h + 0.07, h - 0.07, y + (row ? 0.04 : 0), -0.15, depth - 0.25, row * 5 + Math.round(x * 3 + z * 7));
+  });
+  const [fx, fz] = FRONT[facing] ?? FRONT.south;
+  const posts = [];
+  for (let u = -h + 0.3; u <= h - 0.3 + 1e-6; u += 0.45) posts.push({ x: x + u * fz + fx * 0.02, z: z - u * fx + fz * 0.02, radius: 0.3 });
+  return { posts };
+}
+
+// Globe terrestre sur son pied : trois pieds, une colonne, la sphère (océans
+// et terres en deux tons), le méridien de fer.
+export function buildGlobe({ x, z }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const sea = createFrame(builders.voletBleu, [x, 0, z]); // le bois peint en bleu des volets
+  const land = createFrame(builders.leaves, [x, 0, z]);
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  for (const a of [0, 2.1, 4.2]) pushBar(wood, [0, 0.45, 0], [Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3], 0.05, { groundAo: 0.6 });
+  pushRevolution(wood, [[0.45, 0.05], [0.7, 0.04], [0.74, 0.08]], { sides: 8 });
+  const c = 0.98;
+  const r = 0.24;
+  const rings = [];
+  for (let k = 0; k <= 6; k += 1) {
+    const a = -Math.PI / 2 + (k / 6) * Math.PI;
+    rings.push([c + Math.sin(a) * r, Math.max(0.001, Math.cos(a) * r)]);
+  }
+  pushRevolution(sea, rings.slice(0, 3), { sides: 10, groundAo: 1 });
+  pushRevolution(land, rings.slice(2, 5), { sides: 10, groundAo: 1, phase: 0.3 });
+  pushRevolution(sea, rings.slice(4), { sides: 10, groundAo: 1 });
+  pushRevolution(iron, [[c - 0.015, r + 0.02], [c + 0.015, r + 0.02]], { sides: 12, groundAo: 1 });
+  pushBar(iron, [0, c - r - 0.06, 0], [0, c + r + 0.06, 0], 0.025);
+  return { posts: [{ x, z, radius: 0.32 }] };
+}
+
+// Pile de livres posée à plat (y : la hauteur où elle repose), chaque livre
+// un peu décalé.
+export function buildBookStack({ x, z, y = 0, count = 4 }, builders) {
+  let top = y;
+  for (let k = 0; k < count; k += 1) {
+    const book = createFrame(builders[BOOK_MATTERS[(k * 3 + Math.round(x * 5)) % BOOK_MATTERS.length]], [x, 0, z]);
+    const w = 0.34 - (k % 3) * 0.03;
+    const d = 0.25 - (k % 2) * 0.02;
+    const dx = ((k * 37) % 7 - 3) * 0.012;
+    const dz = ((k * 53) % 5 - 2) * 0.012;
+    const t = 0.05 + (k % 2) * 0.015;
+    pushBox(book, [dx - w / 2, top, dz - d / 2], [dx + w / 2, top + t, dz + d / 2], { groundAo: top < 0.05 ? 0.7 : 1 });
+    top += t;
+  }
+  return { posts: y < 0.05 ? [{ x, z, radius: 0.22 }] : [] };
+}
+
+// Lutrin : un pied tourné, un plateau incliné vers le lecteur (facing), un
+// grand livre ouvert dessus.
+export function buildLectern({ x, z, facing = 'south' }, builders) {
+  const wood = orientedBox(builders.wood, x, z, facing);
+  const page = orientedBox(builders.plaster, x, z, facing);
+  const cover = orientedBox(builders.awning, x, z, facing);
+  wood([-0.25, 0, -0.2], [0.25, 0.06, 0.2]);
+  wood([-0.05, 0.06, -0.05], [0.05, 1.0, 0.05]);
+  // Le plateau, en trois marches qui montent vers l'arrière : une pente lisible.
+  for (let k = 0; k < 3; k += 1) wood([-0.3, 0.98 + k * 0.05, 0.12 - k * 0.12], [0.3, 1.03 + k * 0.05, 0.24 - k * 0.12]);
+  cover([-0.27, 1.03, -0.12], [0.27, 1.1, 0.22]);
+  page([-0.25, 1.1, -0.1], [-0.01, 1.13, 0.2]);
+  page([0.01, 1.1, -0.1], [0.25, 1.13, 0.2]);
+  return { posts: [{ x, z, radius: 0.3 }] };
+}

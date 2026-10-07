@@ -911,3 +911,20 @@ export function buildShopSign({ x, z, y = 2.5, kind = 'chope' }, builders) {
     pushBox(brick, [-0.14, y - 0.2, cz - 0.14], [0.14, y - 0.16, cz + 0.14]); // l'étiquette, un liseré
   }
 }
+
+// Cadran solaire (version 2.6, le parvis de la bibliothèque) : un socle carré,
+// une colonne de pierre, la table ronde et son style de fer.
+export function buildSundial({ x, z }, builders) {
+  const stone = createFrame(builders.stone, [x, 0, z]);
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  pushBox(stone, [-0.32, 0, -0.32], [0.32, 0.14, 0.32], { groundAo: 0.6 });
+  pushRevolution(stone, [[0.14, 0.14], [0.25, 0.11], [0.75, 0.1], [0.82, 0.14]], { sides: 8 });
+  pushRevolution(stone, [[0.82, 0.3], [0.88, 0.3]], { sides: 12, groundAo: 1 });
+  pushDisc(stone, 0.88, 0.3, { sides: 12 });
+  for (let k = 0; k < 12; k += 1) {
+    const a = (k / 12) * Math.PI * 2;
+    pushBox(iron, [Math.cos(a) * 0.24 - 0.012, 0.88, Math.sin(a) * 0.24 - 0.012], [Math.cos(a) * 0.24 + 0.012, 0.895, Math.sin(a) * 0.24 + 0.012]);
+  }
+  pushSkewBox(iron, [-0.012, 0.88, -0.18], [[0.024, 0, 0], [0, 0.2, 0.2], [0, 0, 0.16]]);
+  return { x, z, radius: 0.36 };
+}

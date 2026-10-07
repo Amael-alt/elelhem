@@ -83,6 +83,19 @@ export const TOWERS = {
 export const SITE = { x: 33, z: 35, sizeX: 4, sizeZ: 3 };
 
 export const WELL = { x: 27.6, z: 20.4 };
+// Le parvis de la bibliothèque (version 2.6) : des pavés en éventail
+// jusqu'à l'allée, un muret à chaperon coiffé d'auges fleuries au sud (ouvert
+// face à la porte), un cadran solaire à l'ouest, un banc et des livres sous
+// la fenêtre à l'est.
+export const LIBRARY_COURT = {
+  walls: [[[13.9, 14.3], [16.7, 14.3]], [[18.3, 14.3], [21.2, 14.3]]],
+  planters: [
+    { x: 15.2, z: 14.3, length: 1.8, axis: 'x', y: 0.66, stone: true },
+    { x: 19.8, z: 14.3, length: 2.0, axis: 'x', y: 0.66, stone: true },
+  ],
+  sundial: { x: 14.9, z: 12.1 },
+  books: { x: 20.15, z: 11.55, y: 0.47, count: 3 },
+};
 export const HEARTH = { x: 10.6, z: 9.2 };
 // La cour de la forge (version 2.6) : des dalles (case k de world/map.js), un
 // muret à l'ouest, un râtelier d'épées et un bouclier sur la façade, un
@@ -150,7 +163,7 @@ export const BARRELS = [
 export const CRATES = [
   { x: 22.0, z: 13.3 }, { x: 31.5, z: 13.4 }, { x: 30.6, z: 36.0, size: 0.5 }, { x: 22.8, z: 35.6 },
 ];
-export const BENCHES = [{ x: 23.7, z: 16.7 }, { x: 31.2, z: 24.8 }, { x: 11.0, z: 32.55 }, { x: 41.6, z: 27.2 }, { x: 49.4, z: 39.3 }];
+export const BENCHES = [{ x: 19.7, z: 11.55 }, { x: 23.7, z: 16.7 }, { x: 31.2, z: 24.8 }, { x: 11.0, z: 32.55 }, { x: 41.6, z: 27.2 }, { x: 49.4, z: 39.3 }];
 export const VEGETABLES = [
   { x0: 37.6, z0: 8.6, x1: 39.4, z1: 12.2 }, // jardin de simples de l'apothicaire
   { x0: 19.5, z0: 29.4, x1: 22.0, z1: 30.3 }, // potager de l'auberge
@@ -242,7 +255,7 @@ export const TREES = [
 
 // Buissons : position, taille (1 : à hauteur de genou).
 export const BUSHES = [
-  [15.6, 12.8, 1], [5.2, 13.2, 0.9], [23.0, 12.0, 1], [14.2, 11.2, 0.8], [31.6, 12.3, 0.9], [36.4, 6.2, 1],
+  [13.2, 15.2, 1], [5.2, 13.2, 0.9], [23.0, 12.0, 1], [13.3, 11.7, 0.8], [31.6, 12.3, 0.9], [36.4, 6.2, 1],
   [9.2, 26.0, 1.1], [19.0, 27.4, 0.9], [7.6, 33.0, 1], [35.6, 30.2, 0.9], [37.4, 22.6, 0.8], [42.0, 29.4, 1],
   [46.2, 15.4, 1.1], [51.1, 17.5, 0.9], [46.4, 25.4, 1], [38.6, 40.6, 1.1], [24.6, 36.4, 0.9], [15.4, 38.6, 1],
   [3.6, 39.2, 1], [13.6, 3.4, 0.9], [19.6, 4.8, 1], [38.6, 4.5, 1], [22.4, 7.8, 0.9], [41.8, 24.0, 0.9],

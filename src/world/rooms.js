@@ -141,6 +141,65 @@ export const ROOMS = {
     ],
   },
 
+  // La bibliothèque (version 2.6) : la salle de lecture de Dame Marjolaine.
+  // Des livres du sol au plafond sur trois murs, l'échelle contre les rayons,
+  // le bureau sous la fenêtre, deux tables de lecture, le lutrin au milieu,
+  // un coin de lecture, le globe, des piles de livres partout.
+  bibliotheque: {
+    house: 'bibliotheque',
+    lieu: 'bibliotheque',
+    rows: [
+      'MMMMMMMMMMMMM',
+      'MfffffffffffM',
+      'MfffffffffffM',
+      'MfffffffffffM',
+      'MfffffffffffM',
+      'MfffffffffffM',
+      'MfffffffffffM',
+      'MfffffffffffM',
+      'mmmmmmPmmmmmm',
+    ],
+    entry: { x: 6.5, z: 7.4 },
+    props: [
+      // Le mur nord : deux bibliothèques et l'échelle, la fenêtre entre elles,
+      // le bureau dessous.
+      { type: 'bookshelf', x0: 1.1, x1: 5.1, z: 1, height: 2.35 },
+      { type: 'bookshelf', x0: 7.9, x1: 11.9, z: 1, height: 2.35 },
+      { type: 'ladder', x: 10.4, z: 1.75, length: 2.3, lean: 'north' },
+      { type: 'window', x: 6.5, z: 1, y: 1.35 },
+      { type: 'curtain', x: 6.5, z: 1, y: 1.35 },
+      { type: 'desk', x: 6.5, z: 1.9 },
+      { type: 'candle', x: 6.95, z: 1.75, y: 0.78 },
+      // Les murs est et ouest : des bibliothèques hautes, une applique entre elles.
+      { type: 'tallshelf', x: 1.22, z: 2.9, facing: 'east', width: 1.5 },
+      { type: 'tallshelf', x: 1.22, z: 5.3, facing: 'east', width: 1.5 },
+      { type: 'tallshelf', x: 11.78, z: 2.9, facing: 'west', width: 1.5 },
+      { type: 'tallshelf', x: 11.78, z: 5.3, facing: 'west', width: 1.5 },
+      { type: 'sconce', x: 1, z: 4.1, side: 'west' },
+      { type: 'sconce', x: 12, z: 4.1, side: 'east' },
+      // Le tapis du milieu, le lutrin et son grand livre, le lustre.
+      { type: 'rug', x0: 5.0, z0: 3.1, x1: 8.0, z1: 7.6 },
+      { type: 'lectern', x: 6.5, z: 4.4, facing: 'south' },
+      { type: 'chandelier', x: 6.5, z: 4.4, y: 2.15 },
+      // Deux tables de lecture, leurs bougies et leurs livres.
+      { type: 'table', x: 3.6, z: 4.2 },
+      { type: 'candle', x: 3.9, z: 4.22, y: 0.78 },
+      { type: 'bookstack', x: 3.25, z: 4.15, y: 0.78, count: 3 },
+      { type: 'table', x: 9.4, z: 4.2 },
+      { type: 'candle', x: 9.1, z: 4.22, y: 0.78 },
+      { type: 'bookstack', x: 9.75, z: 4.15, y: 0.78, count: 4 },
+      // Le coin de lecture, au sud-ouest ; le globe et des piles au sud-est.
+      { type: 'armchair', x: 2.2, z: 6.5, facing: 'east' },
+      { type: 'lowtable', x: 3.25, z: 6.5, width: 0.55, depth: 0.7 },
+      { type: 'plant', x: 1.5, z: 7.4 },
+      { type: 'globe', x: 10.4, z: 6.6 },
+      { type: 'bookstack', x: 11.3, z: 7.3, count: 5 },
+      { type: 'bookstack', x: 8.6, z: 7.45, count: 3 },
+      { type: 'bookstack', x: 4.3, z: 7.4, count: 4 },
+      { type: 'painting', x: 1, z: 7.3, y: 1.5, width: 0.6, height: 0.5, side: 'west' },
+    ],
+  },
+
   // La forge : le four rougeoyant, l'enclume des grandes pièces, le râtelier,
   // l'établi, les fers au mur au-dessus du baquet de trempe, la meule.
   forge: {

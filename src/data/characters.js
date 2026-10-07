@@ -110,7 +110,7 @@ export const marjolaine = {
     accent: ['#10343a', '#1a5560', '#2a7a85', '#4aa3ad'],
     cheveux: ['#4a4048', '#6b5f67', '#8f828b', '#b5a8b0'],
   },
-  position: { x: 16.4, z: 14.4 },
+  position: { x: 16.0, z: 12.7 },
   direction: 'down',
   dialogue: 'marjolaine',
 };

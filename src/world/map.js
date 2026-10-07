@@ -13,7 +13,7 @@
 //
 //   . herbe   t terre   p pavés   ~ eau   # muret   b pont
 //   c falaise   W muraille   h haie   r rivière haute (avant la cascade)
-//   g corniche derrière la cascade   e parvis en éventail (devant l'auberge)   k cour de la forge
+//   g corniche derrière la cascade   e parvis en éventail (devant l'auberge et la bibliothèque)   k cour de la forge
 
 const ROWS = [
   'cccccccccccccccccccccccccccccccccccccccccccrrrcccccccccc',
@@ -27,11 +27,11 @@ const ROWS = [
   '...W.kkkkkkkk.............tt........htttth.~~~........cc',
   '...W.kkkkkkkk.............tt........htttth.~~~........cc',
   '...W.kkkkkkkk.............tt........htttth.~~~........cc',
-  '...W...tt........tt.......tt.....tt.htttth.~~~........cc',
-  '...W...ttttttt...tt.......tt.....tt.htttth.~~~........cc',
-  '...W...ttttttt...tt.......tt.....tt.htttth.~~~........cc',
-  '...W...ttttttt...tt.......tt.....tt........~~~........cc',
-  '...W...ttttttt...tt.......tt.....tt........~~~........cc',
+  '...W...tt.....eeeeeeee....tt.....tt.htttth.~~~........cc',
+  '...W...ttttttteeeeeeee....tt.....tt.htttth.~~~........cc',
+  '...W...ttttttteeeeeeee....tt.....tt.htttth.~~~........cc',
+  '...W...ttttttt...ee.......tt.....tt........~~~........cc',
+  '...W...ttttttt...ee.......tt.....tt........~~~........cc',
   '...W...ttttttt......ppppppppppppppppp......~~~........cc',
   '...W...ttttttt......ppppppppppppppppp......~~~........cc',
   '...W...ttttttt......ppppppppppppppppp......~~~........cc',

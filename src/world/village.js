@@ -12,7 +12,7 @@ import { createMap } from './map.js';
 import { createTerrain } from './terrain.js';
 import { createCollider } from './collision.js';
 import { buildHouse, buildLantern, buildTree, LANTERN_FLAME, LANTERN_POST_RADIUS, TREE_TRUNK_RADIUS } from './props.js';
-import { buildChalkboard, buildLowWall, buildPlanterBox,
+import { buildSundial, buildChalkboard, buildLowWall, buildPlanterBox,
   buildAnvil, buildAppleTree, buildBarrel, buildBasket, buildBench, buildCampfire, buildCrate, buildDummy, buildFence,
   buildFlowerPot, buildHaystack, buildHearth, buildLadder, buildMarketStall, buildRock, buildShopSign, buildSignpost, buildSite,
   buildStall, buildTable, buildTarget, buildTower, buildVegetables, buildWashhouse, buildWell, buildWoodpile,
@@ -20,7 +20,7 @@ import { buildChalkboard, buildLowWall, buildPlanterBox,
 import {
   ANVIL, BARRELS, BENCHES, BUNTING, BUSHES, BUTTERFLIES, CAMPFIRE, FENCES, FLOWER_POTS, HAYSTACKS, MEADOWS, ROCKS, SIGNPOSTS,
   STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, MARKET_STALLS, ORCHARD, SITE,
-  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT, FORGE_YARD,
+  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT, FORGE_YARD, LIBRARY_COURT,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createFoliage, crownClumps } from '../gfx/foliage.js';
@@ -32,7 +32,7 @@ import { createBunting } from '../gfx/bunting.js';
 import { createLightPools } from '../gfx/lightpools.js';
 import { createButterflies, createFallingLeaves } from '../gfx/fx/leaves.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
-import { buildGrindstone, buildIronBars, buildSacks, buildShield, buildSwordBarrel, buildTrough, buildWeaponRack, buildStool, buildChest } from './furniture.js';
+import { buildBookStack, buildGrindstone, buildIronBars, buildSacks, buildShield, buildSwordBarrel, buildTrough, buildWeaponRack, buildStool, buildChest } from './furniture.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
 import { createFxUniforms } from '../gfx/fx/points.js';
@@ -198,6 +198,15 @@ function createBuildings(materials, posts) {
   }
   addPosts(buildChalkboard(INN_COURT.chalkboard, builders));
   for (const stool of INN_COURT.stools) addPosts(buildStool(stool, builders).posts);
+  // Le parvis de la bibliothèque (version 2.6).
+  for (const wall of LIBRARY_COURT.walls) addPosts(buildLowWall(wall, builders));
+  for (const box of LIBRARY_COURT.planters) {
+    const planter = buildPlanterBox(box, builders);
+    addPosts(planter.obstacle);
+    planters.push(...planter.flowers);
+  }
+  addPosts(buildSundial(LIBRARY_COURT.sundial, builders));
+  buildBookStack(LIBRARY_COURT.books, builders);
   // La cour de la forge (version 2.6).
   for (const wall of FORGE_YARD.walls) addPosts(buildLowWall(wall, builders));
   addPosts(buildWeaponRack(FORGE_YARD.rack, builders).posts);

@@ -8,7 +8,7 @@
 // ronds { x, z, radius } à poser dans les collisions, et au besoin la
 // position d'une flamme ou d'une cheminée.
 
-import { createFrame, pushBox } from './builder.js';
+import { createFrame, pushBar, pushBox, pushSkewBox } from './builder.js';
 import { TILE_UNITS } from '../gfx/textures.js';
 
 const tile = (value) => value / TILE_UNITS;
@@ -388,52 +388,6 @@ export function buildWoodpile({ x, z }, builders) {
 function hash01(a, b, i) {
   const v = Math.sin(a * 12.9898 + b * 78.233 + i * 37.719) * 43758.5453;
   return v - Math.floor(v);
-}
-
-// Boîte dont les arêtes suivent trois vecteurs quelconques (ex, ey, ez) depuis
-// un coin origin : le parallélépipède d'un bois incliné. Six faces, dessous
-// compris. Le trièdre (ex, ey, ez) doit être direct pour garder les faces
-// tournées vers l'extérieur.
-function pushSkewBox(frame, origin, [ex, ey, ez], { groundAo = 0.75 } = {}) {
-  const at = (i, j, k) => [
-    origin[0] + i * ex[0] + j * ey[0] + k * ez[0],
-    origin[1] + i * ex[1] + j * ey[1] + k * ez[1],
-    origin[2] + i * ex[2] + j * ey[2] + k * ez[2],
-  ];
-  const length = (v) => tile(Math.hypot(v[0], v[1], v[2]));
-  const [lx, ly, lz] = [length(ex), length(ey), length(ez)];
-  const uv = (a, b) => [[0, 0], [a, 0], [a, b], [0, b]];
-  const foot = origin[1] < 0.05 ? groundAo : 1;
-  const sideAo = [foot, foot, 1, 1];
-  frame.polygon([at(0, 1, 1), at(1, 1, 1), at(1, 1, 0), at(0, 1, 0)], uv(lx, lz));
-  frame.polygon([at(0, 0, 1), at(1, 0, 1), at(1, 1, 1), at(0, 1, 1)], uv(lx, ly), sideAo);
-  frame.polygon([at(1, 0, 0), at(0, 0, 0), at(0, 1, 0), at(1, 1, 0)], uv(lx, ly), sideAo);
-  frame.polygon([at(1, 0, 1), at(1, 0, 0), at(1, 1, 0), at(1, 1, 1)], uv(lz, ly), sideAo);
-  frame.polygon([at(0, 0, 0), at(0, 0, 1), at(0, 1, 1), at(0, 1, 0)], uv(lz, ly), sideAo);
-  frame.polygon([at(0, 0, 0), at(1, 0, 0), at(1, 0, 1), at(0, 0, 1)], uv(lx, lz));
-}
-
-// Barre de section carrée entre deux points [x, y, z], quelle que soit son
-// inclinaison : la section reste droite selon les deux autres axes du monde.
-function pushBar(frame, from, to, section, options) {
-  let d = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
-  let start = from;
-  const sizes = d.map(Math.abs);
-  const axis = sizes.indexOf(Math.max(...sizes));
-  if (d[axis] < 0) {
-    start = to;
-    d = d.map((v) => -v);
-  }
-  const h = section / 2;
-  const across = [[h, 0, 0], [0, h, 0], [0, 0, h]].filter((_, i) => i !== axis);
-  const origin = [
-    start[0] - across[0][0] - across[1][0],
-    start[1] - across[0][1] - across[1][1],
-    start[2] - across[0][2] - across[1][2],
-  ];
-  const edges = [[section, 0, 0], [0, section, 0], [0, 0, section]];
-  edges[axis] = d;
-  pushSkewBox(frame, origin, edges, options);
 }
 
 // Octogone plein dans un plan vertical, face au sud : face avant en z1, face
@@ -823,4 +777,46 @@ export function buildMarketStall({ x, z, goods = 'legumes' }, builders) {
     pushBox(wood, [-0.025, valanceY - 0.27, frontZ + 0.02], [0.025, valanceY - 0.23, frontZ + 0.035]);
   }
   return [{ x, z: z + 0.2, radius: 1.15 }];
+}
+
+// Enseigne figurée (version 2.4) : la potence de fer de buildSign, et dessous
+// l'objet du métier au bout de deux chaînettes : la chope de l'auberge
+// (fût de bois cerclé, mousse d'enduit, anse de fer), l'enclume de la forge,
+// le livre ouvert de la bibliothèque, la fiole lumineuse de l'apothicaire
+// (le verre est la matière des fenêtres : il brille le soir).
+export function buildShopSign({ x, z, y = 2.5, kind = 'chope' }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  const plaster = createFrame(builders.plaster, [x, 0, z]);
+  const glass = createFrame(builders.window, [x, 0, z]);
+  const brick = createFrame(builders.brick, [x, 0, z]);
+  pushBox(iron, [-0.03, y + 0.35, 0], [0.03, y + 0.4, 0.8]);
+  pushBox(iron, [-0.03, y, 0], [0.03, y + 0.4, 0.05]);
+  pushBar(iron, [0, y + 0.05, 0.05], [0, y + 0.35, 0.5], 0.04); // la jambe de force
+  const cz = 0.56; // l'objet pend au bout de la potence
+  for (const sz of [-0.12, 0.12]) pushBox(iron, [-0.012, y + 0.14, cz + sz - 0.012], [0.012, y + 0.35, cz + sz + 0.012]);
+  if (kind === 'chope') {
+    pushBox(wood, [-0.16, y - 0.26, cz - 0.16], [0.16, y + 0.1, cz + 0.16]);
+    for (const yy of [y - 0.22, y + 0.02]) pushBox(iron, [-0.17, yy, cz - 0.17], [0.17, yy + 0.04, cz + 0.17]);
+    pushBox(plaster, [-0.18, y + 0.1, cz - 0.18], [0.18, y + 0.2, cz + 0.18]); // la mousse
+    pushBox(plaster, [-0.1, y + 0.2, cz - 0.1], [0.1, y + 0.26, cz + 0.1]);
+    pushBox(iron, [0.16, y - 0.18, cz - 0.03], [0.26, y + 0.02, cz + 0.03]); // l'anse
+    pushBox(iron, [0.22, y - 0.18, cz - 0.03], [0.26, y + 0.02, cz + 0.03]);
+  } else if (kind === 'enclume') {
+    pushBox(iron, [-0.2, y - 0.26, cz - 0.13], [0.2, y - 0.14, cz + 0.13]); // le pied
+    pushBox(iron, [-0.13, y - 0.14, cz - 0.09], [0.13, y - 0.02, cz + 0.09]); // le corps
+    pushBox(iron, [-0.3, y - 0.02, cz - 0.1], [0.3, y + 0.12, cz + 0.1]); // la table
+    pushBox(iron, [0.3, y + 0.02, cz - 0.05], [0.42, y + 0.1, cz + 0.05]); // le bec
+  } else if (kind === 'livre') {
+    for (const sx of [-1, 1]) {
+      pushSkewBox(wood, [sx * 0.02, y - 0.2, cz - 0.16], [[sx * 0.26, 0.1, 0], [0, 0.04, 0], [0, 0, 0.32]]); // la couverture
+      pushSkewBox(plaster, [sx * 0.03, y - 0.16, cz - 0.14], [[sx * 0.23, 0.09, 0], [0, 0.07, 0], [0, 0, 0.28]]); // les pages
+    }
+    pushBox(wood, [-0.03, y - 0.2, cz - 0.16], [0.03, y - 0.1, cz + 0.16]); // le dos
+  } else if (kind === 'fiole') {
+    pushBox(glass, [-0.12, y - 0.26, cz - 0.12], [0.12, y - 0.02, cz + 0.12]); // la panse
+    pushBox(glass, [-0.06, y - 0.02, cz - 0.06], [0.06, y + 0.12, cz + 0.06]); // le col
+    pushBox(wood, [-0.07, y + 0.12, cz - 0.07], [0.07, y + 0.2, cz + 0.07]); // le bouchon
+    pushBox(brick, [-0.14, y - 0.2, cz - 0.14], [0.14, y - 0.16, cz + 0.14]); // l'étiquette, un liseré
+  }
 }

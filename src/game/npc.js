@@ -5,7 +5,9 @@
 // Tout ce qui les décrit est de la donnée (data/characters.js) : le moteur ne
 // connaît aucun habitant par son nom.
 
+import * as THREE from 'three';
 import { createBlobShadow, createSprite } from '../gfx/billboard.js';
+import { createPixelBuffer, setPixel, toDataTexture } from '../gfx/pixels.js';
 import { DIRECTIONS, directionOf, IDLE_FPS, IDLE_FRAMES, WALK_FPS, WALK_FRAMES } from '../gfx/sprites.js';
 import { SPRITE_LAYER } from '../gfx/post/pipeline.js';
 
@@ -30,6 +32,29 @@ export const directionToward = (dx, dz, current) => directionOf(dx, dz, current,
 // village ou un intérieur, voir world/interior.js) ; post : crochets du
 // post-traitement. at : { x, z, direction } pour le poser ailleurs qu'à sa
 // position de la fiche (Claudette, qui attend dans la maison au début).
+// Le point d'exclamation des quêtes (version 2.8) : une petite image de
+// pixels, jaune à contour sombre, partagée par tous les habitants.
+let questTexture = null;
+function getQuestTexture() {
+  if (questTexture) return questTexture;
+  const rows = [
+    '..kkkk..', '.kyyyyk.', '.kyYyyk.', '.kyYyyk.', '.kyYyyk.', '.kyyyyk.', '..kyyk..', '..kyyk..', '..kyyk..',
+    '...kk...', '........', '..kkkk..', '.kyYyyk.', '.kyyyyk.', '..kkkk..',
+  ];
+  const colors = { k: [58, 37, 16], y: [255, 214, 74], Y: [255, 244, 170] };
+  const buffer = createPixelBuffer(8, rows.length);
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (colors[ch]) setPixel(buffer, x, y, colors[ch]);
+  }));
+  questTexture = toDataTexture(buffer, { repeat: false, mipmaps: false });
+  questTexture.magFilter = THREE.NearestFilter;
+  questTexture.minFilter = THREE.NearestFilter;
+  return questTexture;
+}
+const QUEST_LIFT = 0.3; // au-dessus de la tête
+const QUEST_BOB = 0.06; // amplitude du flottement
+const QUEST_SIZE = 0.34; // hauteur du point, en unités
+
 export function createNpc({ character, sheet, village, sunDirection, post, at = null }) {
   if (!character.position) throw new Error(`Habitant « ${character.id} » sans position.`);
   const position = { x: (at ?? character.position).x, z: (at ?? character.position).z };
@@ -40,6 +65,11 @@ export function createNpc({ character, sheet, village, sunDirection, post, at = 
   const headHeight = sheet.height + HEAD_MARGIN;
   sprite.object.layers.set(SPRITE_LAYER);
   const shadow = createBlobShadow();
+  // Le point d'exclamation d'une quête à faire (version 2.8), caché par défaut.
+  const quest = new THREE.Sprite(new THREE.SpriteMaterial({ map: getQuestTexture(), transparent: true, depthWrite: false }));
+  quest.scale.set(QUEST_SIZE * 8 / 15, QUEST_SIZE, 1);
+  quest.layers.set(SPRITE_LAYER);
+  quest.visible = false;
 
   let ground = world.groundHeight(position.x, position.z);
   sprite.object.position.set(position.x, ground, position.z);
@@ -88,7 +118,7 @@ export function createNpc({ character, sheet, village, sunDirection, post, at = 
     // Un figurant : il a un trajet, ou le dit (figurant : vrai, le marchand et
     // la lavandière de la version 2.3, qui restent à leur poste).
     isExtra: Boolean(route) || character.figurant === true,
-    objects: [sprite.object, shadow],
+    objects: [sprite.object, shadow, quest],
     get facing() {
       return facing;
     },
@@ -113,6 +143,7 @@ export function createNpc({ character, sheet, village, sunDirection, post, at = 
         shadow.position.set(position.x, y + 0.01, position.z);
         return;
       }
+      if (quest.visible) quest.position.set(position.x, ground + headHeight + QUEST_LIFT + QUEST_SIZE / 2 + Math.sin(time * 2.4) * QUEST_BOB, position.z);
       const dx = heroPosition.x - position.x;
       const dz = heroPosition.z - position.z;
       facing = Math.hypot(dx, dz) < NAME_RADIUS ? directionToward(dx, dz, facing) : rest;
@@ -134,8 +165,12 @@ export function createNpc({ character, sheet, village, sunDirection, post, at = 
       ground = world.groundHeight(x, z);
       sprite.object.position.set(x, ground, z);
       shadow.position.set(x, ground + 0.01, z);
-      world.scene.add(sprite.object, shadow);
+      world.scene.add(sprite.object, shadow, quest);
       if (!route) obstacle = world.addObstacle(x, z, BODY_RADIUS);
+    },
+    // Montre ou cache le point d'exclamation de sa quête.
+    setQuest(on) {
+      quest.visible = Boolean(on);
     },
     // Tourne l'habitant vers un point (au début d'une conversation).
     faceToward(point) {

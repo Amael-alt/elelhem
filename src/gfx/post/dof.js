@@ -26,6 +26,7 @@ const FAR_RAMP = 11;
 // tout l'écran (uBandHalfWidth, réglé par le pipeline) : on voit la pièce nette.
 export const BAND_HALF_WIDTH = 0.12;
 const BAND_SOFTNESS = 0.4;
+const TOP_BLUR_SCALE = 0.8; // le flou du haut de l'écran, réduit d'un cinquième
 const DEPTH_MIX = 0.3;
 export const MAX_BLUR = 0.019; // rayon maximal, en part de la hauteur d'écran
 const GOLDEN_ANGLE = 2.39996323;
@@ -47,7 +48,10 @@ float viewDistance( float depth ) {
 float circleOfConfusion( float distance, float screenY ) {
   float delta = distance - uFocusDistance;
   float depthCoc = clamp( ( abs( delta ) - ${f(SHARP_RANGE)} ) / ( delta > 0.0 ? ${f(FAR_RAMP)} : ${f(NEAR_RAMP)} ), 0.0, 1.0 );
-  float bandCoc = smoothstep( uBandHalfWidth, uBandHalfWidth + ${f(BAND_SOFTNESS)}, abs( screenY - uBandCenter ) );
+  // Au-dessus du héros (le haut de l'écran), le flou monte un cinquième moins
+  // vite : le décor qu'on regarde en marchant reste plus lisible (version 2.6).
+  float offBand = screenY - uBandCenter;
+  float bandCoc = smoothstep( uBandHalfWidth, uBandHalfWidth + ${f(BAND_SOFTNESS)}, offBand > 0.0 ? offBand * ${f(TOP_BLUR_SCALE)} : - offBand );
   float coc = mix( bandCoc, depthCoc, ${f(DEPTH_MIX)} );
   return delta < 0.0 ? - coc : coc;
 }

@@ -1,45 +1,75 @@
-MIT License
-
-Copyright (c) 2026 Jordan Goussery
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+The Legend of Elelhem : La Magie de Lia
+Copyright © 2026 Jordan Goussery, Maintenant Vous Savez. Tous droits réservés.
 
 -------------------------------------------------------------------------------
 
-Portée de la licence
+1. Ce que couvre cette licence
 
-Cette licence couvre le code et les textes du jeu (dialogues compris).
+Tout le contenu de ce dépôt, sauf les composants tiers listés au point 5 :
+le code, les textes du jeu et ses dialogues, l'univers d'Elelhem, ses
+personnages et leurs noms, les données, les sprites et leurs grilles, les
+illustrations, portraits et ornements de l'interface, la musique, et la
+documentation. Le tout est protégé par le droit d'auteur (Code de la propriété
+intellectuelle). L'ensemble est appelé ci-dessous « l'Œuvre ».
 
-Elle ne couvre pas le logo Maintenant Vous Savez, c'est-à-dire la flamme
-affichée sur l'écran titre (fichier assets/mvs-flame.png) et toute
-reproduction de ce logo : tous droits réservés. Il ne peut être ni réutilisé
-ni modifié sans autorisation écrite.
+2. Ce qui est permis, sans demander
 
-Elle ne couvre pas non plus la musique de fond (assets/audio/village-bell.mp3,
-« The Village Bell », composée par l'auteur avec Suno) : elle n'est fournie
-que pour ce jeu et n'est pas placée sous licence MIT.
+- Jouer au jeu, gratuitement, à son adresse officielle :
+  https://amael-alt.github.io/elelhem/
+- Partager ce lien, avec qui l'on veut et où l'on veut : réseaux sociaux,
+  message, présentation, salle de formation.
+- Montrer des captures d'écran ou de courts extraits du jeu pour en parler,
+  en citant l'auteur (Jordan Goussery) et le lien officiel.
+- Lire le code sur GitHub pour comprendre comment le jeu est fait.
 
-Le dossier vendor/three/ contient three.js, sous sa propre licence MIT
-(vendor/three/LICENSE).
+3. Ce qui est interdit sans autorisation écrite de l'auteur
 
-Scope of this license (English summary): the MIT license above covers the
-code and the game texts. It does not cover the Maintenant Vous Savez logo
-(the flame shown on the title screen, assets/mvs-flame.png), which remains
-all rights reserved, nor the background music (assets/audio/village-bell.mp3,
-made by the author with Suno), which is provided for this game only. three.js in vendor/three/ keeps its own MIT license.
+Même gratuitement, même à des fins pédagogiques ou de formation, et même en
+citant l'auteur :
+
+- copier, reproduire ou héberger l'Œuvre, en tout ou en partie, ailleurs qu'à
+  son adresse officielle, y compris en l'intégrant dans une autre page
+  (iframe) ;
+- modifier, adapter, traduire ou dériver une autre œuvre de tout ou partie de
+  l'Œuvre : code, textes, univers, personnages, illustrations, musique ;
+- l'utiliser comme contenu ou support d'une formation, d'un cours, d'un
+  produit ou d'un service, payant ou gratuit, autre que ceux de l'auteur ;
+- la présenter comme la sienne, ou en retirer les mentions de l'auteur ;
+- l'utiliser pour entraîner ou ajuster un modèle d'intelligence artificielle.
+
+4. À propos de GitHub
+
+Ce dépôt est public. Les conditions d'utilisation de GitHub permettent à ses
+utilisateurs de consulter le dépôt et d'en faire une copie (« fork ») sur
+GitHub même. Ce droit s'arrête là : un fork n'autorise aucun des usages
+interdits au point 3.
+
+5. Composants tiers, sous leur propre licence
+
+- three.js, dans vendor/three/ : © three.js authors, licence MIT
+  (vendor/three/LICENSE).
+- La police EB Garamond, dans assets/fonts/ : © The EB Garamond Project
+  Authors, licence SIL Open Font 1.1 (assets/fonts/OFL.txt).
+
+Le nom et le logo Maintenant Vous Savez, dont la flamme redessinée en lumière
+sur l'écran titre, sont des signes distinctifs de l'auteur et ne peuvent être
+utilisés sans son accord.
+
+6. Demander une autorisation
+
+Pour tout usage qui n'est pas permis au point 2, par exemple utiliser le jeu
+dans une formation que vous animez : https://maintenant-vous-savez.com/contact
+
+-------------------------------------------------------------------------------
+
+English summary
+
+Copyright © 2026 Jordan Goussery. All rights reserved. You may play the game
+for free at its official address (https://amael-alt.github.io/elelhem/), share
+that link anywhere, show screenshots with credit, and read the code on GitHub.
+You may not copy, host, embed, modify, adapt or reuse any part of it (code,
+texts, characters, artwork, music), even for free or for teaching, nor use it
+to train AI models, without the author's written permission. GitHub's terms
+allow viewing and forking on GitHub only; they grant no further rights.
+three.js (MIT) and EB Garamond (SIL OFL 1.1) keep their own licenses.
+Permission requests: https://maintenant-vous-savez.com/contact

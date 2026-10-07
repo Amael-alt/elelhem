@@ -1,16 +1,43 @@
 # The Legend of Elelhem : La Magie de Lia
 
-Un petit RPG en HD-2D, jouable dans le navigateur. À Elelhem, tout le monde parle de la magie LIA, celle qui répond à tout : pour devenir apprenti mage, il faut rassembler les parchemins des maîtres du village. Chaque maître transpose une notion d'intelligence artificielle en univers médiéval fantastique : le forgeron forge des incantations (des prompts), la bibliothécaire veille sur le contexte, l'apothicaire se méfie des potions trop belles pour être vraies, et l'Oracle Gépété répond à tout, parfois à tort.
+Un petit RPG pour découvrir l'IA en dix minutes, dans le navigateur.
 
-**Jouer : https://amael-alt.github.io/elelhem/**, sur téléphone ou sur ordinateur, en une dizaine de minutes.
+**[Jouer à Elelhem](https://amael-alt.github.io/elelhem/)**, gratuitement, sur téléphone ou sur ordinateur, sans inscription.
 
-**Le décor et les personnages sont générés par le code** au chargement de la page : textures, silhouettes en pixel art, ciel, intérieurs et effets de lumière. Les seules images chargées sont l'illustration de l'écran titre, les ornements de l'interface (cadres, plaques, icônes) et, une fois le jeu lancé, les portraits de dialogue des habitants, tous illustrés avec Higgsfield d'après une description, puis détourés, découpés ou cadrés par les scripts du dépôt. Les silhouettes elles-mêmes ont été dessinées sur fiche puis transcrites pixel par pixel en grilles de code (voir [`docs/construction.md`](docs/construction.md), versions 1.4 et 2.1).
+![L'illustration de l'écran titre : un jeune voyageur au chapeau rouge tend la main vers une flamme de magie, devant un château dans les nuages.](assets/social-preview.png)
 
-Version 2.2, du 7 octobre 2026. L'état du chantier et ce qui vient ensuite : [`docs/suite.md`](docs/suite.md).
+## Le but du projet
+
+Elelhem poursuit deux buts.
+
+**Faire découvrir l'IA en s'amusant.** Le jeu s'adresse à celles et ceux qui ne connaissent pas encore l'IA, ou qui commencent à peine, le temps d'une pause. Huit maîtres du village enseignent chacun une notion, posent une question, et remettent un parchemin ; les huit réunis valent un diplôme d'apprenti mage. Le niveau est volontairement simple : c'est une première rencontre avec l'IA, pas une formation complète.
+
+**Montrer ce qu'on construit quand on pilote bien une IA.** On lit souvent qu'un seul prompt suffit pour créer un jeu vidéo. Un prompt donne un premier jet. Celui-ci a demandé trois jours de pilotage de Claude Code : un plan écrit avant la première ligne, des étapes vérifiées une à une dans le navigateur, des choix de game design, et beaucoup de refus. Tout le code a été écrit par Claude Code. L'idée, l'histoire, les décisions et la relecture sont de Jordan Goussery, formateur et consultant IA, passionné de jeux de rôle.
+
+## Ce qu'on y apprend
+
+| Maître | Son métier au village | La notion d'IA |
+|---|---|---|
+| L'Oracle Gépété | vieux magicien qui sait tout, et se trompe parfois | le grand modèle de langage |
+| Maître Ferrand | forgeron | l'art du prompt |
+| Dame Marjolaine | bibliothécaire | le contexte et les biais |
+| Basile | apothicaire | les hallucinations |
+| Berthe | aubergiste | la mémoire |
+| Pépin | messager du colombier | les connecteurs MCP |
+| Maître Gaspard | chef de chantier | les agents |
+| Capitaine Rocard | garde de la muraille | la sécurité des données |
+
+Chaque leçon est facultative et se relit dans le grimoire. Une erreur ne coûte rien, sinon la mention du diplôme.
+
+## Partager le jeu
+
+Le lien se partage librement, y compris avec des stagiaires. Le jeu et son contenu restent la propriété de leur auteur : pas de copie, d'adaptation ni de réutilisation, même gratuite, sans son accord écrit. Le détail est dans la [licence](LICENSE).
+
+Version 2.10.3, du 7 octobre 2026. L'état du chantier : [`docs/suite.md`](docs/suite.md) ; le récit de la construction, étape par étape : [`docs/construction.md`](docs/construction.md) ; le vocabulaire du code : [`CONTEXT.md`](CONTEXT.md).
 
 ## Le jeu
 
-La partie commence dans la maison du héros, où Claudette, sa sœur, lui confie la quête. Le village se parcourt à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. On entre dans la maison, l'auberge et la forge. Huit maîtres enseignent chacun une notion, posent une question à trois choix et remettent un parchemin ; chaque leçon est facultative et se relit dans le grimoire. Les huit parchemins réunis, Clodomir, l'architecte, remet un diplôme d'apprenti mage, avec une mention selon les erreurs, à partager ou à télécharger, puis vient le générique. Une minimap montre qui attend encore, et les Tokens gagnés en chemin s'échangent contre des tenues chez Berthe ou une épée chez Ferrand. Hors les murs, la lande grouille d'Hallucinations : on les dissipe à l'épée, en temps réel, trois coups qui s'enchaînent, cinq clartés en jeu ; elles lâchent des pièces et parfois une fiole de clarté, à ramasser en marchant dessus. La fiche d'apprenti (touche F) fait le point, avec six exploits à décrocher. Depuis la version 2.3, le village est plus vaste et plus vivant : un marché (le marchand y vend des fioles de réserve), un verger où cueillir une pomme, un lavoir et sa lavandière, un terrain d'entraînement avec son défi du mannequin ; on jette un Token dans le puits pour une maxime, on s'assied au feu ou sur un banc pour reprendre ses clartés, on fouille tonneaux, caisses et meules, on ramasse douze étincelles cachées, et un coffre attend derrière la cascade. La carte (touche C) est une illustration peinte sur parchemin. Les façades (version 2.4) ont leur rez-de-chaussée de pierre, leurs croix de colombage, leurs volets peints, leurs lucarnes, leurs enseignes et leurs lanternes à la porte.
+La partie commence dans la maison du héros, où Claudette, sa sœur, lui confie la quête. Le village se parcourt à l'heure dorée : place au puits, forge, bibliothèque, apothicairerie, colombier, porte de la muraille, auberge, chantier, tour de l'architecte, rivière et pont. On entre dans la maison, l'auberge et la forge. Huit maîtres enseignent chacun une notion, posent une question à trois choix et remettent un parchemin ; chaque leçon est facultative et se relit dans le grimoire. Les huit parchemins réunis, Clodomir, l'architecte, remet un diplôme d'apprenti mage, avec une mention selon les erreurs, à partager ou à télécharger, puis vient le générique. Une minimap montre qui attend encore, et les Tokens gagnés en chemin s'échangent contre des tenues chez Berthe ou une épée chez Ferrand. Hors les murs, la lande grouille d'Hallucinations : on les dissipe à l'épée, en temps réel, trois coups qui s'enchaînent, cinq clartés en jeu ; elles lâchent des pièces et parfois une fiole de clarté, à ramasser en marchant dessus. La fiche d'apprenti (touche F) fait le point, avec six exploits à décrocher. Depuis la version 2.3, le village est plus vaste et plus vivant : un marché (le marchand y vend des fioles de réserve), un verger où cueillir une pomme, un lavoir et sa lavandière, un terrain d'entraînement avec son défi du mannequin ; on jette un Token dans le puits pour une maxime, on fouille tonneaux, caisses et meules, on ramasse douze étincelles cachées, et un coffre attend derrière la cascade. La carte (touche C) est une illustration peinte sur parchemin. Les façades (version 2.4) ont leur rez-de-chaussée de pierre, leurs croix de colombage, leurs volets peints, leurs lucarnes, leurs enseignes et leurs lanternes à la porte.
 
 - **Au clavier** : ZQSD, WASD ou flèches pour marcher, Maj pour courir, molette pour le zoom, E, Entrée ou Espace pour parler, flèches ou chiffres 1, 2, 3 pour répondre, G pour le grimoire, C pour la carte, F pour la feuille de personnage, J ou X (ou un clic) pour frapper de l'épée sur la lande, M pour couper la musique, T pour replier ou déplier la légende des touches, affichée en bas à gauche sur ordinateur.
 - **Au doigt** : un joystick apparaît sous le pouce dans le bas de l'écran (poussé à fond, on court), un bouton d'action parle à l'habitant à portée, un bouton épée frappe sur la lande, deux doigts pincent pour zoomer. L'écran titre permet de passer le joystick à droite pour jouer de la main gauche.
@@ -24,7 +51,7 @@ La partie commence dans la maison du héros, où Claudette, sa sœur, lui confie
 
 ## Lancer en local
 
-Les modules JavaScript ne se chargent pas depuis un fichier ouvert directement : il faut un petit serveur statique. Avec Node.js installé :
+Pour étudier le code seulement : la licence n'autorise aucun autre usage d'une copie. Les modules JavaScript ne se chargent pas depuis un fichier ouvert directement : il faut un petit serveur statique. Avec Node.js installé :
 
 ```bash
 npx -y http-server . -p 8080 -c-1
@@ -33,6 +60,8 @@ npx -y http-server . -p 8080 -c-1
 Puis ouvrir http://localhost:8080 (ou http://localhost:8080/?debug).
 
 ## Comment c'est construit
+
+**Le décor et les personnages sont générés par le code** au chargement de la page : textures, silhouettes en pixel art, ciel, intérieurs et effets de lumière. Les seules images chargées sont l'illustration de l'écran titre, les ornements de l'interface (cadres, plaques, icônes) et, une fois le jeu lancé, les portraits de dialogue des habitants, tous illustrés avec Higgsfield d'après une description, puis détourés, découpés ou cadrés par les scripts du dépôt. Les silhouettes elles-mêmes ont été dessinées sur fiche puis transcrites pixel par pixel en grilles de code (voir [`docs/construction.md`](docs/construction.md), versions 1.4 et 2.1).
 
 - **Aucun outil de build.** Des modules ES natifs, une carte d'import dans `index.html`, et GitHub Pages sert les fichiers tels quels. Le code se lit directement en ligne.
 - **Une seule dépendance** : three.js, copiée dans `vendor/three/`.
@@ -59,7 +88,7 @@ outils/           outils du poste, hors du jeu : vignette.mjs (image de partage)
 
 ## Comment ce village a été construit
 
-Tout le code de ce dépôt a été écrit par Claude Code, les 5 et 6 octobre 2026, à partir d'un plan préparé avant la première ligne : le rendu visé, chiffré, les étapes, et la façon de vérifier chacune. Jordan Goussery a tenu le plan, tranché à chaque étape (direction artistique, histoire, commandes) et relu chaque texte du jeu. Chaque étape a été vérifiée dans un navigateur, mesurée, puis publiée. Le récit détaillé, avec les mesures, est dans [`docs/construction.md`](docs/construction.md).
+Tout le code de ce dépôt a été écrit par Claude Code, du 5 au 7 octobre 2026, à partir d'un plan préparé avant la première ligne : le rendu visé, chiffré, les étapes, et la façon de vérifier chacune. Jordan Goussery a tenu le plan, tranché à chaque étape (direction artistique, histoire, commandes) et relu chaque texte du jeu. Chaque étape a été vérifiée dans un navigateur, mesurée, puis publiée. Le récit détaillé, avec les mesures, est dans [`docs/construction.md`](docs/construction.md).
 
 | Étape | Ce qu'elle a apporté |
 |---|---|
@@ -136,10 +165,12 @@ https://maintenant-vous-savez.com
 
 three.js : © three.js authors, licence MIT.
 
-Musique : « The Village Bell », composée par Jordan Goussery avec Suno. Exclue de la licence MIT.
+Musique : « The Village Bell », composée par Jordan Goussery avec Suno.
+
+Illustrations, portraits, ornements et fiches des personnages : générés avec Higgsfield d'après les descriptions de l'auteur, puis détourés, cadrés ou transcrits par les scripts du dépôt.
 
 Police EB Garamond : © The EB Garamond Project Authors, licence SIL Open Font 1.1, voir [`assets/fonts/OFL.txt`](assets/fonts/OFL.txt).
 
 ## Licence
 
-Code et textes sous licence MIT, voir [`LICENSE`](LICENSE). Le logo Maintenant Vous Savez, redessiné en flamme de lumière dans l'illustration de l'écran titre, en est exclu : tous droits réservés. Les illustrations générées (portraits, ornements, illustration du titre) et la musique en sont exclues aussi.
+© 2026 Jordan Goussery, Maintenant Vous Savez. **Tous droits réservés**, voir [`LICENSE`](LICENSE). On peut jouer, partager le lien et montrer des captures en citant l'auteur. On ne peut pas copier, héberger ailleurs, modifier ni réutiliser le jeu ou une partie (code, textes, personnages, illustrations, musique), même gratuitement ou pour une formation, sans autorisation écrite. Seuls three.js (licence MIT) et la police EB Garamond (licence SIL Open Font 1.1) gardent leur propre licence.

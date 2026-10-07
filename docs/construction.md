@@ -847,3 +847,21 @@ Ce qui a résisté :
 | Points d'action | vœu (maxime, un Token), pomme (une clarté), fouille (2 Tokens puis « rien à prendre »), repos (cinq clartés revenues), fiole achetée, coffre (25 Tokens et la tenue) : tous vérifiés |
 | Console | aucune erreur |
 | Générateur d'images | deux dessins, quatre fiches (deux refaites sur fond vert), deux cartes : 8 crédits, il en reste 151 |
+
+## Version 2.4 : les façades (7 octobre 2026)
+
+Le chantier prévu avant la refonte, lancé par Jordan sitôt la 2.3 publiée : des maisons qui ne soient plus des boîtes d'enduit à colombages. Référence regardée d'abord : une capture de village HD-2D (rez-de-chaussée de pierre, porte en arc de pierre, croix de colombage, lucarne, volets, lanterne, enseigne, marches, tonneaux à la porte).
+
+**Tout est de la donnée par maison** (`HOUSES` de `world/layout.js`, bâti par `buildHouse` dans `world/props.js`) : `shutters` ('vert', 'bleu', 'rouge') peint des volets à barres à chaque fenêtre, `dormers` (décalages le long du faîtage) pose des lucarnes sur le pan sud, `sign` ('chope', 'enclume', 'livre', 'fiole') accroche une enseigne figurée à droite de la porte, `lantern` (vrai par défaut) une lanterne murale, `stoneBase` (vrai par défaut pour l'enduit) un rez-de-chaussée de pierre. Et d'office : des appuis de pierre sous chaque fenêtre (les jardinières se posent juste dessous), un encadrement de pierre à la porte avec sa clé de voûte et deux marches, des croix de colombage dans chaque panneau libre entre le bandeau de pierre et la lisse (là où aucune fenêtre ni porte ne gêne : la bibliothèque n'en a que sur ses pignons), les bouts de chevrons sous les égouts, un chapeau de pierre et des pots de terre cuite sur chaque cheminée (la fumée part des pots). La boîte inclinée et la barre entre deux points écrites par l'agent de la 2.3 passent dans `world/builder.js`, partagées : les croix de colombage et la jambe de force des enseignes en sont faites. Trois matières de plus pour les volets (`voletVert`, `voletBleu`, `voletRouge`, du bois teinté). Les lanternes murales sont des flammes d'ambiance de plus (`buildHouse` les renvoie, le village les ajoute aux lanternes de décor) : les portes s'allument le soir. L'enseigne de l'auberge en planche (`buildSign`) laisse la place à la chope ; la fiole de l'apothicaire est en matière de fenêtre, elle brille.
+
+Ce qui a résisté :
+
+- **Les lucarnes invisibles.** Posées au tiers bas de la pente, elles se lisaient comme un troisième rang de fenêtres collé à l'égout : la caméra, très inclinée, aplatit les toits. Remontées à mi-pente (`DORMER.along` 0,55), enfoncées de 10 cm seulement, elles sortent de 75 cm et se voient comme des lucarnes. Vérifié par `__lia.probe` sur leurs faces (couleur d'enduit là où le toit est rouge) avant de les voir à l'œil.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Rendu devant l'auberge | 118 appels de dessin, 73 650 triangles (63 700 avant les façades) |
+| Maisons | six maisons : volets sur 24 fenêtres, quatre lucarnes, quatre enseignes, cinq lanternes murales |
+| Console | aucune erreur |

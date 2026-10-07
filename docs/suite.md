@@ -6,7 +6,9 @@
 
 **Version 2.2**, étiquette `v2.2`, publiée le 7 octobre 2026 sur https://amael-alt.github.io/elelhem/ avec les étiquettes `v1.4` à `v2.2` posées d'un coup (les versions 1.4 à 2.2 avaient été validées ensemble, en local).
 
-**Version 2.3 en local**, commitée sur `main` le 7 octobre au soir, pas encore poussée : elle attend la validation de l'auteur dans le navigateur (voir `construction.md`, « Version 2.3 »). À publier ensuite : `git push`, étiquette `v2.3`, vérification sur l'adresse publique.
+**Version 2.3**, étiquette `v2.3`, publiée le 7 octobre 2026 au soir après validation de l'auteur.
+
+**Version 2.4 en local** (les façades), commitée sur `main`, pas encore poussée : elle attend la validation de l'auteur dans le navigateur (voir `construction.md`, « Version 2.4 »). À publier ensuite : `git push`, étiquette `v2.4`, vérification sur l'adresse publique.
 
 Ce que le jeu contient : le village d'Elelhem et ses huit maîtres (quête, grimoire, diplôme, générique), les intérieurs, la minimap et la carte, les Tokens et la boutique de Berthe, la forge de Ferrand, la fiche d'apprenti, la Lande des Hallucinations et son combat en temps réel (trois coups qui s'enchaînent, cinq clartés, barres de vie, butin au sol), le tactile complet, l'écran titre en page de parchemin, l'interface illustrée, la légende des touches sur ordinateur. Et depuis la 2.3 : le village de 56 × 42 cases avec le marché, le verger, le lavoir et le terrain d'entraînement, le marchand et la lavandière, les points d'action du village (`game/spots.js`), les étincelles cachées, les exploits (`game/exploits.js`), le coffre et la tenue de la cascade, la carte illustrée.
 
@@ -35,8 +37,8 @@ Tout se vérifie dans un navigateur, sur le serveur local (`npx -y http-server .
 
 Par ordre de priorité, tel que décidé avec l'auteur :
 
-1. **Publier la 2.3** après validation de l'auteur, et faire relire ses textes nouveaux (noms des lieux, maximes du puits, répliques du marchand et de la lavandière, exploits, points d'action : `textesInterface.points` et `exploits` dans `data/dialogues.js`).
-2. **Les façades** : volets, encadrements de portes, marches, enseignes (chope de l'auberge, enclume de la forge), lucarnes, détails de toit. Les maisons ont déjà colombages, jardinières et cheminées (`buildHouse` dans `world/props.js`, tours et chantier dans `world/landmarks.js`, données dans `world/layout.js`).
+1. **Publier la 2.4** après validation de l'auteur. Les textes de la 2.3 (noms des lieux, maximes du puits, répliques du marchand et de la lavandière, exploits, points d'action : `textesInterface.points` et `exploits` dans `data/dialogues.js`) sont publiés sans relecture explicite : à reprendre s'il veut les retoucher.
+2. **Les façades, suite possible** : fait en 2.4 pour les maisons (`buildHouse` dans `world/props.js`, piloté par `HOUSES` de `world/layout.js`). Restent nues : les deux tours (`buildTower` dans `world/landmarks.js` : encadrement de porte, lanterne, volets) et le chantier.
 3. Points plus anciens : jamais testé sur un vrai téléphone (images par seconde avec `?debug`, deux pouces, pincement, bouton Partager) ; volumes des sons à valider à l'oreille (`LEVELS` dans `src/core/ambience.js`) ; les libellés du côté du joystick et le générique en mouvement réduit jamais relus ou vus.
 
 Chaque lot suit la même méthode : état des lieux après une partie, série de trois ou quatre questions à choix pour décider, vérification dans le navigateur, journal dans `construction.md`, commits découpés par sujet, push après validation, une étiquette par lot publié.

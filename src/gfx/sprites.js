@@ -400,12 +400,26 @@ function readViews(data) {
   };
 }
 
-// Toutes les grilles d'un personnage : les vues nues, l'épée à la main, les coups.
+// Toutes les grilles d'un personnage : les vues nues, l'épée à la main, les
+// coups, et les pas de profil dessinés (version 2.7).
 function allGrids(data) {
   const list = [data];
   if (data.arme) list.push(data.arme);
   for (const pair of data.coups ?? []) list.push(...pair);
+  for (const key of STEP_KEYS) list.push(...(data[key] ?? []));
   return list;
+}
+
+// Les pas de profil dessinés (version 2.7) : marche et course, six images
+// chacune, nues puis l'épée à la main. Chaque module ne porte qu'une vue,
+// « profil », avec sa palette : on la lit telle quelle.
+const STEP_KEYS = ['marche', 'course', 'armeMarche', 'armeCourse'];
+function readSteps(list) {
+  if (!list) return null;
+  return list.map((data) => {
+    const colors = data.couleurs.map(hexToRgb);
+    return { grid: parseGrid(data.profil, data.cadre[0], data.cadre[1]), colors, darker: colors };
+  });
 }
 
 // Chaque grille a le même nombre de lignes sous les pieds (BELOW_FEET) : alignée
@@ -431,6 +445,7 @@ export function createCharacterSheet(character) {
   // Les poses de combat du héros, si sa fiche les porte (version 2.1).
   const armed = data.arme ? readViews(data.arme) : null;
   const strikes = data.coups ? data.coups.map((pair) => pair.map((pose) => readViews(pose))) : null;
+  const steps = { marche: readSteps(data.marche), course: readSteps(data.course), armeMarche: readSteps(data.armeMarche), armeCourse: readSteps(data.armeCourse) };
 
   const buffer = createPixelBuffer(W * columns, H * DIRECTIONS.length);
   const glow = createPixelBuffer(buffer.width, buffer.height);
@@ -458,11 +473,22 @@ export function createCharacterSheet(character) {
 
   // Les quinze images de repos, de marche et de course d'un jeu de vues, à
   // partir de column.
-  const animate = (views, view, column, row, mirror) => {
+  // drawn : { marche, course }, les pas de profil dessinés de ce jeu de vues,
+  // qui remplacent les images fabriquées de la marche et de la course.
+  const animate = (views, view, column, row, mirror, drawn = {}) => {
     const cells = views.grids[view];
     const info = views.infoOf(view);
     const poses = data.flottant ? FLOAT_POSES : view === 'profil' ? SIDE_POSES : FRONT_POSES;
     poses.forEach((pose, i) => {
+      if (view === 'profil') {
+        const walk = WALK_FRAMES.indexOf(i);
+        const run = RUN_FRAMES.indexOf(i);
+        const step = walk !== -1 ? drawn.marche?.[walk] : run !== -1 ? drawn.course?.[run] : null;
+        if (step) {
+          paint(stillFrame(step.grid), step, column + i, row, mirror);
+          return;
+        }
+      }
       const frame = data.flottant ? floatFrame(cells, pose) : view === 'profil' ? sideFrame(cells, info, pose) : frontFrame(cells, info, pose);
       paint(frame, views, column + i, row, mirror);
     });
@@ -471,11 +497,11 @@ export function createCharacterSheet(character) {
   DIRECTIONS.forEach((direction, row) => {
     const view = VIEW_OF[direction];
     const mirror = MIRRORED.has(direction);
-    animate(base, view, 0, row, mirror);
+    animate(base, view, 0, row, mirror, { marche: steps.marche, course: steps.course });
     if (columns === PLAIN_COLUMNS) return;
     // L'épée à la main : les vues armées, sinon les mêmes images (l'épée est
     // alors dessinée à part, gfx/weapon.js).
-    animate(armed ?? base, view, ARMED_OFFSET, row, mirror);
+    animate(armed ?? base, view, ARMED_OFFSET, row, mirror, armed ? { marche: steps.armeMarche, course: steps.armeCourse } : { marche: steps.marche, course: steps.course });
     // Les coups, dessinés de face, de profil et de dos seulement : une
     // diagonale reprend la vue cardinale la plus proche.
     const strikeView = VIEW_OF[cardinalOf(direction)];

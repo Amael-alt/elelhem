@@ -14,6 +14,32 @@ import { heros_coup2_elan } from './heros_coup2_elan.js';
 import { heros_coup2_frappe } from './heros_coup2_frappe.js';
 import { heros_coup3_elan } from './heros_coup3_elan.js';
 import { heros_coup3_frappe } from './heros_coup3_frappe.js';
+// Les pas de profil dessinés (version 2.7) : six images de marche et six de
+// course, le cisaillement des jambes ne bougeait que les pieds.
+import { heros_marche1 } from './heros_marche1.js';
+import { heros_marche2 } from './heros_marche2.js';
+import { heros_marche3 } from './heros_marche3.js';
+import { heros_marche4 } from './heros_marche4.js';
+import { heros_marche5 } from './heros_marche5.js';
+import { heros_marche6 } from './heros_marche6.js';
+import { heros_course1 } from './heros_course1.js';
+import { heros_course2 } from './heros_course2.js';
+import { heros_course3 } from './heros_course3.js';
+import { heros_course4 } from './heros_course4.js';
+import { heros_course5 } from './heros_course5.js';
+import { heros_course6 } from './heros_course6.js';
+import { heros_course_arme1 } from './heros_course_arme1.js';
+import { heros_course_arme2 } from './heros_course_arme2.js';
+import { heros_course_arme3 } from './heros_course_arme3.js';
+import { heros_course_arme4 } from './heros_course_arme4.js';
+import { heros_course_arme5 } from './heros_course_arme5.js';
+import { heros_course_arme6 } from './heros_course_arme6.js';
+import { heros_marche_arme1 } from './heros_marche_arme1.js';
+import { heros_marche_arme2 } from './heros_marche_arme2.js';
+import { heros_marche_arme3 } from './heros_marche_arme3.js';
+import { heros_marche_arme4 } from './heros_marche_arme4.js';
+import { heros_marche_arme5 } from './heros_marche_arme5.js';
+import { heros_marche_arme6 } from './heros_marche_arme6.js';
 
 export const heros = {
   cadre: [48, 56],
@@ -330,5 +356,9 @@ export const heros = {
     '................................................',
   ],
   arme: heros_arme,
+  marche: [heros_marche1, heros_marche2, heros_marche3, heros_marche4, heros_marche5, heros_marche6],
+  course: [heros_course1, heros_course2, heros_course3, heros_course4, heros_course5, heros_course6],
+  armeMarche: [heros_marche_arme1, heros_marche_arme2, heros_marche_arme3, heros_marche_arme4, heros_marche_arme5, heros_marche_arme6],
+  armeCourse: [heros_course_arme1, heros_course_arme2, heros_course_arme3, heros_course_arme4, heros_course_arme5, heros_course_arme6],
   coups: [[heros_coup1_elan, heros_coup1_frappe], [heros_coup2_elan, heros_coup2_frappe], [heros_coup3_elan, heros_coup3_frappe]],
 };

@@ -1002,5 +1002,30 @@ Une seconde liste de Jordan, dix points de « game feel », tous faits dans la f
 | Bouffées | 96 points dans la réserve, un appel de dessin |
 | Chiffres | 1,3 rem pour 1 point, 1,48 pour 2, 2,2 et jaune pour un critique de 4 |
 | Console | aucune erreur |
+
+## Version 2.9 en cours : moins de tics, plus de vie (7 octobre 2026)
+
+La suite des retours de Jordan, après la 2.8 : une correction, les tics d'IA que j'avais pointés, deux points de ressenti, la direction artistique, le bois.
+
+- **La lame de lumière** partait du mauvais côté de profil : l'angle de la lueur est inversé pour la gauche et la droite (`game/combat.js`).
+- **Le bois** (`createWoodTextures`) : il était une suite de colonnes de tons. Des planches d'une demi-unité à joint sombre et chanfrein clair, des fibres fines qui ondulent (un bruit lent décale la colonne lue), un nœud par planche ou presque (ellipse sombre, cerne clair). Les pavés perdent une pierre sur vingt-cinq, la terre affleure.
+- **Les tics corrigés** : les caisses sont posées de biais (`buildCrate` prend un angle, `pushSkewBox`) ; une fenêtre sur neuf a ses volets fermés, les battants couvrent les carreaux (`props.js`, hachage de la maison et de la fenêtre) ; les cachettes vides ont huit répliques (`textesInterface.points.fouille.rien`) ; les habitants ont une vraie vie (plus bas) ; et **la lumière tourne** (`world/daylight.js`) : quatre moments, soir doré (le réglage d'origine), nuit bleue, aube rose, jour clair, interpolés sur un cycle de douze minutes de jeu (`DAY_PERIOD`), qui commence au soir. Le village applique l'état (`setDaylight`) : couleur et force du soleil, lumière du ciel, brume, émission des fenêtres, force des lanternes, le dôme du ciel (`uNight`, `uNightSky`). Les lucioles ne sortent qu'à la nuit. L'étalonnage du post-traitement ne change pas.
+- **L'iris des portes** : le fondu au noir se referme en cercle sur le héros (`clip-path: circle()`, `--iris-x` et `--iris-y` posés par `doors.js` depuis la projection du héros) et se rouvre de même de l'autre côté. Un fondu simple avec le mouvement réduit.
+- **Les sons d'événements** (`ambience.chime`) : tintement d'une pièce ramassée, accord brisé d'un coffre, carillon montant d'un parchemin, « pop » quand le point d'exclamation d'une quête s'efface. Synthétisés en Web Audio comme le reste, avec la variation de hauteur.
+- **La direction artistique, la magie qui se voit** : un cercle de huit **runes** luit la nuit sur les dalles du puits (`gfx/fx/runes.js`, glyphes de pixels symétriques tirés une fois, lumière additive, le bloom fait le halo) ; le **bâton de Gépété** lâche des étincelles qui montent (bouffée `etincelles`) ; le **grimoire flotte** devant la bibliothèque et tourne ses pages ; une **poussière d'étoiles** suit le héros qui a ses huit parchemins ; la **brume** flotte au pied de la cascade (bouffée `brume`, émise quand le héros est à moins de 18 unités).
+- **Les animaux** (`gfx/fx/critters.js`) : un chat roux qui dort sur le muret de la bibliothèque et bat de la queue, trois poules qui picorent et trottent dans la pâture aux meules. Sprites de pixels dessinés dans le module, deux images chacun.
+- **Ferrand frappe** : un marteau de pixels tourne au-dessus de son épaule, levé lentement puis abattu d'un coup, en phase avec le son (le marteau de `ambience.js` frappe maintenant à période fixe, `HAMMER_PERIOD`, et expose sa phase).
+- Outil de test : `__lia.heure(0.22)` force la nuit (`0` soir, `0,48` aube, `0,72` jour, `null` pour reprendre).
+
+**Ressources extérieures** : rien n'a été importé. Les sons restent synthétisés (un pack CC0 aurait fait entrer des fichiers, contre la règle de la page qui ne charge que ses ornements), les sprites restent transcrits du même héros. Les pistes (Kenney, OpenGameArt, Lospec, Pedro Medeiros, jsfxr) sont notées dans `suite.md` pour plus tard.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Nuit forcée sur la place | huit runes visibles autour du puits, ciel bleu profond, fenêtres plus fortes, lucioles sorties |
+| Petites vies | six sprites dans le village (chat, trois poules, grimoire, marteau) |
+| Iris | variables posées à (843, 686) px en passant la porte de l'auberge |
+| Console | aucune erreur |
 | Écran titre | bureau 1686 × 1199, mobile 375 × 812, paysage 812 × 375 et vignette 1200 × 630 vérifiés |
 | Console | aucune erreur |

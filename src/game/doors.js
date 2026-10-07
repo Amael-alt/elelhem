@@ -3,6 +3,8 @@
 // le sud. Le passage se fait dans un fondu au noir : on change de scène au
 // moment où l'écran est noir, le joueur ne voit jamais la bascule.
 
+import { inRect } from '../world/places.js';
+
 const FADE_MS = 240;
 const DOOR_HALF_WIDTH = 0.45; // demi-largeur de la porte où l'on peut entrer
 const DOOR_REACH = 0.45; // arrêté par le mur, le héros est à 0,3 de la façade
@@ -114,8 +116,7 @@ export function createDoors(fade, { village, rooms, houses, player, onChange, ga
       // Un portail du monde où l'on est, si le geste le pousse et qu'on est dedans.
       for (const gate of gates) {
         if (gate.from !== current) continue;
-        const { x0, x1, z0, z1 } = gate.zone;
-        if (x < x0 || x > x1 || z < z0 || z > z1) continue;
+        if (!inRect(gate.zone, x, z)) continue;
         if ((move.x * gate.push.x + move.z * gate.push.z) / length < PUSH) continue;
         if (gate.allowed && !gate.allowed()) {
           onRefused(gate);

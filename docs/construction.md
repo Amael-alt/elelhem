@@ -899,7 +899,7 @@ Ce qui a résisté :
 | Higgsfield | 24 images, 36 crédits, 115 restants |
 | Console | aucune erreur |
 
-## Version 2.6 en cours : l'auberge, la forge et la bibliothèque, des décors riches (7 octobre 2026)
+## Version 2.6 en cours : l'auberge, la forge, la bibliothèque et l'apothicairerie, des décors riches (7 octobre 2026)
 
 La 2.4 et la 2.5 publiées (étiquettes `v2.4` et `v2.5`), Jordan a lancé la richesse des décors en partant d'une seule maison, l'auberge, dedans et dehors, à faire valider avant d'étendre. Un constat d'abord : les petits objets du village étaient des boîtes (le tonneau était un cube), exactement les « gros blocs » à éviter.
 
@@ -918,6 +918,8 @@ Ce qui a résisté :
 
 **La bibliothèque**, qui n'avait pas d'intérieur : une salle de lecture neuve (`ROOMS.bibliotheque`), la porte s'ouvre d'elle-même puisque la pièce porte le nom de la maison. Des livres du sol au plafond sur trois murs (deux bibliothèques au nord, quatre hautes étagères à l'est et à l'ouest, `buildTallShelf`), l'échelle contre les rayons, le bureau de Dame Marjolaine sous la fenêtre, un lutrin et son grand livre ouvert au milieu du tapis (`buildLectern`), deux tables de lecture avec bougies et livres, un coin de lecture (fauteuil, table basse, plante), un globe sur son pied (`buildGlobe`, les océans dans le bois bleu des volets : la toile rayée en faisait un ballon de plage), des piles de livres (`buildBookStack`). Dehors, un parvis en pavés en éventail sur trois rangs, fermé au sud par le muret coiffé d'auges fleuries (reculé d'une case : le premier parvis serrait Marjolaine contre lui), un cadran solaire (`buildSundial`), un banc et une pile de livres sous la fenêtre ; Dame Marjolaine attend sur le parvis, près de sa porte. L'exploit du cartographe compte un lieu de plus.
 
+**L'apothicairerie**, elle aussi sans intérieur jusqu'ici : l'officine de Basile (`ROOMS.apothicairerie`). La cheminée et son chaudron, des herbes qui sèchent au-dessus de la fenêtre, une étagère de remèdes sur tout le mur nord (`buildJarShelf` : bocaux de grès et de terre à couvercle de fer, fioles de couleur au long col, quelques-unes dans la matière des fenêtres allumées, qui luisent), le comptoir avec son mortier (`buildMortar`), une bougie et des livres, un séchoir à herbes contre le mur ouest (`buildDryingRack`), un panier et des sacs, l'alambic sur une table ronde (`buildAlembic` : ballon de cuivre, col de cygne, serpentin, ballon de recette qui luit), deux plantes, un tapis. Dehors, un seuil dallé (case `k`), un séchoir à l'ouest de la porte (ses bottes d'herbes étoffées après un premier essai où on ne les voyait pas), une grande plante en pot à l'est, un chaudron sur trépied au bord de l'allée (`buildTripodCauldron`), deux ruches de paille au fond du jardin de simples (`buildBeehive`).
+
 ### Mesures
 
 | Critère | Résultat |
@@ -928,5 +930,7 @@ Ce qui a résisté :
 | Rendu dans la forge | 43 appels de dessin, 8 400 triangles |
 | Rendu devant la bibliothèque | 117 appels de dessin, 79 700 triangles |
 | Rendu dans la bibliothèque | 49 appels de dessin, 20 200 triangles |
+| Rendu devant l'apothicairerie | 117 appels de dessin, 81 600 triangles |
+| Rendu dans l'apothicairerie | 56 appels de dessin, 17 700 triangles |
 | Collisions | bloqué au pied de l'escalier et contre le canapé |
 | Console | aucune erreur |

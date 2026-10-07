@@ -13,13 +13,15 @@
 //     [--bord 12]       épaisseur de la bordure où lire la couleur du fond
 //     [--rogner 1]      1 : rogne l'image aux pixels restants (une marge de --marge)
 //     [--marge 2]       pixels transparents gardés autour, après rognage
+//     [--creux 1]       1 : retire aussi les poches de fond enfermées dans la
+//                       silhouette (entre un bâton et le corps), version 2.5
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { decodePng, encodePng } from './png.mjs';
 
 const args = process.argv.slice(2);
-const options = { sortie: '', teinte: 12, ecart: 0.28, bord: 12, rogner: 1, marge: 2 };
+const options = { sortie: '', teinte: 12, ecart: 0.28, bord: 12, rogner: 1, marge: 2 , creux: 0 };
 let input = '';
 for (let i = 0; i < args.length; i += 1) {
   const arg = args[i];
@@ -119,6 +121,18 @@ while (stack.length) {
   stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
 }
 console.log(`${count} pixels de fond retirés (${((100 * count) / (width * height)).toFixed(1)} %).`);
+if (Number(options.creux) === 1) {
+  let pockets = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = y * width + x;
+      if (removed[i] || !isBackground(x, y)) continue;
+      removed[i] = 1;
+      pockets += 1;
+    }
+  }
+  console.log(`${pockets} pixels de fond retirés dans les creux.`);
+}
 
 // Les pixels de bord qui restent, voisins du fond retiré, sont adoucis : leur
 // opacité suit leur distance à la couleur du fond, pour un contour sans frange.

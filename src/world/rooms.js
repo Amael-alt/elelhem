@@ -141,6 +141,51 @@ export const ROOMS = {
     ],
   },
 
+  // L'apothicairerie (version 2.6) : l'officine de Basile. La cheminée et son
+  // chaudron, des herbes qui sèchent, l'étagère des remèdes, le comptoir et
+  // son mortier, l'alambic sur la table, le séchoir, les paniers et les sacs.
+  apothicairerie: {
+    house: 'apothicairerie',
+    lieu: 'apothicairerie',
+    rows: [
+      'MMMMMMMMMM',
+      'MffffffffM',
+      'MffffffffM',
+      'MffffffffM',
+      'MffffffffM',
+      'MffffffffM',
+      'MffffffffM',
+      'mmmmPmmmmm',
+    ],
+    entry: { x: 4.5, z: 6.4 },
+    props: [
+      { type: 'fireplace', x: 1.9, z: 1 },
+      { type: 'cauldron', x: 1.9, z: 1 },
+      { type: 'window', x: 3.55, z: 1, y: 1.25, width: 0.7, height: 0.6 },
+      { type: 'herbs', x0: 2.9, x1: 4.3, z: 1, y: 2.05 },
+      { type: 'jarshelf', x0: 4.6, x1: 8.9, z: 1, height: 2.2 },
+      // Le comptoir de Basile, son mortier, une fiole qu'il vient de remplir.
+      { type: 'counter', x0: 5.2, x1: 8.5, z: 3.1 },
+      { type: 'mortar', x: 5.9, z: 3.05, y: 1.05 },
+      { type: 'candle', x: 6.7, z: 3.05, y: 1.05 },
+      { type: 'bookstack', x: 7.8, z: 3.05, y: 1.05, count: 3 },
+      // Le séchoir le long du mur ouest, un panier, des sacs.
+      { type: 'dryingrack', x: 1.45, z: 3.9, facing: 'east', width: 1.6 },
+      { type: 'basket', x: 1.5, z: 5.6 },
+      { type: 'sacks', x: 2.2, z: 6.6, count: 2 },
+      // La table de l'alambic, une chaise, une plante haute.
+      { type: 'roundtable', x: 7.0, z: 5.3, radius: 0.48 },
+      { type: 'alembic', x: 6.85, z: 5.3, y: 0.78 },
+      { type: 'chair', x: 7.0, z: 6.1, facing: 'north' },
+      { type: 'plant', x: 8.4, z: 6.7, size: 1.15 },
+      { type: 'plant', x: 8.45, z: 4.0, size: 0.8 },
+      // Le tapis, les appliques.
+      { type: 'rug', x0: 2.8, z0: 4.2, x1: 5.2, z1: 6.8 },
+      { type: 'sconce', x: 1, z: 5.2, side: 'west' },
+      { type: 'sconce', x: 9, z: 3.0, side: 'east' },
+    ],
+  },
+
   // La bibliothèque (version 2.6) : la salle de lecture de Dame Marjolaine.
   // Des livres du sol au plafond sur trois murs, l'échelle contre les rayons,
   // le bureau sous la fenêtre, deux tables de lecture, le lutrin au milieu,

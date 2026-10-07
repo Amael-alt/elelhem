@@ -96,6 +96,15 @@ export const LIBRARY_COURT = {
   sundial: { x: 14.9, z: 12.1 },
   books: { x: 20.15, z: 11.55, y: 0.47, count: 3 },
 };
+// Les abords de l'apothicairerie (version 2.6) : un seuil dallé (case k), un
+// séchoir à herbes à l'ouest de la porte, une grande plante en pot à l'est,
+// un chaudron sur trépied, et deux ruches de paille au fond du jardin de simples.
+export const APOTHECARY_YARD = {
+  rack: { x: 30.9, z: 11.7, facing: 'south', width: 1.3 },
+  plant: { x: 35.25, z: 11.75, size: 0.85 },
+  cauldron: { x: 34.9, z: 13.7 },
+  hives: [{ x: 40.3, z: 9.0 }, { x: 40.3, z: 10.6 }],
+};
 export const HEARTH = { x: 10.6, z: 9.2 };
 // La cour de la forge (version 2.6) : des dalles (case k de world/map.js), un
 // muret à l'ouest, un râtelier d'épées et un bouclier sur la façade, un
@@ -255,7 +264,7 @@ export const TREES = [
 
 // Buissons : position, taille (1 : à hauteur de genou).
 export const BUSHES = [
-  [13.2, 15.2, 1], [5.2, 13.2, 0.9], [23.0, 12.0, 1], [13.3, 11.7, 0.8], [31.6, 12.3, 0.9], [36.4, 6.2, 1],
+  [13.2, 15.2, 1], [5.2, 13.2, 0.9], [23.0, 12.0, 1], [13.3, 11.7, 0.8], [29.6, 13.4, 0.9], [36.4, 6.2, 1],
   [9.2, 26.0, 1.1], [19.0, 27.4, 0.9], [7.6, 33.0, 1], [35.6, 30.2, 0.9], [37.4, 22.6, 0.8], [42.0, 29.4, 1],
   [46.2, 15.4, 1.1], [51.1, 17.5, 0.9], [46.4, 25.4, 1], [38.6, 40.6, 1.1], [24.6, 36.4, 0.9], [15.4, 38.6, 1],
   [3.6, 39.2, 1], [13.6, 3.4, 0.9], [19.6, 4.8, 1], [38.6, 4.5, 1], [22.4, 7.8, 0.9], [41.8, 24.0, 0.9],

@@ -22,7 +22,7 @@ import { createCollider } from './collision.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
 import { buildLadder, buildAnvil, buildBarrel, buildBench, buildCrate, buildTable, buildWoodpile } from './landmarks.js';
 import {
-  BASE_DEPTH, buildBookStack, buildGlobe, buildLectern, buildTallShelf, buildArmorStand, buildIronBars, buildSacks, buildShield, buildSwordBarrel, buildWeaponRack, buildArmchair, buildChair, buildClock, buildLowTable, buildPlant, buildRoundTable, buildSofa, buildStairs, buildBasket, buildBed, buildBookshelf, buildCandle, buildCauldron, buildChandelier, buildChest, buildCoal, buildCounter,
+  BASE_DEPTH, buildAlembic, buildDryingRack, buildJarShelf, buildMortar, buildBookStack, buildGlobe, buildLectern, buildTallShelf, buildArmorStand, buildIronBars, buildSacks, buildShield, buildSwordBarrel, buildWeaponRack, buildArmchair, buildChair, buildClock, buildLowTable, buildPlant, buildRoundTable, buildSofa, buildStairs, buildBasket, buildBed, buildBookshelf, buildCandle, buildCauldron, buildChandelier, buildChest, buildCoal, buildCounter,
   buildCurtain, buildDesk, buildFireplace, buildFurnace, buildGrindstone, buildHerbs, buildHorseshoes, buildKeg, buildPainting, buildRug,
   buildSconce, buildShelf, buildStool, buildTableware, buildTapestry, buildToolRack, buildTrim, buildTrough, buildWalls, buildWardrobe,
   buildWindow, buildWorkbench,
@@ -53,7 +53,11 @@ const DAY_DIRECTION = new THREE.Vector3(-0.5, 0.55, -0.7).normalize();
 const FURNITURE = {
   anvil: buildAnvil,
   armchair: buildArmchair,
+  alembic: buildAlembic,
   armorstand: buildArmorStand,
+  dryingrack: buildDryingRack,
+  jarshelf: buildJarShelf,
+  mortar: buildMortar,
   bookstack: buildBookStack,
   globe: buildGlobe,
   lectern: buildLectern,
@@ -143,7 +147,7 @@ export function createInterior(room, { materials }) {
   // texture est faite à sa taille.
   const keys = [
     'wood', 'plaster', 'plasterIn', 'paneling', 'stonewall', 'brick', 'iron', 'bark', 'awning', 'window', 'stone', 'leaves', 'door',
-    'thatch', 'painting', 'velvet', 'voletBleu',
+    'thatch', 'painting', 'velvet', 'voletBleu', 'voletVert', 'voletRouge',
   ];
   const builders = Object.fromEntries(keys.map((key) => [key, createMeshBuilder()]));
   const materialOf = { stone: materials.cobble };

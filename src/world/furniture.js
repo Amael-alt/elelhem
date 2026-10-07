@@ -924,3 +924,138 @@ export function buildLectern({ x, z, facing = 'south' }, builders) {
   page([0.01, 1.1, -0.1], [0.25, 1.13, 0.2]);
   return { posts: [{ x, z, radius: 0.3 }] };
 }
+
+// --- Version 2.6 : l'apothicairerie ------------------------------------------
+
+// Les verres des fioles : du bois peint (vert, bleu, rouge, opaques en pixel
+// art) et, pour les remèdes qui luisent, la matière des fenêtres allumées.
+const GLASS = ['voletVert', 'voletBleu', 'voletRouge', 'window'];
+
+// Une fiole ronde au long col, en (x, y, z) : la panse, le col, le bouchon.
+function flask(builders, x, y, z, glass, size = 1) {
+  const body = createFrame(builders[glass], [x, 0, z]);
+  const cork = createFrame(builders.bark, [x, 0, z]);
+  const s = size;
+  pushRevolution(body, [[y, 0.03 * s], [y + 0.04 * s, 0.07 * s], [y + 0.1 * s, 0.075 * s], [y + 0.15 * s, 0.04 * s], [y + 0.2 * s, 0.02 * s]], { sides: 7, groundAo: 1 });
+  pushRevolution(cork, [[y + 0.2 * s, 0.022 * s], [y + 0.25 * s, 0.022 * s]], { sides: 5, groundAo: 1 });
+}
+
+// Un bocal de terre ou de grès, en (x, y, z) : ventru, un couvercle de fer.
+function jar(builders, x, y, z, clay, size = 1) {
+  const body = createFrame(builders[clay], [x, 0, z]);
+  const lid = createFrame(builders.iron, [x, 0, z]);
+  const s = size;
+  pushRevolution(body, [[y, 0.06 * s], [y + 0.06 * s, 0.09 * s], [y + 0.18 * s, 0.085 * s], [y + 0.22 * s, 0.06 * s]], { sides: 7, groundAo: 1 });
+  pushRevolution(lid, [[y + 0.22 * s, 0.065 * s], [y + 0.25 * s, 0.065 * s], [y + 0.27 * s, 0.03 * s]], { sides: 7, groundAo: 1 });
+}
+
+// Étagère de remèdes contre le mur nord, de x0 à x1 : quatre rayons, des
+// bocaux de grès et de terre, des fioles de couleur, quelques-unes qui luisent.
+export function buildJarShelf({ x0, x1, z, height = 2.2 }, builders) {
+  const wood = createFrame(builders.wood, [0, 0, z]);
+  for (const px of [x0, x1 - 0.08]) pushBox(wood, [px, 0, 0], [px + 0.08, height, 0.34]);
+  pushBox(wood, [x0 - 0.04, height, 0], [x1 + 0.04, height + 0.07, 0.38]);
+  const rows = [0.15, 0.62, 1.09, 1.56];
+  rows.forEach((y, row) => {
+    pushBox(wood, [x0, y - 0.05, 0], [x1, y, 0.34]);
+    let px = x0 + 0.2;
+    let n = row * 5;
+    while (px < x1 - 0.18) {
+      const kind = (n * 7 + row) % 5;
+      if (kind < 2) {
+        jar(builders, px, y, z + 0.17, kind === 0 ? 'plaster' : 'brick', 0.9 + (n % 3) * 0.12);
+        px += 0.24;
+      } else {
+        flask(builders, px, y, z + 0.17, GLASS[(n + row) % GLASS.length], 0.9 + (n % 2) * 0.25);
+        px += 0.18;
+      }
+      n += 1;
+      if (n % 7 === 0) px += 0.12;
+    }
+  });
+  const posts = [];
+  for (let px = x0 + 0.3; px < x1; px += 0.5) posts.push({ x: px, z: z + 0.2, radius: 0.3 });
+  return { posts };
+}
+
+// Alambic posé sur un meuble (y : son plateau) : un ballon sur un petit
+// réchaud, le col de cygne, le serpentin, le ballon de recette qui luit.
+export function buildAlembic({ x, z, y = 0.78 }, builders) {
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  const copper = createFrame(builders.brick, [x, 0, z]);
+  const glass = createFrame(builders.voletVert, [x, 0, z]);
+  pushRevolution(iron, [[y, 0.1], [y + 0.12, 0.1]], { sides: 8, groundAo: 1 });
+  pushRevolution(copper, [[y + 0.12, 0.06], [y + 0.18, 0.13], [y + 0.3, 0.13], [y + 0.38, 0.07], [y + 0.5, 0.03]], { sides: 9, groundAo: 1 });
+  pushBar(copper, [-0.0, y + 0.5, 0], [0.32, y + 0.42, 0], 0.03);
+  pushBar(copper, [0.32, y + 0.42, 0], [0.34, y + 0.2, 0], 0.03);
+  for (let k = 0; k < 3; k += 1) pushBar(copper, [0.28, y + 0.38 - k * 0.07, -0.05], [0.4, y + 0.36 - k * 0.07, 0.05], 0.025);
+  flask(builders, x + 0.36, y, z + 0.02, 'window', 0.9);
+  pushRevolution(glass, [[y, 0.04], [y + 0.04, 0.05], [y + 0.1, 0.03]], { sides: 6, groundAo: 1 });
+  return { posts: [] };
+}
+
+// Mortier de pierre et son pilon, posé sur un meuble.
+export function buildMortar({ x, z, y = 0.78 }, builders) {
+  const stone = createFrame(builders.stone, [x, 0, z]);
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  pushRevolution(stone, [[y, 0.07], [y + 0.04, 0.1], [y + 0.12, 0.11], [y + 0.14, 0.1]], { sides: 8, groundAo: 1 });
+  pushDisc(stone, y + 0.13, 0.08, { sides: 8 });
+  pushBar(wood, [0.02, y + 0.1, 0], [0.12, y + 0.3, 0.04], 0.035);
+  return { posts: [] };
+}
+
+// Séchoir à herbes : deux montants, une perche en haut, des bottes d'herbes
+// pendues tête en bas par une ficelle. facing : le côté vu de face.
+export function buildDryingRack({ x, z, facing = 'south', width = 1.3 }, builders) {
+  const wood = orientedBox(builders.wood, x, z, facing);
+  const leaves = orientedBox(builders.leaves, x, z, facing);
+  const string = orientedBox(builders.thatch, x, z, facing);
+  const h = width / 2;
+  for (const s of [-1, 1]) {
+    wood([s * h - 0.04, 0, -0.04], [s * h + 0.04, 1.75, 0.04]);
+    wood([s * h - 0.18, 0, -0.06], [s * h + 0.18, 0.06, 0.06]);
+  }
+  wood([-h - 0.06, 1.7, -0.03], [h + 0.06, 1.77, 0.03]);
+  wood([-h, 1.25, -0.025], [h, 1.3, 0.025]);
+  let k = 0;
+  for (let u = -h + 0.16; u < h - 0.1; u += 0.2) {
+    const top = k % 2 ? 1.7 : 1.25;
+    const length = 0.38 + (k % 3) * 0.08;
+    string([u - 0.01, top - 0.08, -0.01], [u + 0.01, top, 0.01]);
+    leaves([u - 0.06, top - 0.08 - length * 0.35, -0.05], [u + 0.06, top - 0.08, 0.05]);
+    leaves([u - 0.1, top - 0.08 - length, -0.08], [u + 0.1, top - 0.08 - length * 0.35, 0.08]);
+    k += 1;
+  }
+  const [fx, fz] = FRONT[facing] ?? FRONT.south;
+  return { posts: [{ x: x + h * fz * 0.9, z: z - h * fx * 0.9, radius: 0.2 }, { x: x - h * fz * 0.9, z: z + h * fx * 0.9, radius: 0.2 }] };
+}
+
+// Ruche de paille sur son tabouret : un dôme de chaume en anneaux, le trou
+// de vol, un toit plat de planches.
+export function buildBeehive({ x, z }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const straw = createFrame(builders.thatch, [x, 0, z]);
+  const hole = createFrame(builders.iron, [x, 0, z]);
+  for (const [lx, lz] of [[-0.2, -0.2], [0.2, -0.2], [-0.2, 0.2], [0.2, 0.2]]) pushBox(wood, [lx - 0.03, 0, lz - 0.03], [lx + 0.03, 0.35, lz + 0.03], { groundAo: 0.6 });
+  pushBox(wood, [-0.3, 0.35, -0.3], [0.3, 0.4, 0.3]);
+  pushRevolution(straw, [[0.4, 0.26], [0.5, 0.28], [0.62, 0.27], [0.74, 0.23], [0.84, 0.16], [0.9, 0.07], [0.92, 0.001]], { sides: 10, groundAo: 1 });
+  for (const y of [0.52, 0.66, 0.78]) pushRevolution(straw, [[y, 0.285 - (y - 0.5) * 0.4], [y + 0.025, 0.29 - (y - 0.5) * 0.4]], { sides: 10, groundAo: 1, phase: 0.3 });
+  pushBox(hole, [-0.05, 0.4, 0.24], [0.05, 0.45, 0.27]);
+  return { posts: [{ x, z, radius: 0.34 }] };
+}
+
+// Chaudron sur trépied, dehors : trois perches liées en haut, une chaîne,
+// une marmite de fer ventrue, des bûches dessous.
+export function buildTripodCauldron({ x, z }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  const bark = createFrame(builders.bark, [x, 0, z]);
+  for (const a of [0.3, 2.4, 4.5]) pushBar(wood, [Math.cos(a) * 0.55, 0, Math.sin(a) * 0.55], [0, 1.45, 0], 0.06, { groundAo: 0.6 });
+  pushBar(iron, [0, 1.42, 0], [0, 0.8, 0], 0.02);
+  pushRevolution(iron, [[0.42, 0.14], [0.5, 0.22], [0.66, 0.25], [0.76, 0.22], [0.8, 0.2]], { sides: 10 });
+  pushRevolution(iron, [[0.8, 0.22], [0.83, 0.22]], { sides: 10, groundAo: 1 });
+  const brew = createFrame(builders.voletVert, [x, 0, z]);
+  pushDisc(brew, 0.78, 0.19, { sides: 10 });
+  for (const [a, l] of [[0.4, 0.5], [1.9, 0.45], [3.3, 0.5]]) pushBar(bark, [Math.cos(a) * l * 0.5, 0.05, Math.sin(a) * l * 0.5], [-Math.cos(a) * l * 0.5, 0.05, -Math.sin(a) * l * 0.5], 0.09);
+  return { posts: [{ x, z, radius: 0.45 }] };
+}

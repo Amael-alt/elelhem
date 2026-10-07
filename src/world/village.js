@@ -20,7 +20,7 @@ import { buildSundial, buildChalkboard, buildLowWall, buildPlanterBox,
 import {
   ANVIL, BARRELS, BENCHES, BUNTING, BUSHES, BUTTERFLIES, CAMPFIRE, FENCES, FLOWER_POTS, HAYSTACKS, MEADOWS, ROCKS, SIGNPOSTS,
   STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, MARKET_STALLS, ORCHARD, SITE,
-  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT, FORGE_YARD, LIBRARY_COURT,
+  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT, FORGE_YARD, LIBRARY_COURT, APOTHECARY_YARD,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createFoliage, crownClumps } from '../gfx/foliage.js';
@@ -32,7 +32,7 @@ import { createBunting } from '../gfx/bunting.js';
 import { createLightPools } from '../gfx/lightpools.js';
 import { createButterflies, createFallingLeaves } from '../gfx/fx/leaves.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
-import { buildBookStack, buildGrindstone, buildIronBars, buildSacks, buildShield, buildSwordBarrel, buildTrough, buildWeaponRack, buildStool, buildChest } from './furniture.js';
+import { buildBeehive, buildDryingRack, buildPlant, buildTripodCauldron, buildBookStack, buildGrindstone, buildIronBars, buildSacks, buildShield, buildSwordBarrel, buildTrough, buildWeaponRack, buildStool, buildChest } from './furniture.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
 import { createFxUniforms } from '../gfx/fx/points.js';
@@ -207,6 +207,11 @@ function createBuildings(materials, posts) {
   }
   addPosts(buildSundial(LIBRARY_COURT.sundial, builders));
   buildBookStack(LIBRARY_COURT.books, builders);
+  // Les abords de l'apothicairerie (version 2.6).
+  addPosts(buildDryingRack(APOTHECARY_YARD.rack, builders).posts);
+  addPosts(buildPlant(APOTHECARY_YARD.plant, builders).posts);
+  addPosts(buildTripodCauldron(APOTHECARY_YARD.cauldron, builders).posts);
+  for (const hive of APOTHECARY_YARD.hives) addPosts(buildBeehive(hive, builders).posts);
   // La cour de la forge (version 2.6).
   for (const wall of FORGE_YARD.walls) addPosts(buildLowWall(wall, builders));
   addPosts(buildWeaponRack(FORGE_YARD.rack, builders).posts);

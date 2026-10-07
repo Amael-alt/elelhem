@@ -80,7 +80,9 @@ export const textesInterface = {
   // ou en commencer une nouvelle.
   continuer: 'Continuer',
   // L'illustration de l'écran titre, pour un lecteur d'écran.
-  illustration: "Le voyageur d'Elelhem bondit vers la flamme de la magie LIA",
+  illustration: "Le voyageur d'Elelhem tend la main vers la flamme de la magie LIA, devant le titre du jeu",
+  // Sous la signature de l'écran titre (version 2.6).
+  droits: '© 2026, tous droits réservés',
   parlerA: (nom) => `Parler à ${nom}`,
   // La légende des touches, sur ordinateur seulement (game/keys.js). Les
   // touches de déplacement sont lues sur le clavier réel quand le navigateur

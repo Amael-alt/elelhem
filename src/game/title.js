@@ -21,6 +21,7 @@ export function createTitleScreen(root, { texts, state, onStart, leftHanded = fa
   root.querySelector('.titre-contree').textContent = texts.contree;
   root.querySelector('.titre-accroche').textContent = texts.accroche;
   root.querySelector('.titre-signature').textContent = texts.signature;
+  root.querySelector('.titre-droits').textContent = texts.droits;
   root.querySelector('.titre-illustration').alt = texts.illustration;
   const site = root.querySelector('.titre-site');
   site.textContent = texts.site.replace('https://', '');

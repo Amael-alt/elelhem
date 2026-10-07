@@ -105,14 +105,19 @@
        de la magie LIA (la flamme du logo Maintenant Vous Savez, redessinée),
        est la seule image chargée avant le lancement, avec les ornements de
        l'interface. -->
+  <!-- L'écran titre (version 2.6) : l'illustration porte le titre, le menu,
+       le prénom et la signature sont posés dessus à droite (ou dessous, sur
+       un écran étroit) ; le cache couvre la partie dessinée qu'ils remplacent. -->
   <div id="titre" hidden>
-    <div class="titre-cadre">
-      <img class="titre-illustration" src="assets/ui/titre-heros.png" alt="" width="542" height="900">
+    <div class="titre-scene">
+      <div class="titre-image">
+        <img class="titre-illustration" src="assets/ui/titre.webp" alt="" width="1672" height="941">
+        <div class="titre-cache" aria-hidden="true"></div>
+      </div>
       <div class="titre-texte">
-        <h1 class="titre-nom"></h1>
-        <div class="titre-orne" aria-hidden="true"><span></span><i></i><span></span></div>
-        <p class="titre-contree"></p>
-        <p class="titre-accroche"></p>
+        <h1 class="titre-nom titre-invisible"></h1>
+        <p class="titre-contree titre-invisible"></p>
+        <p class="titre-accroche titre-invisible"></p>
         <!-- Le menu : continuer la partie sauvegardée, ou en commencer une nouvelle. -->
         <nav class="titre-menu" aria-label="Menu">
           <button class="titre-commencer" type="button"></button>
@@ -126,7 +131,7 @@
           </svg>
           <span></span>
         </button>
-        <p class="titre-credits"><span class="titre-signature"></span><a class="titre-site" target="_blank" rel="noopener"></a></p>
+        <p class="titre-credits"><span class="titre-signature"></span><a class="titre-site" target="_blank" rel="noopener"></a><span class="titre-droits"></span></p>
       </div>
     </div>
   </div>

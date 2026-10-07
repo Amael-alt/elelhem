@@ -203,7 +203,7 @@ export function createDialogueBox(root, { onClose = () => {}, portraitOf = () =>
         const button = document.createElement('button');
         button.type = 'button';
         button.tabIndex = -1; // le clavier passe par les touches du jeu
-        button.className = option.ecarte ? 'ecarte' : '';
+        button.className = option.ecarte ? 'ecarte' : option.sortie ? 'sortie' : '';
         button.disabled = option.ecarte;
         button.dataset.touche = String(i + 1);
         button.textContent = nonBreaking(option.texte);

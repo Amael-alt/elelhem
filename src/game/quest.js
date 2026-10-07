@@ -35,7 +35,9 @@ const TAKE_LESSON = 0;
 // diplôme qui vient d'être remis.
 // forge : le menu Forger (forge.js) et forgeOffer, sa question
 // (textesInterface.forge.offre), pour l'habitant qui porte `forge`.
-export function createQuest({ dialogue, state, texts, offer, scrolls, counter, overlays, diploma, wallet, gains, shop, shopOffer, credits, forge = null, forgeOffer = null }) {
+// farewell : le texte du dernier choix de chaque question, qui referme la
+// conversation sans répondre (version 2.6, textesInterface.auRevoir).
+export function createQuest({ dialogue, state, texts, offer, scrolls, counter, overlays, diploma, wallet, gains, shop, shopOffer, credits, forge = null, forgeOffer = null, farewell = 'Au revoir.' }) {
   const missing = () => scrolls.filter((id) => !state.parchemins.has(id)).length;
 
   // then : la suite quand on le referme (le générique, à la remise).
@@ -65,9 +67,13 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
   // indices des choix déjà essayés.
   function ask(entry, key, tried) {
     const { question } = entry;
-    const options = question.choix.map((choice, i) => ({ texte: choice.texte, ecarte: tried.has(i) }));
+    const options = [...question.choix.map((choice, i) => ({ texte: choice.texte, ecarte: tried.has(i) })), { texte: farewell, sortie: true }];
     dialogue.ask(entry.nom, question.texte, options, (index) => {
       const choice = question.choix[index];
+      if (!choice) {
+        dialogue.close(); // « Au revoir » : on reviendra
+        return;
+      }
       if (choice.bon) {
         dialogue.open(entry.nom, [choice.retour], () => reward(entry, key, index));
       } else {
@@ -83,10 +89,11 @@ export function createQuest({ dialogue, state, texts, offer, scrolls, counter, o
   function lessonOrQuestion(entry, key, opening) {
     const question = () => ask(entry, key, new Set());
     dialogue.open(entry.nom, opening, () => {
-      const options = offer.choix.map((texte) => ({ texte }));
+      const options = [...offer.choix.map((texte) => ({ texte })), { texte: farewell, sortie: true }];
       dialogue.ask(entry.nom, offer.texte, options, (index) => {
         if (index === TAKE_LESSON) dialogue.open(entry.nom, entry.lecon, question);
-        else question();
+        else if (index < offer.choix.length) question();
+        else dialogue.close();
       }, 'offre');
     });
   }

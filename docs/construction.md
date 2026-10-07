@@ -978,5 +978,29 @@ Jordan a joué à la 2.6 et rendu une liste de retours, traitée dans l'ordre o�
 | Pas de profil | marche 23 à 25 × 40, course 26 à 30 × 36 ; galerie des quatre rangées vérifiée, puis en jeu vers la gauche et la droite |
 | Décor à 32 texels | place : 123 appels de dessin, 113 800 triangles (122 et 112 500 à 16 texels) |
 | Contraste | le plus bas : 5,1 (texte sépia du grimoire sur parchemin) |
+
+## Version 2.8 en cours : le ressenti du jeu (7 octobre 2026)
+
+Une seconde liste de Jordan, dix points de « game feel », tous faits dans la foulée de la 2.7, en local :
+
+- **Bouffées de poussière et de feuilles** (`gfx/fx/bursts.js`) : une réserve de 96 points animée image par image (gravité, frottement, arrêt au sol), un seul appel de dessin, l'objet suit le héros de lieu en lieu comme son épée. De la poussière quand la direction voulue se retourne (produit scalaire sous -0,2 avec le mouvement précédent) ou quand la course commence ; des feuilles, au hasard, quand il avance sur une case d'herbe.
+- **Barres de vie à double jauge** (`gfx/healthbar.js`) : la part pleine descend aussitôt, une jauge de retard (jaune sur les Hallucinations, rouge sous le héros) attend 0,4 s puis rattrape à 1,1 barre par seconde ; une fiole remonte les deux d'un coup. `update(dt)` par barre, `reset()` au retour sur la lande.
+- **Retour des boutons** : au survol ou à la sélection, un bouton de menu grandit de 5 % et une étincelle animée (✦) apparaît à sa droite ; rien de tout cela avec le mouvement réduit.
+- **Le curseur** : une main gantée qui pointe, dessinée pixel par pixel dans `outils/curseur.mjs` et écrite en PNG à l'échelle 2 (`assets/ui/curseur.png`, 40 × 42, point chaud au bout de l'index), posée par le CSS sur la page, le canvas, les boutons et les liens.
+- **Sons** : chaque son ponctuel (pas, oiseau, roucoulement, marteau) part d'une hauteur tirée entre 95 et 105 % (`pitch()` dans `core/ambience.js` : `playbackRate` pour les bruits, fréquence pour les oscillateurs).
+- **L'aide aux coins** (`world/collision.js`) : quand un pas est absorbé à plus de 65 %, le même pas est essayé depuis une position décalée de côté, par 7 cm jusqu'à 28 cm ; si l'un passe à plus de 85 %, on le prend. Le héros glisse autour des angles des maisons et des tonneaux au lieu de s'y coller. Vérifié le long du mur est de la bibliothèque : parti à 2 cm dans le mur, il arrive au bout en se décalant de 10 cm.
+- **Chiffres de dégâts** : ils jaillissent (impulsion de 150 px/s, gravité 640), retombent sur leur ligne, rebondissent une fois, et grandissent avec les dégâts (14 % par point), une fois et demie plus grands et jaunes pour le coup critique.
+- **L'herbe et les buissons se couchent** : dans le shader des touffes (`gfx/grass.js`) et des grappes basses (`gfx/foliage.js`, sous 1,3 unité d'altitude), un uniforme `uHero` (position du héros, tenu par `fx.uHero`, mis à jour par `update` du village et de la lande) repousse le haut de la plante loin de lui dans un rayon de 0,7 à 0,9 unité. Rien à calculer côté JavaScript.
+- **Le bip des dialogues** : une lettre sur deux qui s'écrit (hors espaces) fait une note brève en triangle (`ambience.blip`), à 540 Hz fois la voix de l'habitant (`voix` dans `data/characters.js` : 0,62 pour Ferrand, 1,3 pour Pépin), fois un hasard de 90 à 110 %.
+- **Le point d'exclamation** : un sprite de pixels jaune à contour sombre (`game/npc.js`, `setQuest`), qui flotte au-dessus de la tête des habitants dont le parchemin reste à gagner (et de Clodomir quand les huit sont réunis), partagé entre les lieux avec l'habitant.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Aide aux coins | depuis (20,2 ; 13) vers (20,2 ; 9) le long de la bibliothèque : arrivé, décalé en x 20,3 |
+| Bouffées | 96 points dans la réserve, un appel de dessin |
+| Chiffres | 1,3 rem pour 1 point, 1,48 pour 2, 2,2 et jaune pour un critique de 4 |
+| Console | aucune erreur |
 | Écran titre | bureau 1686 × 1199, mobile 375 × 812, paysage 812 × 375 et vignette 1200 × 630 vérifiés |
 | Console | aucune erreur |

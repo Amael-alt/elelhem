@@ -94,6 +94,9 @@
     </svg>
   </button>
 
+  <!-- Le lieu où l'on est, sous la minimap (src/game/banner.js). -->
+  <p id="endroit" hidden><span class="endroit-monde"></span><span class="endroit-lieu"></span></p>
+
   <!-- Bandeau de lieu : le nom du quartier où l'on entre. -->
   <div id="lieu" hidden aria-live="polite"><span class="lieu-filet" aria-hidden="true"></span><p class="lieu-nom"></p><span class="lieu-filet" aria-hidden="true"></span></div>
 
@@ -214,6 +217,8 @@
 
   <!-- Nom de l'habitant qui approche, au-dessus de sa tête. -->
   <div id="nom" hidden></div>
+  <!-- Les chiffres de dégâts, posés sur le canvas (src/game/damage.js). -->
+  <div id="degats" aria-hidden="true"></div>
 
   <!-- La forge de Ferrand : le menu Forger (src/game/forge.js). -->
   <div id="forge" role="dialog" aria-modal="true" aria-labelledby="forge-titre" hidden>

@@ -50,7 +50,10 @@ const FACING_VECTOR = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] 
 // à portée de coups (points { x, z }, version 2.3) et onDummy(dummy) quand l'un
 // d'eux est touché ; onStrike() : un coup part.
 // impacts : les éclats d'impact (gfx/weapon.js, version 2.5), facultatif.
-export function createCombat({ player, sword, slash, impacts = null, state, hud, texts, onDeath, canFight, onEmpty = () => false, dummies = () => [], onDummy = () => {}, onStrike = () => {} }) {
+// onDamage(target, amount, kind) : un coup a porté (version 2.6, les chiffres
+// de dégâts) ; target : l'Hallucination touchée, ou null pour le héros ;
+// kind : 'inflige', 'critique' (le troisième coup) ou 'recu'.
+export function createCombat({ player, sword, slash, impacts = null, state, hud, texts, onDeath, canFight, onEmpty = () => false, dummies = () => [], onDummy = () => {}, onStrike = () => {}, onDamage = () => {} }) {
   let clartes = HERO_COMBAT.clartes;
   let invulnerable = 0;
   let blink = 0;
@@ -173,6 +176,8 @@ export function createCombat({ player, sword, slash, impacts = null, state, hud,
       attack.struck.add(enemy);
       burst(enemy.position.x, enemy.position.z, spec);
       enemies.hit(enemy, damage, player.position.x, player.position.z);
+      // Le troisième coup est toujours critique : ses dégâts sont doublés (factor).
+      onDamage(enemy, damage, attack.hit === HITS.length - 1 ? 'critique' : 'inflige');
     }
   }
 
@@ -247,6 +252,7 @@ export function createCombat({ player, sword, slash, impacts = null, state, hud,
       player.shove((dx / d) * HERO_COMBAT.recul * 0.5, (dz / d) * HERO_COMBAT.recul * 0.5);
       attack = null;
       renderHud();
+      onDamage(null, enemy.type.degats, 'recu');
       if (clartes <= 0) {
         clartes = 0;
         // Une fiole de réserve, bue d'elle-même : le héros reste debout.

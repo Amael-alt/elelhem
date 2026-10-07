@@ -114,6 +114,9 @@ export const textesInterface = {
   },
   musique: { couper: 'Couper le son', remettre: 'Remettre le son' },
   lieux: {
+    // Le monde où l'on est, sous la minimap (version 2.6) ; les autres
+    // entrées sont les quartiers et les pièces.
+    village: "Village d'Elelhem",
     lande: 'La Lande des Hallucinations',
     place: 'La place du puits',
     forge: 'La forge',
@@ -147,6 +150,8 @@ export const textesInterface = {
     texte: "Je t'explique d'abord, ou tu tentes directement ma question ?",
     choix: ["Explique-moi d'abord.", 'Directement la question !'],
   },
+  // Le dernier choix de chaque question (version 2.6) : on s'en va, la touche Échap fait de même.
+  auRevoir: 'Au revoir.',
   // La bourse : le Token, la monnaie d'Elelhem.
   tokens: {
     solde: (n) => `${n} Token${n > 1 ? 's' : ''}`,
@@ -203,6 +208,8 @@ export const textesInterface = {
   // Le combat sur la lande (game/combat.js, game/enemies.js).
   combat: {
     clartes: 'Clartés',
+    // Les chiffres de dégâts (version 2.6) : la mention du coup critique.
+    degats: { critique: 'Critique !' },
     frapper: 'Frapper',
     ennemis: { mirage: 'Mirage', fantome: 'Fantôme' },
     reveil: 'Tu reprends tes esprits',
@@ -264,12 +271,6 @@ export const textesInterface = {
         "Ta mémoire est la sienne : dis-lui qui tu es, elle te répondra pour toi.",
         "Ne jette jamais un mot de passe dans un puits. Ni dans une incantation.",
       ],
-    },
-    repos: {
-      action: "S'asseoir un instant",
-      titre: 'Tu reprends ton souffle',
-      detail: 'toutes tes clartés sont revenues',
-      pleine: 'tes clartés étaient au complet, mais la vue est belle',
     },
     fouille: {
       action: 'Fouiller',

@@ -535,10 +535,13 @@ export function createPlankTextures(seed, ramp = interiorRamps.plancher) {
   const fibers = fbm(seed + 2, SIZE, 4, 2, 0.5);
   const tones = new Float32Array(SIZE * SIZE);
   const heights = new Float32Array(SIZE * SIZE);
-  const ROW = 8 * K;
+  const ROW = 8 * K; // une demi-unité de large
+  // Version 2.10 : tout se dessine au pixel (32 texels par unité), plus en
+  // blocs de K : joints d'un pixel, chanfrein fin, clous de deux pixels,
+  // nœuds ovales, fibres qui ondulent le long de la latte.
   for (let y = 0; y < SIZE; y += 1) {
     const row = Math.floor(y / ROW);
-    const ly = Math.floor((y % ROW) / K); // ligne dans la latte, à l'ancienne échelle
+    const ly = y % ROW; // ligne dans la latte
     const runs = PLANK_RUNS[Math.floor(hash2(row, 1, seed) * PLANK_RUNS.length)];
     const offset = Math.floor(hash2(row, 2, seed) * SIZE);
     for (let x = 0; x < SIZE; x += 1) {
@@ -550,42 +553,51 @@ export function createPlankTextures(seed, ramp = interiorRamps.plancher) {
         along -= runs[plank];
         plank += 1;
       }
-      const length = runs[plank] / K;
-      along = Math.floor(along / K);
+      const length = runs[plank];
       if (ly === 0 || along === 0) {
         tones[i] = 0.04 + hash2(x, y, seed) * 0.06;
         heights[i] = 0;
         continue;
       }
       const id = row * 7 + plank;
-      // Les fibres : une teinte par ligne de la latte, étirée en longueur.
-      const fiber = fibers(x, (y * 4) % SIZE) * 0.6 + hash2(ly, id, seed) * 0.4;
+      // Les fibres : une teinte par ligne de la latte, étirée en longueur, qui
+      // ondule un peu (le bruit décale la ligne lue).
+      const wave = Math.round((fibers((x * 2) % SIZE, (row * 37) % SIZE) - 0.5) * 3);
+      const line = ((ly + wave) % ROW + ROW) % ROW;
+      const fiber = fibers(x, (y * 4) % SIZE) * 0.5 + hash2(line, id, seed) * 0.5;
       let tone = 0.22 + hash2(id, 3, seed) * 0.3 + (fiber - 0.5) * 0.3;
       let height = 0.65 + fiber * 0.25;
       if (ly === 1) {
-        tone += 0.12;
-        height += 0.1;
+        tone += 0.14;
+        height += 0.12;
+      } else if (ly === 2) {
+        tone += 0.05;
       }
-      if (ly === ROW / K - 1) {
-        tone -= 0.1;
-        height -= 0.15;
+      if (ly === ROW - 1) {
+        tone -= 0.14;
+        height -= 0.18;
+      } else if (ly === ROW - 2) {
+        tone -= 0.05;
       }
-      if (along === 1) tone += 0.06;
-      if (along === length - 1) tone -= 0.08;
+      if (along === 1) tone += 0.08;
+      if (along === length - 1) tone -= 0.1;
+      // Un nœud sur une latte sur quatre : un ovale sombre, un cerne clair.
       if (hash2(id, 4, seed) < 0.25) {
-        const kx = 6 + Math.floor(hash2(id, 5, seed) * (length - 12));
-        const ky = 2 + Math.floor(hash2(id, 6, seed) * 4);
-        const d = Math.hypot((along - kx) / 2.5, (ly - ky) / 1.5);
+        const kx = 10 + Math.floor(hash2(id, 5, seed) * Math.max(1, length - 20));
+        const ky = 4 + Math.floor(hash2(id, 6, seed) * (ROW - 8));
+        const d = Math.hypot((along - kx) / 4.5, (ly - ky) / 2.5);
         if (d < 1) {
-          tone -= 0.3;
+          tone -= 0.3 + (1 - d) * 0.1;
           height -= 0.3;
         } else if (d < 1.5) {
-          tone += 0.05;
+          tone += 0.06;
         }
       }
-      if ((along === 2 || along === length - 3) && ly === 4) {
+      // Un clou près de chaque bout, deux pixels, enfoncé.
+      const nail = (along === 4 || along === 5 || along === length - 5 || along === length - 6) && (ly === ROW / 2 - 1 || ly === ROW / 2);
+      if (nail) {
         tone -= 0.35;
-        height -= 0.2;
+        height -= 0.25;
       }
       tones[i] = tone;
       heights[i] = height;
@@ -630,26 +642,35 @@ export function createPanelTextures(seed, ramp = interiorRamps.lambris) {
   const grain = fbm(seed + 1, SIZE, 8, 3);
   const tones = new Float32Array(SIZE * SIZE);
   const heights = new Float32Array(SIZE * SIZE);
+  const BOARD = 8 * K; // une demi-unité
+  // Version 2.10 : joints et chanfreins d'un pixel, fibres par colonne qui
+  // ondulent dans la hauteur, une moulure horizontale au tiers.
   for (let y = 0; y < SIZE; y += 1) {
     for (let x = 0; x < SIZE; x += 1) {
       const i = y * SIZE + x;
-      const lx = Math.floor((x % (8 * K)) / K);
-      const board = Math.floor(x / (8 * K));
+      const lx = x % BOARD;
+      const board = Math.floor(x / BOARD);
       if (lx === 0) {
         tones[i] = 0.05 + grain(x, y) * 0.06;
         heights[i] = 0;
         continue;
       }
-      const fiber = (hash2(x, 0, seed) + hash2(x, 1, seed) * 0.5) / 1.5;
+      const wave = Math.round((grain((board * 29) % SIZE, (y * 2) % SIZE) - 0.5) * 3);
+      const column = ((lx + wave) % BOARD + BOARD) % BOARD;
+      const fiber = (hash2(column + board * BOARD, 0, seed) + hash2(column + board * BOARD, 1, seed) * 0.5) / 1.5;
       let tone = 0.26 + hash2(board, 2, seed) * 0.22 + (fiber - 0.5) * 0.3 + (grain(x, y) - 0.5) * 0.2;
       let height = 0.6 + fiber * 0.3;
       if (lx === 1) {
-        tone += 0.12;
-        height += 0.1;
+        tone += 0.14;
+        height += 0.12;
+      } else if (lx === 2) {
+        tone += 0.05;
       }
-      if (lx === 7) {
-        tone -= 0.1;
-        height -= 0.15;
+      if (lx === BOARD - 1) {
+        tone -= 0.14;
+        height -= 0.18;
+      } else if (lx === BOARD - 2) {
+        tone -= 0.05;
       }
       tones[i] = tone;
       heights[i] = height;
@@ -660,35 +681,55 @@ export function createPanelTextures(seed, ramp = interiorRamps.lambris) {
 
 export const RUG_PIXELS_PER_UNIT = 16 * K;
 
-// Tapis : une seule image à la taille du tapis (pas de répétition), 16 pixels
-// par unité. Fond de laine rouge chiné, bordure crème entre deux filets
-// sombres, un losange d'or par largeur de tapis le long du tapis, franges aux
+// Tapis : une seule image à la taille du tapis (pas de répétition), 32 pixels
+// par unité (version 2.10 : dessiné au pixel, plus en blocs de deux). Fond de
+// laine rouge chiné, bordure crème à dents de loup entre deux filets sombres,
+// un médaillon en losange à double contour par largeur de tapis le long du
+// tapis, une petite croix au cœur, des rosaces aux coins, franges fines aux
 // deux bouts.
 export function createRugTexture(width, depth, seed = 7) {
   const buffer = createPixelBuffer(width, depth);
   const c = Object.fromEntries(Object.entries(rugColors).map(([key, hex]) => [key, hexToRgb(hex)]));
   const FRINGE = 2 * K;
+  const BORDER = 4 * K; // filet, bordure, filet : largeur totale
   const y0 = FRINGE;
   const y1 = depth - 1 - FRINGE;
-  const count = Math.max(1, Math.round((depth - 2 * FRINGE) / width));
-  const span = (depth - 2 * FRINGE) / count;
-  const radius = Math.min(width, span) * 0.26;
+  const inner = depth - 2 * FRINGE;
+  const count = Math.max(1, Math.round(inner / width));
+  const span = inner / count;
+  const radius = Math.min(width, span) * 0.27;
   for (let y = 0; y < depth; y += 1) {
     for (let x = 0; x < width; x += 1) {
       let rgb;
       if (y < y0 || y > y1) {
-        rgb = Math.floor(x / K) % 2 === 0 ? c.frange : c.filet;
+        // Les franges : un fil clair, un fil sombre, un fil clair plus court.
+        const tip = y < y0 ? y0 - 1 - y : y - y1 - 1;
+        rgb = x % 2 === 0 ? (tip === FRINGE - 1 && x % 4 === 2 ? c.fond : c.frange) : c.filet;
       } else {
-        const b = Math.floor(Math.min(x, width - 1 - x, y - y0, y1 - y) / K);
-        if (b === 0 || b === 4) rgb = c.filet;
-        else if (b < 4) rgb = c.bordure;
-        else {
-          rgb = hash2(x, y, seed) > 0.8 ? c.fondClair : c.fond;
+        const b = Math.min(x, width - 1 - x, y - y0, y1 - y);
+        if (b === 0 || b === BORDER - 1 || b === 1) rgb = b === 1 ? c.motif : c.filet;
+        else if (b < BORDER) {
+          // La bordure crème, à dents de loup sombres tous les quatre pixels.
+          const along = y - y0 <= b || y1 - y <= b ? x : y;
+          const tooth = (along % (4 * K)) < K && b >= 3 && b <= BORDER - 3;
+          rgb = tooth ? c.filet : c.bordure;
+        } else {
+          // Le fond chiné : trois tons de laine tirés au pixel.
+          const h = hash2(x, y, seed);
+          rgb = h > 0.86 ? c.fondClair : h < 0.06 ? c.filet : c.fond;
+          // Les rosaces des coins : un petit losange d'or à chaque angle du champ.
+          const cx = Math.min(x - BORDER, width - 1 - BORDER - x);
+          const cz = Math.min(y - y0 - BORDER, y1 - BORDER - y);
+          if (cx + cz <= 2 * K + 1 && cx + cz >= K) rgb = c.motif;
           for (let n = 0; n < count; n += 1) {
             const cy = y0 + span * (n + 0.5);
             const d = Math.abs(x + 0.5 - width / 2) / radius + Math.abs(y + 0.5 - cy) / radius;
-            if (d < 0.35 || (d > 0.85 && d < 1.15)) rgb = c.motif;
-            else if (d >= 1.15 && d < 1.35) rgb = c.filet;
+            if (d < 0.12) rgb = c.bordure; // le cœur
+            else if (d >= 0.22 && d < 0.34) rgb = c.motif; // la petite croix pleine
+            else if (d > 0.72 && d < 0.84) rgb = c.filet; // le contour intérieur, sombre
+            else if (d >= 0.84 && d < 1.0) rgb = c.motif; // le médaillon d'or
+            else if (d >= 1.0 && d < 1.08) rgb = c.filet; // le contour extérieur
+            else if (d >= 1.18 && d < 1.26) rgb = c.bordure; // un fin liseré crème autour
           }
         }
       }
@@ -698,25 +739,43 @@ export function createRugTexture(width, depth, seed = 7) {
   return toDataTexture(buffer, { repeat: false, mipmaps: false });
 }
 
-// Un petit tableau : 20 × 14 pixels, un paysage naïf, ciel du soir en dégradé,
-// le soleil, deux collines, un arbre.
+export const PAINTING_SIZE = [40, 28];
+
+// Un petit tableau : 40 × 28 pixels (version 2.10, deux fois plus fin), un
+// paysage naïf au soir : ciel en dégradé, soleil et son halo, trois rangs de
+// collines, un arbre au tronc penché, une maisonnette au loin, des herbes.
 export function createPaintingTexture(seed) {
-  const width = 20;
-  const height = 14;
+  const [width, height] = PAINTING_SIZE;
   const c = Object.fromEntries(Object.entries(paintingColors).map(([key, hex]) => [key, hexToRgb(hex)]));
   const buffer = createPixelBuffer(width, height);
   const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const horizon = 15;
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const far = 8 + Math.round(Math.sin(x * 0.5 + seed) * 1.2);
-      const near = 10 + Math.round(Math.cos(x * 0.7 + seed) * 1.2);
-      let rgb = mix(c.cielHaut, c.cielBas, Math.min(1, y / 8));
-      const sun = Math.abs(x - 15) + Math.abs(y - 3);
-      if (sun <= 1) rgb = c.soleil;
-      if (y >= far) rgb = c.collineLoin;
+      const far = horizon + Math.round(Math.sin(x * 0.25 + seed) * 2.2);
+      const mid = horizon + 4 + Math.round(Math.cos(x * 0.33 + seed * 1.7) * 2);
+      const near = horizon + 8 + Math.round(Math.sin(x * 0.45 + seed * 0.6) * 1.6);
+      let rgb = mix(c.cielHaut, c.cielBas, Math.min(1, y / horizon));
+      // Deux nuages étirés, en bandes claires.
+      if ((y === 4 || y === 5) && x > 6 && x < 15 && (y === 4 ? x > 8 : true)) rgb = mix(rgb, c.soleil, 0.45);
+      if (y === 8 && x > 22 && x < 31) rgb = mix(rgb, c.soleil, 0.35);
+      const sun = Math.hypot(x - 30, (y - 6) * 1.1);
+      if (sun < 2.4) rgb = c.soleil;
+      else if (sun < 3.6) rgb = mix(rgb, c.soleil, 0.4);
+      if (y >= far) rgb = mix(c.collineLoin, c.cielBas, 0.25);
+      if (y >= mid) rgb = c.collineLoin;
       if (y >= near) rgb = c.collinePres;
-      if (x === 5 && y >= 6 && y < 11) rgb = c.tronc;
-      if (Math.hypot(x - 5, (y - 5) * 1.3) < 2.6) rgb = c.arbre;
+      // La maisonnette sur la colline du milieu : un mur clair, un toit sombre.
+      if (x >= 25 && x <= 30 && y >= mid - 3 && y < mid) rgb = x >= 26 && x <= 29 ? c.soleil : c.tronc;
+      if (x >= 25 && x <= 30 && y === mid - 4) rgb = c.tronc;
+      if (x >= 26 && x <= 29 && y === mid - 5) rgb = c.tronc;
+      // L'arbre : le tronc penche, la frondaison en deux boules.
+      const trunkX = 10 + Math.round((near - y) * 0.12);
+      if (y >= 12 && y < near + 2 && (x === trunkX || x === trunkX + 1)) rgb = c.tronc;
+      if (Math.hypot(x - 11, (y - 9) * 1.25) < 4.6 || Math.hypot(x - 8, (y - 11) * 1.25) < 3.2) rgb = c.arbre;
+      if (Math.hypot(x - 12.5, (y - 8) * 1.25) < 2.2) rgb = mix(c.arbre, c.collineLoin, 0.45);
+      // Des herbes au premier plan.
+      if (y >= near + 2 && y === near + 2 + (x % 3) && hash2(x, 1, seed) > 0.5) rgb = c.arbre;
       setPixel(buffer, x, y, rgb);
     }
   }

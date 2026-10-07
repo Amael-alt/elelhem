@@ -45,7 +45,7 @@ import {
   createBrickTextures, createCobbleTextures, createFanCobbleTextures, createDirtTextures, createDoorTexture, createGrassTextures,
   createLeafTextures, createPlasterTextures, createRockTextures, createRoofTextures, createWaterTextures,
   createWindowTextures, createWoodTextures, createAwningTexture, createSlateTextures, createStoneWallTextures, createThatchTextures,
-  createFlagstoneTextures, createPaintingTexture, createPanelTextures, createPlankTextures, createRugTexture, RUG_PIXELS_PER_UNIT,
+  createFlagstoneTextures, createPaintingTexture, createPanelTextures, createPlankTextures, createRugTexture, PAINTING_SIZE, RUG_PIXELS_PER_UNIT,
 } from '../gfx/textures.js';
 import { buildingRamps, foliageTints, hazeColor, interiorRamps, ironColor, lanternColor, natureRamps, terrainRamps } from '../data/palette.js';
 
@@ -131,7 +131,7 @@ function createMaterials() {
     // pas le jour (il entre par ses fenêtres), un tableau y resterait terne.
     painting: (() => {
       const map = createPaintingTexture(139);
-      return createPixelMaterial({ map, emissiveMap: map, emissiveIntensity: 0.45, texSize: [20, 14], roughness: 0.9 });
+      return createPixelMaterial({ map, emissiveMap: map, emissiveIntensity: 0.45, texSize: PAINTING_SIZE, roughness: 0.9 });
     })(),
     rug,
   };

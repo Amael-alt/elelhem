@@ -1,15 +1,24 @@
 // La minimap, en haut à droite : le village vu d'en haut, le héros en flèche,
 // les habitants en points (dorés tant que leur parchemin reste à gagner). Un
 // toucher, ou la touche C, ouvre la carte en grand, avec le nom des quartiers.
-// Dessinée en canvas 2D depuis la grille de world/map.js : aucune image.
+// Dessinée en canvas 2D. Depuis la version 2.3, le fond est la carte
+// illustrée (assets/ui/carte.png : le plan exact de la grille, repeint en
+// parchemin par un générateur d'images, voir outils/plan.mjs et
+// outils/reduire.mjs), demandée après le lancement ; en attendant, et si elle
+// manque, le plan en aplats peint depuis la grille de world/map.js. Les
+// repères se posent en coordonnées de la grille dans les deux cas : l'image
+// couvre exactement les 56 × 42 cases, bord à bord.
 
 import { onTap } from '../core/input.js';
 import { mapColors as COLORS } from '../data/palette.js';
 
 const CELL = 8; // pixels par case dans le plan de référence (dessiné une fois)
+const ILLUSTRATION = 'assets/ui/carte.png'; // la carte peinte (version 2.3)
 const REFRESH_SECONDS = 0.1; // les repères se redessinent dix fois par seconde
 const TOGGLE_KEY = 'KeyC';
 const LABEL_SIZE = 15; // taille des noms de quartier sur la carte, en pixels CSS
+const LABEL_MIN_SIZE = 9.5; // sur un téléphone, la carte fait 320 pixels de large
+const LABEL_WIDE = 720; // largeur de carte (pixels CSS) où les noms ont leur taille pleine
 // Pointe de la flèche du héros selon son regard (vers le haut de l'écran = nord).
 const HEADINGS = { up: -Math.PI / 2, down: Math.PI / 2, left: Math.PI, right: 0 };
 
@@ -94,7 +103,24 @@ function arrow(context, x, y, size, angle) {
 // labels : textesInterface.carte ; canOpen() : faux tant que la carte ne peut
 // pas s'ouvrir (écran titre, conversation).
 export function createMinimap(small, overlay, { map, trees, regions, names, player, markers, labels, canOpen }) {
-  const plan = paintPlan(map, trees);
+  let plan = paintPlan(map, trees);
+  // La carte illustrée, demandée à la première apparition de la minimap (le
+  // jeu lancé) : elle remplace le plan dès qu'elle est là.
+  let illustrated = false;
+  let requested = false;
+  function loadIllustration() {
+    if (requested) return;
+    requested = true;
+    const image = new Image();
+    image.src = ILLUSTRATION;
+    // Décodée avant d'être posée : une image pas encore décodée se dessine vide.
+    image.decode().then(() => {
+      plan = image;
+      illustrated = true;
+      smallCanvas.classList.add('carte-illustree');
+      bigCanvas.classList.add('carte-illustree');
+    }).catch(() => {}); // sans l'image, le plan en aplats reste
+  }
   const smallCanvas = small.querySelector('canvas');
   const bigCanvas = overlay.querySelector('.carte-toile');
   small.setAttribute('aria-label', labels.ouvrir);
@@ -117,20 +143,37 @@ export function createMinimap(small, overlay, { map, trees, regions, names, play
   function draw(canvas, big) {
     const { scale, ratio } = fit(canvas, map);
     const context = canvas.getContext('2d');
-    context.imageSmoothingEnabled = !big; // en grand, des cases nettes
+    context.imageSmoothingEnabled = illustrated || !big; // en grand, des cases nettes ; l'illustration se lisse
     context.drawImage(plan, 0, 0, canvas.width, canvas.height);
     if (big) {
-      context.font = `600 ${Math.round(LABEL_SIZE * ratio)}px Newsreader, Georgia, serif`;
+      // Les noms rapetissent avec la carte (téléphone), et deux noms qui se
+      // chevaucheraient : le second descend d'une ligne, ou deux, ou s'efface.
+      const size = Math.max(LABEL_MIN_SIZE, Math.min(LABEL_SIZE, (LABEL_SIZE * canvas.clientWidth) / LABEL_WIDE));
+      const line = size * ratio;
+      context.font = `600 ${Math.round(line)}px Newsreader, Georgia, serif`;
       context.textAlign = 'center';
       context.textBaseline = 'middle';
       context.lineJoin = 'round';
+      const placed = [];
+      const overlaps = (box) => placed.some((other) => box.x0 < other.x1 && box.x1 > other.x0 && box.y0 < other.y1 && box.y1 > other.y0);
       for (const { id, rect: [x0, z0, x1, z1] } of regions) {
         const text = names[id];
         if (!text) continue;
         // Le nom au centre du quartier, sans déborder du bord de la carte.
         const half = context.measureText(text).width / 2 + 4 * ratio;
         const cx = Math.min(Math.max(((x0 + x1) / 2) * scale, half), canvas.width - half);
-        const cy = ((z0 + z1) / 2) * scale;
+        let cy = ((z0 + z1) / 2) * scale;
+        let box = null;
+        for (let tries = 0; tries < 3; tries += 1) {
+          const candidate = { x0: cx - half, x1: cx + half, y0: cy - line * 0.6, y1: cy + line * 0.6 };
+          if (!overlaps(candidate)) {
+            box = candidate;
+            break;
+          }
+          cy += line * 1.2;
+        }
+        if (!box) continue;
+        placed.push(box);
         context.lineWidth = 4 * ratio;
         context.strokeStyle = COLORS.contour;
         context.strokeText(text, cx, cy);
@@ -185,6 +228,7 @@ export function createMinimap(small, overlay, { map, trees, regions, names, play
     setVisible(on) {
       visible = on;
       small.hidden = !on;
+      if (on) loadIllustration();
       if (!on) hide();
     },
     open: show,

@@ -82,7 +82,21 @@ export const TOWERS = {
 // Le chantier : bâtiment à moitié monté, échafaudage sur ses faces sud et ouest.
 export const SITE = { x: 33, z: 35, sizeX: 4, sizeZ: 3 };
 
-export const WELL = { x: 27.6, z: 20.4 };
+// Le puits, au milieu d'un rond de dalles (dais : son rayon, version 2.6).
+export const WELL = { x: 27.6, z: 20.4, dais: 2.3 };
+// La place du puits (version 2.6) : un tapis de pavés en éventail (case e de
+// world/map.js) bordé de pierres (kerb), le puits sur son rond de dalles,
+// quatre massifs fleuris autour, des bancs à dossier (BENCHES), deux
+// jardinières, un panneau d'affichage, l'étal de légumes (STALLS) avec ses
+// sacs et un panier.
+export const SQUARE = {
+  kerb: [22, 17, 34, 25],
+  beds: [{ x: 24.7, z: 17.9 }, { x: 30.5, z: 17.9 }, { x: 24.2, z: 23.6 }, { x: 31.2, z: 23.9 }],
+  planters: [{ x: 21.6, z: 17.55, length: 0.9, axis: 'x' }, { x: 34.1, z: 24.6, length: 1.0, axis: 'x' }],
+  board: { x: 21.6, z: 23.0 },
+  sacks: { x: 34.5, z: 18.0, count: 3 },
+  basket: { x: 31.1, z: 18.95 },
+};
 // Le parvis de la bibliothèque (version 2.6) : des pavés en éventail
 // jusqu'à l'allée, un muret à chaperon coiffé d'auges fleuries au sud (ouvert
 // face à la porte), un cadran solaire à l'ouest, un banc et des livres sous
@@ -189,7 +203,7 @@ export const BARRELS = [
 export const CRATES = [
   { x: 22.0, z: 13.3 }, { x: 31.5, z: 13.4 }, { x: 30.6, z: 36.0, size: 0.5 }, { x: 22.8, z: 35.6 },
 ];
-export const BENCHES = [{ x: 19.7, z: 11.55 }, { x: 23.7, z: 16.7 }, { x: 31.2, z: 24.8 }, { x: 11.0, z: 32.55 }, { x: 41.6, z: 27.2 }, { x: 49.4, z: 39.3 }];
+export const BENCHES = [{ x: 19.7, z: 11.55 }, { x: 23.0, z: 17.5, back: true }, { x: 32.4, z: 24.6, back: true }, { x: 22.6, z: 25.4, back: true }, { x: 11.0, z: 32.55 }, { x: 41.6, z: 27.2 }, { x: 49.4, z: 39.3 }];
 export const VEGETABLES = [
   { x0: 37.6, z0: 8.6, x1: 39.4, z1: 12.2 }, // jardin de simples de l'apothicaire
   { x0: 19.5, z0: 29.4, x1: 22.0, z1: 30.3 }, // potager de l'auberge
@@ -197,7 +211,7 @@ export const VEGETABLES = [
 
 // Étal de marché sur la place, barrières (tracés de segments droits), meules,
 // rochers et feu de camp dans la prairie de l'est.
-export const STALLS = [{ x: 31.6, z: 18.1 }];
+export const STALLS = [{ x: 32.6, z: 17.9 }];
 export const FENCES = [
   // La pâture aux meules, dans la prairie de l'est.
   [[47.6, 23.6], [52.6, 23.6]], [[47.6, 23.6], [47.6, 28.6]], [[47.6, 28.6], [52.6, 28.6]],

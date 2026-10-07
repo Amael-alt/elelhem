@@ -137,8 +137,9 @@ export function pushBar(frame, from, to, section, options) {
 // Une surface de révolution à n pans : rings est une liste [y, rayon] du bas
 // vers le haut ; chaque pan est un quad entre deux anneaux. Les faces sont
 // tournées vers l'extérieur (vérifié sur la normale), l'ombre au pied si le
-// bas touche le sol. Pour un tonneau, un pot, un pilier rond.
-export function pushRevolution(frame, rings, { sides = 10, groundAo = 0.75, phase = 0 } = {}) {
+// bas touche le sol. Pour un tonneau, un pot, un pilier rond. inward : les
+// faces regardent l'axe, pour la paroi intérieure d'un puits.
+export function pushRevolution(frame, rings, { sides = 10, groundAo = 0.75, phase = 0, inward = false } = {}) {
   for (let r = 0; r + 1 < rings.length; r += 1) {
     const [y0, r0] = rings[r];
     const [y1, r1] = rings[r + 1];
@@ -162,7 +163,7 @@ export function pushRevolution(frame, rings, { sides = 10, groundAo = 0.75, phas
       const nz = ux * vy - uy * vx;
       const mid = (a0 + a1) / 2;
       let points = quad;
-      if (nx * Math.cos(mid) + nz * Math.sin(mid) < 0) {
+      if ((nx * Math.cos(mid) + nz * Math.sin(mid) < 0) !== inward) {
         points = [...quad].reverse();
         uvs = [...uvs].reverse();
         ao = [...ao].reverse();
@@ -184,5 +185,19 @@ export function pushDisc(frame, y, radius, { sides = 10, phase = 0 } = {}) {
     const tri = [[0, y, 0], [Math.cos(a1) * radius, y, Math.sin(a1) * radius], [Math.cos(a0) * radius, y, Math.sin(a0) * radius]];
     const uvs = tri.map(([px, , pz]) => [px / TILE_UNITS, -pz / TILE_UNITS]);
     frame.polygon(tri, uvs);
+  }
+}
+
+// Un anneau horizontal entre deux rayons (la margelle d'un puits, le dessus
+// d'une bordure ronde), tourné vers le haut.
+export function pushAnnulus(frame, y, inner, outer, { sides = 12, phase = 0 } = {}) {
+  for (let k = 0; k < sides; k += 1) {
+    const a0 = phase + (k / sides) * Math.PI * 2;
+    const a1 = phase + ((k + 1) / sides) * Math.PI * 2;
+    const quad = [
+      [Math.cos(a0) * inner, y, Math.sin(a0) * inner], [Math.cos(a1) * inner, y, Math.sin(a1) * inner],
+      [Math.cos(a1) * outer, y, Math.sin(a1) * outer], [Math.cos(a0) * outer, y, Math.sin(a0) * outer],
+    ];
+    frame.polygon(quad, quad.map(([px, , pz]) => [px / TILE_UNITS, -pz / TILE_UNITS]));
   }
 }

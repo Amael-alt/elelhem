@@ -12,7 +12,7 @@ import { createMap } from './map.js';
 import { createTerrain } from './terrain.js';
 import { createCollider } from './collision.js';
 import { buildHouse, buildLantern, buildTree, LANTERN_FLAME, LANTERN_POST_RADIUS, TREE_TRUNK_RADIUS } from './props.js';
-import { buildClothesline, buildSteppingStones, buildSundial, buildChalkboard, buildLowWall, buildPlanterBox,
+import { buildFlowerBed, buildKerb, buildNoticeBoard, buildClothesline, buildSteppingStones, buildSundial, buildChalkboard, buildLowWall, buildPlanterBox,
   buildAnvil, buildAppleTree, buildBarrel, buildBasket, buildBench, buildCampfire, buildCrate, buildDummy, buildFence,
   buildFlowerPot, buildHaystack, buildHearth, buildLadder, buildMarketStall, buildRock, buildShopSign, buildSignpost, buildSite,
   buildStall, buildTable, buildTarget, buildTower, buildVegetables, buildWashhouse, buildWell, buildWoodpile,
@@ -20,7 +20,7 @@ import { buildClothesline, buildSteppingStones, buildSundial, buildChalkboard, b
 import {
   ANVIL, BARRELS, BENCHES, BUNTING, BUSHES, BUTTERFLIES, CAMPFIRE, FENCES, FLOWER_POTS, HAYSTACKS, MEADOWS, ROCKS, SIGNPOSTS,
   STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, MARKET_STALLS, ORCHARD, SITE,
-  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT, FORGE_YARD, LIBRARY_COURT, APOTHECARY_YARD, HOME_GARDEN,
+  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT, FORGE_YARD, LIBRARY_COURT, APOTHECARY_YARD, HOME_GARDEN, SQUARE,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createFoliage, crownClumps } from '../gfx/foliage.js';
@@ -142,7 +142,7 @@ function createMaterials() {
 function createBuildings(materials, posts) {
   const keys = [
     'plaster', 'stonewall', 'wood', 'roof', 'slate', 'thatch', 'stone', 'brick', 'door', 'window', 'post', 'iron', 'bark',
-    'leaves', 'rock', 'awning', 'voletVert', 'voletBleu', 'voletRouge',
+    'leaves', 'rock', 'awning', 'voletVert', 'voletBleu', 'voletRouge', 'yard',
   ];
   const builders = Object.fromEntries(keys.map((key) => [key, createMeshBuilder()]));
   const addPosts = (list) => posts.push(...[list].flat());
@@ -238,6 +238,25 @@ function createBuildings(materials, posts) {
   // Couronnes : les grappes de tous les arbres, dessinées ensemble (voir createVillage).
   const clumps = [];
   const autumnCrowns = []; // d'où tombent les feuilles
+  // La place du puits (version 2.6) : bordure du tapis de pavés, massifs
+  // fleuris et leurs boules taillées, jardinières, panneau d'affichage, sacs
+  // et panier près de l'étal. Le puits, son rond de dalles et les bancs sont
+  // posés plus haut.
+  buildKerb(SQUARE.kerb, builders);
+  SQUARE.beds.forEach((spot, i) => {
+    const bed = buildFlowerBed(spot, builders);
+    addPosts(bed.obstacle);
+    planters.push(...bed.flowers);
+    clumps.push({ ...bed.bush, tint: foliageTints.buisson[i % foliageTints.buisson.length] });
+  });
+  for (const box of SQUARE.planters) {
+    const planter = buildPlanterBox(box, builders);
+    addPosts(planter.obstacle);
+    planters.push(...planter.flowers);
+  }
+  addPosts(buildNoticeBoard(SQUARE.board, builders));
+  addPosts(buildSacks(SQUARE.sacks, builders).posts);
+  addPosts(buildBasket(SQUARE.basket, builders));
   TREES.forEach(([x, z, size, kind = 'vert'], i) => {
     posts.push({ x, z, radius: TREE_TRUNK_RADIUS * size });
     const crown = buildTree(x, z, { size }, builders);

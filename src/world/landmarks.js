@@ -8,7 +8,7 @@
 // ronds { x, z, radius } à poser dans les collisions, et au besoin la
 // position d'une flamme ou d'une cheminée.
 
-import { createFrame, pushBar, pushBox, pushDisc, pushRevolution, pushSkewBox } from './builder.js';
+import { createFrame, pushAnnulus, pushBar, pushBox, pushDisc, pushRevolution, pushSkewBox } from './builder.js';
 import { TILE_UNITS } from '../gfx/textures.js';
 
 const tile = (value) => value / TILE_UNITS;
@@ -97,25 +97,141 @@ export function buildTower({ x, z, size, wall, rise, doorOffset = 0, windowHeigh
   return [{ x: x + S / 2, z: z + S / 2, radius: S / 2 }];
 }
 
-// Puits de la place : margelle de pierre, deux poteaux, traverse et petit toit
-// de planches. Obstacle rond au centre.
+// Une couronne de pierres posées bout à bout sur un cercle (la bordure d'un
+// rond de dalles, d'un massif) : count pierres droites de largeur width,
+// hauteurs un peu inégales, centrées sur le rayon radius.
+function ringOfStones(frame, radius, { width = 0.2, height = 0.06, count = 20, gap = 0.035, phase = 0 } = {}) {
+  const length = (2 * Math.PI * radius) / count - gap;
+  for (let k = 0; k < count; k += 1) {
+    const a = phase + ((k + 0.5) / count) * Math.PI * 2;
+    const [c, s] = [Math.cos(a), Math.sin(a)];
+    const h = height * (0.85 + 0.3 * hash01(k, count, 3));
+    const origin = [c * radius + (s * length) / 2 - (c * width) / 2, 0, s * radius - (c * length) / 2 - (s * width) / 2];
+    pushSkewBox(frame, origin, [[-s * length, 0, c * length], [0, h, 0], [c * width, 0, s * width]], { groundAo: 0.7 });
+  }
+}
+
+// Puits de la place (version 2.6 : il était carré, fait de boîtes) : au milieu
+// d'un rond de dalles bordé de pierres (dais, son rayon), une margelle ronde
+// de pierre de taille coiffée d'un rebord, l'eau sombre au fond, deux
+// poteaux, un treuil à manivelle, la corde et le seau, un toit de tuiles à
+// deux pans et ses pignons. Obstacle rond au centre.
 export const WELL_RADIUS = 0.95;
-export function buildWell({ x, z }, builders) {
-  const stone = createFrame(builders.stone, [x, 0, z]);
-  const wood = createFrame(builders.wood, [x, 0, z]);
-  const iron = createFrame(builders.iron, [x, 0, z]);
-  const r = 0.8;
-  const t = 0.3; // épaisseur de la margelle
-  pushBox(stone, [-r, 0, -r], [r, 0.85, -r + t]);
-  pushBox(stone, [-r, 0, r - t], [r, 0.85, r]);
-  pushBox(stone, [-r, 0, -r + t], [-r + t, 0.85, r - t]);
-  pushBox(stone, [r - t, 0, -r + t], [r, 0.85, r - t]);
-  for (const sx of [-1, 1]) pushBox(wood, [sx * r - 0.07, 0.85, -0.07], [sx * r + 0.07, 2.3, 0.07]);
-  pushBox(wood, [-r - 0.14, 2.3, -0.1], [r + 0.14, 2.42, 0.1]);
-  pushBox(wood, [-r - 0.35, 2.42, -0.7], [r + 0.35, 2.52, 0.7]);
-  pushBox(iron, [-0.04, 1.2, -0.04], [0.04, 2.3, 0.04]);
-  pushBox(iron, [-0.18, 1.0, -0.18], [0.18, 1.2, 0.18]); // le seau
+const WELL_SHAPE = { radius: 0.8, inner: 0.56, height: 0.78, coping: 0.07, water: 0.4, post: 0.72, axle: 1.62, eave: 2.3, ridge: 2.88 };
+export function buildWell({ x, z, dais = 0 }, builders) {
+  const at = (builder) => createFrame(builder, [x, 0, z]);
+  const masonry = at(builders.stonewall);
+  const stone = at(builders.stone);
+  const wood = at(builders.wood);
+  const iron = at(builders.iron);
+  const rope = at(builders.thatch);
+  const roof = at(builders.roof);
+  const W = WELL_SHAPE;
+  // Le rond de dalles, à fleur de sol, et sa bordure : on marche dessus.
+  if (dais > 0) {
+    pushDisc(at(builders.yard), 0.02, dais, { sides: 32 });
+    ringOfStones(stone, dais + 0.1, { width: 0.22, height: 0.06, count: 28 });
+  }
+  // La margelle : le fût, la paroi intérieure jusqu'à l'eau, le rebord qui déborde.
+  const top = W.height + W.coping;
+  const lip = W.radius + 0.06;
+  pushRevolution(masonry, [[0, W.radius], [W.height, W.radius]], { sides: 16, groundAo: 0.6 });
+  pushRevolution(masonry, [[W.water, W.inner], [W.height, W.inner]], { sides: 16, groundAo: 1, inward: true });
+  pushRevolution(stone, [[W.height, lip], [top, lip]], { sides: 16, groundAo: 1 });
+  pushRevolution(stone, [[W.height, W.inner - 0.03], [top, W.inner - 0.03]], { sides: 16, groundAo: 1, inward: true });
+  pushAnnulus(stone, top, W.inner - 0.03, lip, { sides: 16 });
+  pushDisc(iron, W.water, W.inner, { sides: 16 }); // l'eau, sombre, au fond
+  // Deux poteaux plantés dans la margelle, le treuil entre eux, la corde
+  // enroulée, la manivelle à l'est.
+  for (const sx of [-1, 1]) pushBox(wood, [sx * W.post - 0.065, top, -0.065], [sx * W.post + 0.065, W.ridge - 0.08, 0.065]);
+  pushBar(wood, [-W.post, W.axle, 0], [W.post, W.axle, 0], 0.09);
+  pushBar(rope, [-0.22, W.axle, 0], [0.22, W.axle, 0], 0.17);
+  pushBar(iron, [W.post + 0.06, W.axle, 0], [W.post + 0.2, W.axle, 0], 0.04);
+  pushBar(iron, [W.post + 0.2, W.axle + 0.02, 0], [W.post + 0.2, W.axle - 0.25, 0], 0.035);
+  pushBar(wood, [W.post + 0.18, W.axle - 0.25, 0], [W.post + 0.34, W.axle - 0.25, 0], 0.05);
+  // Le seau suspendu au-dessus de l'eau : douelles, deux cercles, l'anse.
+  const pail = 1.0;
+  pushBar(rope, [0, W.axle - 0.08, 0], [0, pail + 0.3, 0], 0.025);
+  pushRevolution(wood, [[pail, 0.12], [pail + 0.22, 0.15]], { sides: 10, groundAo: 1 });
+  pushDisc(wood, pail + 0.16, 0.14, { sides: 10 });
+  for (const y of [pail + 0.03, pail + 0.18]) pushRevolution(iron, [[y, 0.13 + (y - pail) * 0.14], [y + 0.03, 0.135 + (y - pail) * 0.14]], { sides: 10, groundAo: 1 });
+  pushBar(iron, [-0.15, pail + 0.22, 0], [0, pail + 0.3, 0], 0.02);
+  pushBar(iron, [0, pail + 0.3, 0], [0.15, pail + 0.22, 0], 0.02);
+  // Le toit : entraits sur les poteaux, faîtière, deux pans de tuiles qui
+  // débordent, et les pignons de planches.
+  for (const sx of [-1, 1]) pushBox(wood, [sx * W.post - 0.05, W.eave - 0.1, -0.86], [sx * W.post + 0.05, W.eave, 0.86]);
+  pushBox(wood, [-W.post - 0.3, W.ridge - 0.08, -0.06], [W.post + 0.3, W.ridge + 0.02, 0.06]);
+  const rise = W.ridge - W.eave + 0.05;
+  pushSkewBox(roof, [-W.post - 0.36, W.eave - 0.02, 0.98], [[2 * W.post + 0.72, 0, 0], [0, 0.06, 0], [0, rise, -1.0]]);
+  pushSkewBox(roof, [-W.post - 0.36, W.eave - 0.02, -0.98], [[2 * W.post + 0.72, 0, 0], [0, 0.06, 0], [0, rise, 1.0]]);
+  for (const sx of [-1, 1]) {
+    const gable = [[sx * W.post, W.eave, 0.84], [sx * W.post, W.eave, -0.84], [sx * W.post, W.ridge - 0.06, 0]];
+    const uv = [[tile(0.84), tile(W.eave)], [tile(-0.84), tile(W.eave)], [0, tile(W.ridge)]];
+    wood.polygon(gable, uv);
+    wood.polygon([...gable].reverse(), [...uv].reverse());
+  }
   return [{ x, z, radius: WELL_RADIUS }];
+}
+
+// Bordure de pierres à fleur de sol (version 2.6, la place) autour du
+// rectangle [x0, z0, x1, z1] : des pierres longues posées bout à bout, une
+// pierre carrée à chaque coin. On marche dessus.
+const KERB = { length: 0.56, width: 0.2, height: 0.05, gap: 0.035, corner: 0.3 };
+export function buildKerb([x0, z0, x1, z1], builders) {
+  const stone = createFrame(builders.stone, [0, 0, 0]);
+  const { length, width, height, gap, corner } = KERB;
+  const w = width / 2;
+  // Une rangée de pierres de a à b, entre les pierres d'angle.
+  const run = (a, b, place) => {
+    const span = b - a - corner;
+    const count = Math.max(1, Math.round(span / (length + gap)));
+    const step = span / count;
+    for (let i = 0; i < count; i += 1) {
+      const u0 = a + corner / 2 + i * step + gap / 2;
+      place(u0, u0 + step - gap, height * (0.8 + 0.4 * hash01(a + b, i, 7)));
+    }
+  };
+  for (const zz of [z0, z1]) run(x0, x1, (u0, u1, h) => pushBox(stone, [u0, 0, zz - w], [u1, h, zz + w], { groundAo: 0.8 }));
+  for (const xx of [x0, x1]) run(z0, z1, (u0, u1, h) => pushBox(stone, [xx - w, 0, u0], [xx + w, h, u1], { groundAo: 0.8 }));
+  const c = corner / 2;
+  for (const [cx, cz] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1]]) pushBox(stone, [cx - c, 0, cz - c], [cx + c, height * 1.4, cz + c], { groundAo: 0.7 });
+}
+
+// Massif fleuri rond (version 2.6, la place) : une couronne de pierres
+// dressées, la terre, un cercle de fleurs autour d'un buisson taillé en boule.
+// Les fleurs et la boule sont posées par le village avec les autres touffes
+// et feuillages : la fonction renvoie leurs points, avec l'obstacle.
+export function buildFlowerBed({ x, z, radius = 0.6 }, builders) {
+  const stone = createFrame(builders.stonewall, [x, 0, z]);
+  const soil = createFrame(builders.bark, [x, 0, z]);
+  ringOfStones(stone, radius, { width: 0.16, height: 0.24, count: 14, gap: 0.03 });
+  pushDisc(soil, 0.18, radius - 0.06, { sides: 14 });
+  const count = Math.round(radius * 11);
+  const flowers = Array.from({ length: count }, (_, k) => {
+    const a = ((k + 0.5) / count) * Math.PI * 2;
+    return { x: x + Math.cos(a) * radius * 0.64, y: 0.2, z: z + Math.sin(a) * radius * 0.64 };
+  });
+  return { obstacle: { x, z, radius: radius + 0.12 }, flowers, bush: { x, y: 0.56, z, size: radius * 1.3 } };
+}
+
+// Panneau d'affichage (version 2.6, la place) : deux poteaux, un tableau de
+// planches dans son cadre, un petit toit à deux pans, des feuilles épinglées.
+// Face au sud.
+export function buildNoticeBoard({ x, z }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const roof = createFrame(builders.roof, [x, 0, z]);
+  const paper = createFrame(builders.plaster, [x, 0, z]);
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  for (const sx of [-0.62, 0.62]) pushBox(wood, [sx - 0.06, 0, -0.06], [sx + 0.06, 2.0, 0.06], { groundAo: 0.7 });
+  pushBox(wood, [-0.58, 0.86, -0.04], [0.58, 1.74, 0.02]);
+  for (const y of [0.8, 1.74]) pushBox(wood, [-0.66, y, -0.06], [0.66, y + 0.06, 0.06]);
+  pushSkewBox(roof, [-0.8, 1.9, 0.3], [[1.6, 0, 0], [0, 0.05, 0], [0, 0.28, -0.32]]);
+  pushSkewBox(roof, [-0.8, 1.9, -0.3], [[1.6, 0, 0], [0, 0.05, 0], [0, 0.28, 0.32]]);
+  for (const [u, y, w, h] of [[-0.34, 1.32, 0.3, 0.38], [0.06, 1.44, 0.28, 0.28], [0.38, 1.2, 0.26, 0.36], [0.0, 1.05, 0.3, 0.24], [-0.38, 0.98, 0.22, 0.18]]) {
+    pushBox(paper, [u - w / 2, y - h / 2, 0.02], [u + w / 2, y + h / 2, 0.032]);
+    pushBox(iron, [u - 0.016, y + h / 2 - 0.05, 0.032], [u + 0.016, y + h / 2 - 0.018, 0.045]);
+  }
+  return [{ x: x - 0.62, z, radius: 0.14 }, { x, z, radius: 0.22 }, { x: x + 0.62, z, radius: 0.14 }];
 }
 
 // Tonneau (version 2.5 : rond et ventru, il était un cube) : un fût à dix
@@ -226,11 +342,24 @@ export function buildCrate({ x, z, size = 0.55 }, builders) {
   return { x, z, radius: half * 1.2 };
 }
 
-// Banc : planche sur deux pieds, le long de l'axe x.
-export function buildBench({ x, z }, builders) {
+// Banc, le long de l'axe x (version 2.6 : il était une planche sur deux
+// blocs) : trois lattes, deux pieds à montants et traverse, et avec back un
+// dossier au nord, penché, à deux lattes : on s'assoit face au sud.
+export function buildBench({ x, z, back = false }, builders) {
   const wood = createFrame(builders.wood, [x, 0, z]);
-  pushBox(wood, [-0.7, 0.4, -0.18], [0.7, 0.47, 0.18]);
-  for (const sx of [-0.55, 0.55]) pushBox(wood, [sx - 0.05, 0, -0.14], [sx + 0.05, 0.4, 0.14]);
+  for (const w of [-0.13, 0, 0.13]) pushBox(wood, [-0.72, 0.4, w - 0.055], [0.72, 0.46, w + 0.055]);
+  for (const sx of [-0.55, 0.55]) {
+    for (const sz of [-0.13, 0.13]) pushBox(wood, [sx - 0.045, 0, sz - 0.04], [sx + 0.045, 0.34, sz + 0.04]);
+    pushBox(wood, [sx - 0.04, 0.12, -0.12], [sx + 0.04, 0.18, 0.12]);
+    pushBox(wood, [sx - 0.05, 0.34, -0.19], [sx + 0.05, 0.4, 0.19]);
+  }
+  if (back) {
+    for (const sx of [-0.55, 0.55]) pushSkewBox(wood, [sx - 0.045, 0.4, -0.2], [[0.09, 0, 0], [0, 0.56, -0.1], [0, 0, 0.07]]);
+    for (const y of [0.64, 0.84]) {
+      const lean = (-0.1 * (y - 0.4)) / 0.56;
+      pushBox(wood, [-0.7, y, -0.22 + lean], [0.7, y + 0.1, -0.15 + lean]);
+    }
+  }
   return { x, z, radius: 0.55 };
 }
 

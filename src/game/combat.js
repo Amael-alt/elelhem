@@ -119,7 +119,9 @@ export function createCombat({ player, sword, slash, impacts = null, state, hud,
       const [fx, fz] = FACING_VECTOR[facing];
       slash.play({
         x: base.x + fx * 0.6, y: base.y + 0.5, z: base.z + fz * 0.6 + (facing === 'up' ? -0.2 : 0.2),
-        angle: facing === 'down' ? Math.PI : facing === 'left' ? -Math.PI / 2 : facing === 'right' ? Math.PI / 2 : 0,
+        // De profil, la lueur se lance vers l'avant du héros (version 2.9 : elle
+        // partait du mauvais côté).
+        angle: facing === 'down' ? Math.PI : facing === 'left' ? Math.PI / 2 : facing === 'right' ? -Math.PI / 2 : 0,
         scale: spec.scale,
       });
       strike(spec);

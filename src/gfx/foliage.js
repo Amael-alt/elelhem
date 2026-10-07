@@ -21,6 +21,11 @@ const VARIANTS = 4; // formes de grappes différentes, côte à côte dans l'ima
 const SWAY = 0.05; // amplitude du vent, en unités, au sommet de la grappe
 const SWAY_RATE = 1.5; // radians par seconde
 const NORMAL_TILT = 0.9; // la normale penche vers le haut : le dessus prend le soleil
+// Version 2.8 : les grappes basses (buissons, haies : sous LOW_CLUMP d'altitude)
+// s'écartent du héros qui les traverse.
+const LOW_CLUMP = 1.3;
+const BEND_RADIUS = 0.9;
+const BEND_PUSH = 0.35;
 
 // Lumière de la grappe dans l'image (y vers le bas) : en haut à gauche.
 const LIGHT = [-0.55, -0.6, 0.58];
@@ -94,6 +99,13 @@ vec3 clumpRight = vec3( viewMatrix[ 0 ][ 0 ], viewMatrix[ 1 ][ 0 ], viewMatrix[ 
 vec3 clumpUp = vec3( viewMatrix[ 0 ][ 1 ], viewMatrix[ 1 ][ 1 ], viewMatrix[ 2 ][ 1 ] );
 float clumpSway = sin( uTime * ${SWAY_RATE.toFixed(2)} + aSeed * 6.2832 ) * ${SWAY.toFixed(3)} * ( position.y + 0.5 );
 vec3 transformed = clumpRight * ( position.x + clumpSway ) + clumpUp * position.y;
+// Une grappe basse s'écarte du héros (version 2.8).
+float clumpLow = step( instanceMatrix[ 3 ].y, ${LOW_CLUMP.toFixed(2)} );
+vec2 clumpAway = instanceMatrix[ 3 ].xz - uHero.xz;
+float clumpDistance = length( clumpAway );
+float clumpBend = clumpLow * smoothstep( ${BEND_RADIUS.toFixed(2)}, 0.15, clumpDistance );
+transformed.xz += ( clumpAway / max( clumpDistance, 0.001 ) ) * clumpBend * ${BEND_PUSH.toFixed(2)};
+transformed.y -= clumpBend * 0.15;
 `;
 
 const VARIANT_UV = /* glsl */`
@@ -103,23 +115,25 @@ const VARIANT_UV = /* glsl */`
 #endif
 `;
 
-function patchVertex(shader, time) {
+function patchVertex(shader, time, hero) {
   shader.uniforms.uTime = time;
+  shader.uniforms.uHero = hero ?? { value: new THREE.Vector3(-1000, 0, -1000) };
   shader.vertexShader = shader.vertexShader
-    .replace('#include <common>', '#include <common>\nuniform float uTime;\nattribute float aSeed;\nattribute float aVariant;')
+    .replace('#include <common>', '#include <common>\nuniform float uTime;\nuniform vec3 uHero;\nattribute float aSeed;\nattribute float aVariant;')
     .replace('#include <begin_vertex>', BILLBOARD_VERTEX)
     .replace('#include <uv_vertex>', VARIANT_UV);
 }
 
 // clumps : liste de { x, y, z, size, tint } (centre de la grappe, côté du quad
 // en unités, couleur). time : l'uniforme de temps partagé des effets.
-export function createFoliage(clumps, time, seed = 7) {
+// hero : uniforme { value: Vector3 } de la position du héros (facultatif).
+export function createFoliage(clumps, time, seed = 7, hero = null) {
   const texture = createClumpTexture(seed);
   const texSize = new THREE.Vector2(CLUMP_PIXELS * VARIANTS, CLUMP_PIXELS);
 
   const material = new THREE.MeshLambertMaterial({ map: texture, alphaTest: 0.5 });
   material.onBeforeCompile = (shader) => {
-    patchVertex(shader, time);
+    patchVertex(shader, time, hero);
     shader.vertexShader = shader.vertexShader.replace('#include <beginnormal_vertex>', /* glsl */`
       #include <beginnormal_vertex>
       objectNormal = normalize( vec3( viewMatrix[ 0 ][ 2 ], viewMatrix[ 1 ][ 2 ], viewMatrix[ 2 ][ 2 ] ) + vec3( 0.0, ${NORMAL_TILT.toFixed(2)}, 0.0 ) );
@@ -128,7 +142,7 @@ export function createFoliage(clumps, time, seed = 7) {
   };
 
   const depthMaterial = new THREE.MeshDepthMaterial({ map: texture, alphaTest: 0.5 });
-  depthMaterial.onBeforeCompile = (shader) => patchVertex(shader, time);
+  depthMaterial.onBeforeCompile = (shader) => patchVertex(shader, time, hero);
 
   const geometry = new THREE.PlaneGeometry(1, 1);
   const seeds = new Float32Array(clumps.length);

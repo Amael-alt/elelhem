@@ -354,7 +354,7 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
   // Le monde autour du village : plateau, plaine, rivière, routes, lisière.
   const outskirts = createOutskirts(map, materials, { tints: foliageTints, light: narrowScreen });
   scene.add(outskirts.group);
-  scene.add(createFoliage([...buildings.clumps, ...bushClumps, ...hedgeClumps, ...outskirts.clumps], fx.uTime));
+  scene.add(createFoliage([...buildings.clumps, ...bushClumps, ...hedgeClumps, ...outskirts.clumps], fx.uTime, 7, fx.uHero));
   scene.add(createWaterfall(WATERFALL, materials.water.map, fx));
   // Lisières dentelées, fanions, flaques de lumière, feuilles et papillons.
   scene.add(createFringes(map, materials.grass));
@@ -379,7 +379,7 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
   // Herbe en touffes : partout où il y a de l'herbe libre.
   const blocked = (x, z) => posts.some((post) => Math.hypot(x - post.x, z - post.z) < post.radius + 0.15);
   const planterFlowers = buildings.planters.map((point, i) => ({ ...point, variant: FIRST_FLOWER_VARIANT + (i % FLOWER_VARIANTS) }));
-  scene.add(createGrass([...scatterTufts(map, { meadows: MEADOWS, blocked, density: narrowScreen ? GRASS_DENSITY_LIGHT : 1 }), ...planterFlowers, ...outskirts.tufts], fx.uTime));
+  scene.add(createGrass([...scatterTufts(map, { meadows: MEADOWS, blocked, density: narrowScreen ? GRASS_DENSITY_LIGHT : 1 }), ...planterFlowers, ...outskirts.tufts], fx.uTime, 31, fx.uHero));
   const pigeons = createPigeons(PIGEONS);
   scene.add(pigeons.mesh);
   const sun = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
@@ -456,9 +456,11 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
     setPointScale(scale) {
       fx.uPointScale.value = scale;
     },
-    // focus : point visé par la caméra ; cameraDistance : son recul.
-    update(time, focus, cameraDistance) {
+    // focus : point visé par la caméra ; cameraDistance : son recul ; hero :
+    // la position du héros (les plantes se couchent sur son passage).
+    update(time, focus, cameraDistance, hero = null) {
       fx.uTime.value = time;
+      if (hero) fx.uHero.value.copy(hero);
       pigeons.update(time);
       fx.uFocus.value.copy(focus);
       const along = Math.round(focus.dot(lightRight) / texel) * texel;

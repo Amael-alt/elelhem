@@ -21,6 +21,10 @@ export const TUFT_VARIANTS = GRASS_VARIANTS + FLOWER_VARIANTS;
 const PIXELS_PER_UNIT = 32;
 const SWAY = 0.07;
 const SWAY_RATE = 2.1;
+// Version 2.8 : les touffes se couchent sur le passage du héros, dans un
+// rayon BEND_RADIUS, poussées de BEND_PUSH (en part de leur hauteur).
+const BEND_RADIUS = 0.7;
+const BEND_PUSH = 0.6;
 
 // Un brin : une ligne de la base vers la pointe, qui penche un peu, du ton
 // sombre au pied au ton clair au bout.
@@ -79,10 +83,17 @@ vec3 tuftBack = vec3( viewMatrix[ 0 ][ 2 ], viewMatrix[ 1 ][ 2 ], viewMatrix[ 2 
 float tuftStretch = 1.0 / max( length( tuftBack.xz ), 0.3 );
 float tuftSway = sin( uTime * ${SWAY_RATE.toFixed(2)} + aSeed * 6.2832 ) * ${SWAY.toFixed(3)} * position.y;
 vec3 transformed = tuftRight * ( position.x + tuftSway ) + vec3( 0.0, position.y * tuftStretch, 0.0 );
+// Le héros passe : la touffe se couche en s'éloignant de lui (version 2.8).
+vec2 tuftAway = instanceMatrix[ 3 ].xz - uHero.xz;
+float tuftDistance = length( tuftAway );
+float tuftBend = smoothstep( ${BEND_RADIUS.toFixed(2)}, 0.1, tuftDistance ) * position.y;
+transformed.xz += ( tuftAway / max( tuftDistance, 0.001 ) ) * tuftBend * ${BEND_PUSH.toFixed(2)};
+transformed.y -= tuftBend * 0.25;
 `;
 
 // tufts : liste de { x, y, z, variant } ; time : uniforme de temps partagé.
-export function createGrass(tufts, time, seed = 31) {
+// hero : uniforme { value: Vector3 } de la position du héros (facultatif).
+export function createGrass(tufts, time, seed = 31, hero = null) {
   const texture = createTuftTexture(seed);
   const texSize = new THREE.Vector2(TUFT_PIXELS * TUFT_VARIANTS, TUFT_PIXELS);
   const size = TUFT_PIXELS / PIXELS_PER_UNIT;
@@ -90,8 +101,9 @@ export function createGrass(tufts, time, seed = 31) {
   const material = new THREE.MeshLambertMaterial({ map: texture, alphaTest: 0.5 });
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = time;
+    shader.uniforms.uHero = hero ?? { value: new THREE.Vector3(-1000, 0, -1000) };
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform float uTime;\nattribute float aSeed;\nattribute float aVariant;')
+      .replace('#include <common>', '#include <common>\nuniform float uTime;\nuniform vec3 uHero;\nattribute float aSeed;\nattribute float aVariant;')
       .replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nobjectNormal = vec3( 0.0, 1.0, 0.0 );')
       .replace('#include <begin_vertex>', TUFT_VERTEX)
       .replace('#include <uv_vertex>', `#include <uv_vertex>\nvMapUv = vec2( ( uv.x + aVariant ) / ${TUFT_VARIANTS.toFixed(1)}, uv.y );`);

@@ -132,9 +132,9 @@ export function createMoor({ materials, narrowScreen = false }) {
   const blocked = (x, z) => posts.some((post) => Math.hypot(x - post.x, z - post.z) < post.radius + 0.15);
   scene.add(
     createSky(sunDirection),
-    createFoliage(clumps, fx.uTime, 11),
+    createFoliage(clumps, fx.uTime, 11, fx.uHero),
     createFringes(map, materials.grass, 23),
-    createGrass(scatterTufts(map, { meadows: [[2, 2, WIDTH - 2, DEPTH - 3]], blocked, density: narrowScreen ? GRASS_DENSITY * 0.7 : GRASS_DENSITY, seed: 9 }), fx.uTime, 37),
+    createGrass(scatterTufts(map, { meadows: [[2, 2, WIDTH - 2, DEPTH - 3]], blocked, density: narrowScreen ? GRASS_DENSITY * 0.7 : GRASS_DENSITY, seed: 9 }), fx.uTime, 37, fx.uHero),
     createFireflies(FIREFLY_ANCHORS, fx),
     // La brume : des grains qui traînent au ras du sol sur toute la lande.
     createDust(fx, { ...MIST, box: [WIDTH - 3, 1.3, DEPTH - 4], origin: [1.5, 0.05, 2] }),
@@ -186,7 +186,8 @@ export function createMoor({ materials, narrowScreen = false }) {
     setPointScale(scale) {
       fx.uPointScale.value = scale;
     },
-    update(time, focus, cameraDistance) {
+    update(time, focus, cameraDistance, hero = null) {
+      if (hero) fx.uHero.value.copy(hero);
       fx.uTime.value = time;
       fx.uFocus.value.copy(focus);
       const along = Math.round(focus.dot(lightRight) / texel) * texel;

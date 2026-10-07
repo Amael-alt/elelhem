@@ -111,6 +111,19 @@ body {
   display: none;
 }
 
+/* Le bouton de l'écran d'échec au chargement (index.html). */
+.message-recharger {
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 8px 22px;
+  border: 1px solid #a8803e;
+  border-radius: 4px;
+  background: #f3d08c;
+  color: #2a1d10;
+  font: 600 1.05rem/1.2 var(--police);
+  cursor: var(--curseur-actif);
+}
+
 /* Bulle d'interaction : posée par le jeu (translate) au-dessus de la tête de
    l'habitant. Le bouton fait 48 px, au-dessus des 44 px d'une cible tactile.
    Le translate du bouton place son coin haut gauche, la marge le recentre

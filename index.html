@@ -50,7 +50,50 @@
       });
     }
   </script>
-  <script type="module" src="src/main.js"></script>
+  <!-- Le jeu se charge en environ 150 modules. Si un seul manque (GitHub Pages
+       répond parfois 503 quelques minutes après une mise en ligne), rien ne
+       démarre et l'écran resterait violet. Alors on recharge la page une fois
+       d'elle-même (une réponse 503 n'est pas gardée en cache), puis, si cela
+       échoue encore, on le dit avec un bouton pour réessayer. -->
+  <script type="module">
+    const RETRY_KEY = 'elelhem-rechargement';
+    import('./src/main.js').then(() => {
+      try { sessionStorage.removeItem(RETRY_KEY); } catch {}
+    }).catch((error) => {
+      console.error(error);
+      let retried = false;
+      try {
+        retried = sessionStorage.getItem(RETRY_KEY) === '1';
+        if (!retried) sessionStorage.setItem(RETRY_KEY, '1');
+      } catch {
+        retried = true; // sans stockage, pas de boucle de rechargements
+      }
+      if (!retried) {
+        window.location.reload();
+        return;
+      }
+      const show = () => {
+        const box = document.getElementById('message');
+        box.replaceChildren();
+        const text = document.createElement('p');
+        text.textContent = "Le village n'a pas fini de se charger. La connexion a dû hoqueter : réessaie dans un instant.";
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'message-recharger';
+        button.textContent = 'Réessayer';
+        button.addEventListener('click', () => {
+          try { sessionStorage.removeItem(RETRY_KEY); } catch {}
+          window.location.reload();
+        });
+        const inner = document.createElement('div');
+        inner.append(text, button);
+        box.append(inner);
+        box.hidden = false;
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
+      else show();
+    });
+  </script>
 </head>
 <body>
   <canvas id="scene" aria-label="Le village d'Elelhem"></canvas>

@@ -1053,3 +1053,9 @@ Jordan a demandé « les améliorations nécessaires » après la revue d'archit
 | Lande | `__lia.lande(true)` : arrivée en (25,2 ; 10,5), `decouvertes` = `piece:maison`, `lieu:lande` |
 | Modules purs | `places.js` et `state.js` s'exécutent dans Node sans navigateur |
 | Intérieurs | maison, bibliothèque, auberge revues : lattes, lambris et tapis lisibles au pixel, zéro erreur console |
+
+## Version 2.10.1 : un écran violet après la mise en ligne (7 octobre 2026)
+
+Jordan a ouvert le lien publié et n'a vu qu'un fond violet. Cause : juste après les deux déploiements de la 2.10, GitHub Pages a répondu 503 à quelques fichiers pendant quelques minutes (vu aussi au premier chargement de la vérification : `exploits.js` et `sky.js`). Le jeu se charge en environ 150 modules ; il suffit d'un seul manquant pour que rien ne démarre, et `main.js` n'ayant jamais tourné, son message d'erreur ne s'affichait pas non plus. Un quart d'heure plus tard, les 148 fichiers répondaient 200, un par un comme tous en parallèle, trois fois de suite.
+
+Correction dans `index.html` : le jeu est chargé par un `import()` qui surveille l'échec. Au premier échec, la page se recharge d'elle-même (une réponse 503 n'est pas gardée en cache) ; au second, un message dit que la connexion a hoqueté, avec un bouton « Réessayer ». Un drapeau de `sessionStorage` empêche toute boucle de rechargements. Vérifié avec un serveur de test qui répond 503 sur commande : une panne passagère se corrige seule (un 503 puis un 200, le titre s'affiche), une panne qui dure affiche le message après exactement deux essais, et « Réessayer » relance le jeu une fois la panne levée.

@@ -42,6 +42,7 @@ import { createSpots } from './game/spots.js';
 import { createExploits } from './game/exploits.js';
 import { createHealthBar } from './gfx/healthbar.js';
 import { createDamageNumbers } from './game/damage.js';
+import { createBursts } from './gfx/fx/bursts.js';
 import { barColors } from './data/palette.js';
 import { createImpacts, createSlash, createSword } from './gfx/weapon.js';
 import { MOOR_ENEMIES, SWORDS } from './data/enemies.js';
@@ -160,8 +161,12 @@ function start() {
   const impacts = createImpacts();
   // La barre des clartés, à plat sous les pieds du héros, sur la lande (gfx/healthbar.js).
   const heroBar = createHealthBar(barColors.clarte, { ground: true });
-  scene.add(sprite.object, shadow, sword.object, slash.object, impacts.object, heroBar.object);
-  const player = createPlayer({ sprite, shadow, village, extras: [sword.object, slash.object, impacts.object, heroBar.object] });
+  // Les bouffées de poussière et de feuilles (version 2.8, gfx/fx/bursts.js),
+  // qui suivent le héros de lieu en lieu comme son épée.
+  const burstScale = { value: 1 };
+  const bursts = createBursts(burstScale);
+  scene.add(sprite.object, shadow, sword.object, slash.object, impacts.object, heroBar.object, bursts.object);
+  const player = createPlayer({ sprite, shadow, village, extras: [sword.object, slash.object, impacts.object, heroBar.object, bursts.object] });
 
   // Les habitants : de la donnée (data/characters.js), une planche chacun. Chacun
   // vit dans son lieu (le village ou une pièce) ; celui qui a un départ
@@ -205,6 +210,7 @@ function start() {
     pipeline.setSize(drawingBuffer.x, drawingBuffer.y);
     const pointScale = drawingBuffer.y / (2 * Math.tan(THREE.MathUtils.degToRad(follow.camera.fov / 2)));
     for (const world of [village, moor, ...Object.values(rooms)]) world.setPointScale(pointScale);
+    burstScale.value = pointScale;
     follow.setAspect(width / height);
   }
   // Suit la taille réelle du canvas (fenêtre redimensionnée, page affichée).
@@ -231,7 +237,9 @@ function start() {
     const who = villagers.find((v) => v.nom === name);
     return who ? `assets/portraits/${who.id}.png` : null;
   };
-  const dialogue = createDialogueBox(document.getElementById('dialogue'), { portraitOf });
+  // La voix d'un habitant, pour le bip de la frappe (data/characters.js, voix).
+  const voiceOf = (name) => [...villagers, ...figurants].find((who) => who.nom === name)?.voix ?? 1;
+  const dialogue = createDialogueBox(document.getElementById('dialogue'), { portraitOf, onType: (name) => ambience.blip(voiceOf(name)) });
   let playing = params.has('autostart');
   let quest = null;
   const canOpenOverlay = () => playing && !quest.isBusy;
@@ -435,6 +443,21 @@ function start() {
     ],
     player, camera: follow.camera, canvas,
   });
+  // La matière du sol sous un point, dans le lieu courant (les pas, les feuilles).
+  const surfaceAt = (x, z) => (doors?.current ?? village).map.cellAt(Math.floor(x), Math.floor(z))?.matter ?? 'grass';
+  // Le mouvement de l'image précédente, pour les bouffées de poussière.
+  const lastMove = { x: 0, z: 0 };
+  let lastPace = 0;
+  let wasRunning = false;
+  const RUN_PACE = 1.3; // le facteur de vitesse à partir duquel le héros court (game/player.js)
+  // Un habitant a-t-il une quête pour le grimoire (son parchemin, ou le diplôme) encore à faire ?
+  const hasQuest = (npc) => {
+    const key = npc.character.dialogue;
+    const entry = dialogues[key];
+    if (!entry || entry.guide || !entry.question) return false;
+    if (entry.diplome) return !gameState.choix.has(key) && counter.ids.every((id) => gameState.parchemins.has(id));
+    return !gameState.parchemins.has(key);
+  };
   const ambience = createAmbience(music, {
     // La rivière : du plateau au nord jusqu'à la plaine au sud.
     river: [[44.5, -30], [44.5, 22.5], [45.5, 23.5], [45.5, 80]],
@@ -442,7 +465,7 @@ function start() {
     fires: [[HEARTH.x, HEARTH.z], [CAMPFIRE.x, CAMPFIRE.z]],
     anvil: [ANVIL.x, ANVIL.z],
     dovecote: [dovecoteCenter.x, dovecoteCenter.z],
-  }, (x, z) => (doors?.current ?? village).map.cellAt(Math.floor(x), Math.floor(z))?.matter ?? 'grass');
+  }, surfaceAt);
 
   // Écran titre (sauf ?autostart, pour les tests) et bandeau de lieu.
   const banner = createAreaBanner(document.getElementById('lieu'), REGIONS, textesInterface.lieux, { place: document.getElementById('endroit') });
@@ -603,7 +626,31 @@ function start() {
     player.update(step, frozen || combat.isAttacking ? STANDING : wanted);
     // Pendant un coup, la planche montre l'élan puis la frappe.
     if (combat.frame !== null) sprite.setFrame(DIRECTIONS.indexOf(player.facing), combat.frame);
-    for (const npc of activeNpcs) npc.update(step, state.time, player.position);
+    for (const npc of activeNpcs) {
+      npc.update(step, state.time, player.position);
+      npc.setQuest(hasQuest(npc));
+    }
+    // Les bouffées (version 2.8) : de la poussière quand le héros tourne court
+    // ou part en courant, des feuilles quand il traverse l'herbe.
+    if (!frozen) {
+      const pace = Math.hypot(wanted.x, wanted.z);
+      const running = pace >= RUN_PACE;
+      const here = player.worldPosition(focusTarget);
+      if (pace > 0.01 && lastPace > 0.01) {
+        const dot = (wanted.x * lastMove.x + wanted.z * lastMove.z) / (pace * lastPace);
+        if (dot < -0.2) bursts.emit('poussiere', here.x, here.y, here.z, { x: lastMove.x / lastPace, z: lastMove.z / lastPace });
+      }
+      if (running && !wasRunning && pace > 0.01) bursts.emit('poussiere', here.x, here.y, here.z, { x: -wanted.x / pace, z: -wanted.z / pace });
+      if (pace > 0.01 && surfaceAt(player.position.x, player.position.z) === 'grass' && Math.random() < step * (running ? 9 : 5)) {
+        bursts.emit('feuilles', here.x, here.y + 0.15, here.z);
+      }
+      lastMove.x = wanted.x;
+      lastMove.z = wanted.z;
+      lastPace = pace;
+      wasRunning = running;
+    }
+    bursts.update(step);
+    heroBar.update(step);
     if (playing && keyboard.takeKey('KeyJ', 'KeyX')) combat.request();
     combat.update(step, frozen);
     if (doors.current === moor && !frozen) {
@@ -648,7 +695,7 @@ function start() {
       keyboard.takeAction();
       keyboard.takeCancel();
     }
-    doors.current.update(state.time, follow.focus, follow.distance);
+    doors.current.update(state.time, follow.focus, follow.distance, player.worldPosition(focusTarget));
     // Le point net du flou : le buste du héros.
     sharpPoint.copy(player.worldPosition(focusTarget)).y += 0.9;
     pipeline.render(doors.current.scene, follow.camera, sharpPoint, state.time);

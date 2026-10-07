@@ -256,7 +256,7 @@ export function installDebugApi(game) {
         first.setFromMatrixPosition(m);
       }
       const screen = first.clone().project(follow.camera);
-      return { visible: o.visible, count: o.count ?? null, position: o.position.toArray().map((v) => Number(v.toFixed(2))), rayon: o.geometry?.boundingSphere?.radius ?? null, triangles: o.geometry ? o.geometry.index.count / 3 : null, premier: first.toArray().map((v) => Number(v.toFixed(2))), ecran: [Number(((screen.x * 0.5 + 0.5) * renderer.domElement.clientWidth).toFixed(0)), Number(((0.5 - screen.y * 0.5) * renderer.domElement.clientHeight).toFixed(0))] };
+      return { visible: o.visible, count: o.count ?? null, position: o.position.toArray().map((v) => Number(v.toFixed(2))), rayon: o.geometry?.boundingSphere?.radius ?? null, triangles: o.geometry?.index ? o.geometry.index.count / 3 : null, points: o.geometry?.drawRange?.count ?? null, premier: first.toArray().map((v) => Number(v.toFixed(2))), ecran: [Number(((screen.x * 0.5 + 0.5) * renderer.domElement.clientWidth).toFixed(0)), Number(((0.5 - screen.y * 0.5) * renderer.domElement.clientHeight).toFixed(0))] };
     },
     hallucinations() {
       return game.hallucinations.list.map((e) => ({ id: e.id, hp: e.hp, state: e.state, x: Number(e.position.x.toFixed(2)), z: Number(e.position.z.toFixed(2)) }));

@@ -92,6 +92,7 @@ export function createEnemies(placements, { world, sunDirection, post, onDeath =
       enemy.velocity.x = 0;
       enemy.velocity.z = 0;
       enemy.hp = enemy.type.pv;
+      enemy.bar.reset();
       enemy.state = 'vif';
       enemy.timer = 0;
       enemy.flash = 0;
@@ -231,6 +232,7 @@ export function createEnemies(placements, { world, sunDirection, post, onDeath =
         enemy.clock += dt;
         enemy.sprite.setFrame(DIRECTIONS.indexOf(enemy.facing), IDLE_FRAMES[Math.floor(enemy.clock * IDLE_FPS) % IDLE_FRAMES.length]);
         place(enemy, time);
+        enemy.bar.update(dt);
         if (enemy.state === 'vif' && Math.hypot(player.x - enemy.position.x, player.z - enemy.position.z) < enemy.type.portee + 0.3) {
           onContact(enemy);
         }

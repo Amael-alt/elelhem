@@ -205,8 +205,9 @@ export const lootColors = {
 // Les barres de vie (gfx/healthbar.js) : celle des Hallucinations, rouge, et
 // celle des clartés du héros, dorée. Contour, fond, part pleine, liseré clair.
 export const barColors = {
-  hallucination: { cadre: '#1e0907', fond: '#3d1a13', plein: '#cf2726', clair: '#f07a63' },
-  clarte: { cadre: '#1e0907', fond: '#3a2a10', plein: '#f3d08c', clair: '#fff6dc' },
+  // retard : la jauge qui suit la perte avec un temps de retard (version 2.8).
+  hallucination: { cadre: '#1e0907', fond: '#3d1a13', plein: '#cf2726', clair: '#f07a63', retard: '#f2c84b' },
+  clarte: { cadre: '#1e0907', fond: '#3a2a10', plein: '#f3d08c', clair: '#fff6dc', retard: '#d9623a' },
 };
 
 // Le dehors des intérieurs (version 2.5, world/beyond.js) : les silhouettes du

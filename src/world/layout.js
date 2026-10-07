@@ -201,7 +201,7 @@ export const BARRELS = [
   { x: 36.2, z: 30.4 }, { x: 44.0, z: 39.8, height: 0.6 },
 ];
 export const CRATES = [
-  { x: 22.0, z: 13.3 }, { x: 31.5, z: 13.4 }, { x: 30.6, z: 36.0, size: 0.5 }, { x: 22.8, z: 35.6 },
+  { x: 22.0, z: 13.3, angle: 0.3 }, { x: 31.5, z: 13.4, angle: -0.5 }, { x: 30.6, z: 36.0, size: 0.5, angle: 0.7 }, { x: 22.8, z: 35.6, angle: -0.2 },
 ];
 export const BENCHES = [{ x: 19.7, z: 11.55 }, { x: 23.0, z: 17.5, back: true }, { x: 32.4, z: 24.6, back: true }, { x: 22.6, z: 25.4, back: true }, { x: 11.0, z: 32.55 }, { x: 41.6, z: 27.2 }, { x: 49.4, z: 39.3 }];
 export const VEGETABLES = [

@@ -283,6 +283,10 @@ export const textesInterface = {
         'de la paille, et une souris vexée',
         'des clous rouillés et un vieux chiffon',
         'un fond de cidre, mieux vaut le laisser',
+        'une chaussette seule, qui attend sa jumelle depuis des années',
+        'un parchemin : la liste des courses de Berthe',
+        "une araignée, qui te regarde comme si c'était chez elle",
+        'du sable, et un coquillage très loin de la mer',
       ],
     },
     verger: {

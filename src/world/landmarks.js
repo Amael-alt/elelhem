@@ -334,11 +334,14 @@ export function buildChalkboard({ x, z }, builders) {
   return { x, z, radius: 0.32 };
 }
 
-// Caisse de bois.
-export function buildCrate({ x, z, size = 0.55 }, builders) {
+// Caisse de bois, posée de travers (angle, en radians, version 2.9 : rien
+// n'est aligné dans un vrai village).
+export function buildCrate({ x, z, size = 0.55, angle = 0 }, builders) {
   const wood = createFrame(builders.wood, [x, 0, z]);
   const half = size / 2;
-  pushBox(wood, [-half, 0, -half], [half, size, half]);
+  const c = Math.cos(angle) * size;
+  const s = Math.sin(angle) * size;
+  pushSkewBox(wood, [-(c - s) / 2, 0, -(s + c) / 2], [[c, 0, s], [0, size, 0], [-s, 0, c]]);
   return { x, z, radius: half * 1.2 };
 }
 

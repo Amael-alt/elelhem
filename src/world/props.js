@@ -205,9 +205,12 @@ export function buildHouse(house, builders) {
     const center = side.length / 2 + (spec.offset ?? 0);
     const y0 = spec.y ?? WINDOW.y;
     if (shutterKey && frames[shutterKey]) {
+      // Une fenêtre sur neuf a ses volets fermés (version 2.9) : les battants
+      // couvrent les carreaux au lieu de les encadrer.
+      const closed = (house.x * 7 + house.z * 13 + (house.windows.indexOf(spec) + 1) * 31) % 9 === 4;
       for (const dir of [-1, 1]) {
-        const near = center + dir * (WINDOW.size / 2 + SHUTTER.gap);
-        const far = near + dir * SHUTTER.width;
+        const near = closed ? center : center + dir * (WINDOW.size / 2 + SHUTTER.gap);
+        const far = closed ? center + dir * (WINDOW.size / 2) : near + dir * SHUTTER.width;
         slab(frames[shutterKey], side, near, far, y0 + 0.02, y0 + WINDOW.size - 0.02, 0.02, 0.02 + SHUTTER.thickness);
         // Deux traverses sombres, comme des volets à barres.
         for (const yy of [y0 + 0.16, y0 + WINDOW.size - 0.22]) {

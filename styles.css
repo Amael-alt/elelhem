@@ -3618,8 +3618,7 @@ body {
 
 .titre-menu button.choisi,
 .titre-menu button:hover {
-  scale: 1.04;
-  filter: drop-shadow(0 0 10px rgb(243 208 140 / 0.95)) drop-shadow(0 3px 6px rgb(0 0 0 / 0.35));
+  filter: brightness(1.08) drop-shadow(0 3px 6px rgb(0 0 0 / 0.35));
 }
 
 .titre-menu button[hidden] {
@@ -4463,14 +4462,14 @@ body:has(#minimap[hidden]) #son {
    outils/curseur.mjs depuis un dessin généré puis détouré), le point chaud au
    bout de l'index. La première ligne sert aux navigateurs sans image-set(). */
 :root {
-  --curseur: image-set(url("assets/ui/curseur.png") 1x, url("assets/ui/curseur-2x.png") 2x) 1 1, auto;
-  --curseur-actif: image-set(url("assets/ui/curseur-actif.png") 1x, url("assets/ui/curseur-actif-2x.png") 2x) 1 1, pointer;
+  --curseur: image-set(url("assets/ui/curseur.png") 1x, url("assets/ui/curseur-2x.png") 2x) 2 1, auto;
+  --curseur-actif: image-set(url("assets/ui/curseur-actif.png") 1x, url("assets/ui/curseur-actif-2x.png") 2x) 2 1, pointer;
 }
 
 @supports not (cursor: image-set(url("assets/ui/curseur.png") 1x) 1 1, auto) {
   :root {
-    --curseur: url("assets/ui/curseur.png") 1 1, auto;
-    --curseur-actif: url("assets/ui/curseur-actif.png") 1 1, pointer;
+    --curseur: url("assets/ui/curseur.png") 2 1, auto;
+    --curseur-actif: url("assets/ui/curseur-actif.png") 2 1, pointer;
   }
 }
 
@@ -4491,8 +4490,9 @@ label,
   cursor: var(--curseur-actif);
 }
 
-/* Au survol ou à la sélection d'un bouton de menu : un léger agrandissement
-   et une étincelle animée à sa droite. */
+/* Au survol d'un bouton de menu : il s'éclaire un peu, sans grandir ni
+   scintiller (version 2.9 : l'étincelle et l'agrandissement de la 2.8 faisaient
+   interface générique ; la sélection garde ses propres styles, plus haut). */
 .dialogue-choix button,
 .titre-menu button,
 #boutique button,
@@ -4502,71 +4502,171 @@ label,
 #carte button,
 #diplome button {
   position: relative;
-  transition: scale 0.15s ease, filter 0.15s ease;
+  transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .dialogue-choix button:not(.ecarte):hover,
-.dialogue-choix button.choisi,
-.titre-menu button:hover,
-.titre-menu button.choisi,
 #boutique button:not(:disabled):hover,
-#boutique button.choisi,
 #forge button:not(:disabled):hover,
-#forge button.choisi,
 #grimoire button:not(:disabled):hover,
 #feuille button:not(:disabled):hover,
 #carte button:not(:disabled):hover,
 #diplome button:not(:disabled):hover {
-  scale: 1.05;
+  filter: brightness(1.12);
 }
 
-.dialogue-choix button:not(.ecarte):hover::after,
-.dialogue-choix button.choisi::after,
-.titre-menu button:hover::after,
-.titre-menu button.choisi::after,
-#boutique button:not(:disabled):hover::after,
-#boutique button.choisi::after,
-#forge button:not(:disabled):hover::after,
-#forge button.choisi::after {
-  content: "✦";
-  position: absolute;
-  top: 50%;
-  right: 12px;
-  color: var(--or-vif);
-  font-size: 0.9em;
-  line-height: 1;
-  text-shadow: 0 0 6px rgb(243 208 140 / 0.8);
-  translate: 0 -50%;
-  animation: curseur-scintille 0.8s ease-in-out infinite alternate;
-  pointer-events: none;
+/* --- Version 2.9 : les titres et les étiquettes retrouvent la casse du livre.
+   Les capitales espacées partout (titres de panneaux, petites étiquettes au-
+   dessus des chiffres) faisaient tableau de bord ; seuls le bandeau de lieu,
+   le « Nouvelle partie » qui clignote, les rôles du générique et la mention
+   des coups critiques gardent leurs capitales. ------------------------------ */
+.grimoire-titre,
+.carte-titre,
+.boutique-titre,
+.forge-titre,
+.feuille-titre {
+  font-size: clamp(1.25rem, 1rem + 1.2vw, 1.6rem);
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-.titre-menu button:hover::after,
-.titre-menu button.choisi::after {
-  right: -26px;
+.dialogue-nom,
+.touches-titre,
+.endroit-monde {
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-@keyframes curseur-scintille {
-  from {
-    opacity: 0.55;
-    translate: 0 -50%;
-    rotate: 0deg;
+.dialogue-nom {
+  font-size: clamp(1rem, 0.65rem + 1.6vw, 1.15rem);
+}
+
+.touches-titre {
+  font-size: 0.95rem;
+}
+
+.endroit-monde {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgb(246 236 214 / 0.7);
+}
+
+/* Les petites étiquettes : en italique discret plutôt qu'en capitales. */
+.grimoire-numero,
+.feuille-exploits-titre,
+.feuille-notions-titre,
+.feuille-stat dt {
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.grimoire-numero {
+  font-size: 0.95rem;
+}
+
+.feuille-exploits-titre,
+.feuille-notions-titre {
+  font-size: 1rem;
+  color: #6e5236;
+}
+
+/* Les chiffres de la fiche : une liste à points de conduite, comme un
+   registre, plutôt que cinq tuiles encadrées. */
+.feuille-stats {
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 28px;
+}
+
+.feuille-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  text-align: left;
+}
+
+.feuille-stat dt {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  font-size: 0.95rem;
+  color: #6e5236;
+}
+
+.feuille-stat dt::after {
+  content: "";
+  flex: 1;
+  margin: 0 2px 0.3em 8px;
+  border-bottom: 1px dotted rgb(110 82 54 / 0.55);
+}
+
+.feuille-stat dd {
+  color: var(--encre);
+  font-size: 1rem;
+}
+
+/* Les exploits : un petit sceau de cire sans lettre, le nom, la condition à la
+   suite, sur deux colonnes. */
+.feuille-exploits {
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 20px;
+}
+
+.feuille-exploits li {
+  display: block;
+  padding-left: 22px;
+  text-indent: -22px;
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+
+.feuille-sceau {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  text-indent: 0;
+  border-width: 1px;
+  background: radial-gradient(circle at 35% 30%, #d9544a, #8a1f1a 65%, #5a1210);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.4), inset 0 0 0 2px rgb(255 200 180 / 0.25);
+  font-size: 0;
+}
+
+.feuille-exploit-condition::before {
+  content: ", ";
+}
+
+.feuille-exploit-condition {
+  font-size: 0.92rem;
+}
+
+.feuille-exploits li[data-obtenu="non"] .feuille-sceau {
+  border-color: rgb(120 110 100 / 0.5);
+  background: radial-gradient(circle at 35% 30%, #8a8378, #55504a 65%, #35312c);
+}
+
+@media (max-width: 640px) {
+  .feuille-stats,
+  .feuille-exploits {
+    grid-template-columns: 1fr;
   }
 
-  to {
-    opacity: 1;
-    translate: -4px -50%;
-    rotate: 45deg;
+  .feuille-exploits li {
+    grid-template-columns: 14px 1fr;
+    font-size: 0.85rem;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .dialogue-choix button::after,
-  .titre-menu button::after,
-  #boutique button::after,
-  #forge button::after {
-    animation: none;
-  }
+/* Les boutons du grimoire : les mots seuls, sans chevrons. */
+.grimoire-precedente::before,
+.grimoire-suivante::after {
+  content: none;
 }
 
 /* --- Version 2.9 : l'iris des portes. ---------------------------------------- */

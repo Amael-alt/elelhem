@@ -227,7 +227,7 @@ export const textesInterface = {
     titre: "Fiche d'apprenti",
     bouton: 'Feuille de personnage (F)',
     anonyme: 'Voyageur sans nom',
-    sousTitre: (appris, total, tenue) => `${appris} notion${appris > 1 ? 's' : ''} sur ${total} · ${tenue}`,
+    sousTitre: (appris, total, tenue) => `${appris} notion${appris > 1 ? 's' : ''} sur ${total}, ${tenue.toLowerCase()}`,
     notions: 'Les notions de la magie LIA',
     tokens: 'Tokens',
     clartes: 'Clartés',

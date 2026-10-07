@@ -60,7 +60,6 @@ export function createSheet(root, { button, texts, notions, ids, state, outfits,
         const seal = document.createElement('span');
         seal.className = 'feuille-sceau';
         seal.setAttribute('aria-hidden', 'true');
-        seal.textContent = title.nom.charAt(0);
         const name = document.createElement('span');
         name.className = 'feuille-exploit-nom';
         name.textContent = title.nom;

@@ -113,7 +113,8 @@ function toSheet(buffer, glow) {
 // world : la lande (ou le village pour les étincelles) ; sunDirection, post :
 // pour les sprites ; wallet : la bourse ; onPotion() : une fiole ramassée
 // (rend une clarté) ; onSpark(item) : une étincelle ramassée ; rng : hasard.
-export function createPickups({ world, sunDirection, post, wallet, onPotion = () => {}, onSpark = () => {}, rng = Math.random }) {
+// onCoin() : une pièce ramassée (le tintement, version 2.9).
+export function createPickups({ world, sunDirection, post, wallet, onPotion = () => {}, onSpark = () => {}, onCoin = () => {}, rng = Math.random }) {
   const sheets = { piece: toSheet(drawCoin(), true), fiole: toSheet(drawVial(), false), etincelle: toSheet(drawSpark(), true) };
   const items = [];
   const point = new THREE.Vector3();
@@ -186,7 +187,10 @@ export function createPickups({ world, sunDirection, post, wallet, onPotion = ()
         const bob = BOB_AMPLITUDE * Math.sin(time * BOB_RATE + item.seed);
         item.sprite.object.position.set(x, ground + REST_HEIGHT + hop + bob, z);
         if (collect && settle >= 1 && Math.hypot(player.x - x, player.z - z) < REACH) {
-          if (item.kind === 'piece') wallet.earn(item.value);
+          if (item.kind === 'piece') {
+            wallet.earn(item.value);
+            onCoin();
+          }
           else if (item.kind === 'fiole') onPotion();
           else onSpark(item);
           remove(item);

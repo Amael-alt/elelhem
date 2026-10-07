@@ -11,7 +11,8 @@ const EXIT_MS = 600; // durée de la sortie (annonce-sort dans styles.css)
 // root : #parchemins ; notions : identifiant -> notion (data/dialogues.js),
 // dans l'ordre des emplacements ; texts : textesInterface.parchemins ;
 // state : l'état de partie ; onOpen : appelé quand on touche le compteur.
-export function createScrollCounter(root, { notions, texts, state, onOpen = () => {} }) {
+// onGain() : un parchemin vient d'être gagné (le carillon, version 2.9).
+export function createScrollCounter(root, { notions, texts, state, onOpen = () => {}, onGain = () => {} }) {
   const row = root.querySelector('.parchemins-rangee');
   const announce = root.querySelector('.parchemins-annonce');
   const ids = Object.keys(notions);
@@ -84,6 +85,7 @@ export function createScrollCounter(root, { notions, texts, state, onOpen = () =
       void slot.offsetWidth; // relance l'animation si elle vient de jouer
       slot.classList.add('gagne');
       say(texts.obtenu, notions[id], texts.relire);
+      onGain();
     },
     // Une autre annonce au même endroit (un coffre ouvert, par exemple).
     say,

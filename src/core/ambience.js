@@ -15,8 +15,10 @@ const UPDATE_SECONDS = 0.1; // les volumes suivent le héros dix fois par second
 const SMOOTHING = 0.25; // constante de temps des changements de volume
 
 const BLIP_BASE = 540; // hertz, la voix moyenne des dialogues
+export const HAMMER_PERIOD = 1.6; // secondes entre deux coups de marteau de Ferrand (le son et le geste)
 const LEVELS = {
   bip: 0.045, // la frappe du texte des dialogues
+  carillon: 0.11, // les petits sons d'événements (pièce, coffre, parchemin)
   riviere: 0.16,
   cascade: 0.22,
   feu: 0.2,
@@ -74,6 +76,7 @@ function createCrackleBuffer(context, seconds = 3) {
 export function createAmbience(audio, sources, surfaceAt) {
   let engine = null;
   let clock = 0;
+  let lastHammer = -1;
   // Dans un intérieur : { fires: [[x, z], ...] } dans les coordonnées de la
   // pièce ; dehors : null. Dedans, ni rivière, ni oiseaux, ni forge lointaine,
   // le vent étouffé, seulement le feu de la pièce.
@@ -265,6 +268,35 @@ export function createAmbience(audio, sources, surfaceAt) {
     osc.stop(now + 0.06);
   }
 
+  // Les petits sons d'événements (version 2.9) : une note ou deux, tirées
+  // d'une sinusoïde avec une pointe de triangle, en Web Audio comme le reste.
+  const CHIMES = {
+    piece: [[1320, 0, 0.05], [1980, 0.04, 0.09]], // un tintement qui monte
+    coffre: [[520, 0, 0.14], [780, 0.12, 0.18], [1040, 0.24, 0.3]], // trois notes, un accord brisé
+    parchemin: [[880, 0, 0.12], [1108, 0.1, 0.12], [1318, 0.2, 0.12], [1760, 0.3, 0.4]], // un carillon montant
+    quete: [[640, 0, 0.05], [420, 0.04, 0.08]], // un « pop » qui descend : la quête est faite
+    porte: [[300, 0, 0.1], [240, 0.08, 0.16]], // un battant qui se referme
+  };
+  function chime(kind) {
+    if (!engine || engine.context.state !== 'running' || !CHIMES[kind]) return;
+    const { context } = engine;
+    const { gain, now } = voice(0, 0);
+    const shift = pitch();
+    for (const [frequency, at, duration] of CHIMES[kind]) {
+      const osc = context.createOscillator();
+      osc.type = kind === 'porte' ? 'triangle' : 'sine';
+      osc.frequency.value = frequency * shift;
+      const partial = context.createGain();
+      partial.gain.setValueAtTime(0, now + at);
+      partial.gain.linearRampToValueAtTime(LEVELS.carillon, now + at + 0.008);
+      partial.gain.exponentialRampToValueAtTime(0.0005, now + at + duration);
+      osc.connect(partial).connect(gain);
+      osc.start(now + at);
+      osc.stop(now + at + duration + 0.02);
+    }
+    gain.gain.value = 1;
+  }
+
   const setLevel = (channel, level, pan) => {
     const now = engine.context.currentTime;
     channel.gain.gain.setTargetAtTime(level, now, SMOOTHING);
@@ -273,6 +305,11 @@ export function createAmbience(audio, sources, surfaceAt) {
 
   return {
     blip,
+    chime,
+    // De 0 à 1 dans le coup de marteau en cours : le marteau de Ferrand suit (gfx/fx/critters.js).
+    get hammerPhase() {
+      return (clock % HAMMER_PERIOD) / HAMMER_PERIOD;
+    },
     // position : { x, z } du héros ; dt : durée de l'image (temps réel).
     update(position, dt) {
       if (!engine || engine.context.state !== 'running') return;
@@ -333,9 +370,14 @@ export function createAmbience(audio, sources, surfaceAt) {
       }
       const [ax, az] = sources.anvil;
       const forge = falloff(Math.hypot(ax - x, az - z), REACH.marteau);
+      // Le marteau frappe en rythme, à la fin de chaque période (le geste et le son ensemble).
+      const hammerNow = Math.floor(clock / HAMMER_PERIOD);
+      if (hammerNow !== lastHammer) {
+        lastHammer = hammerNow;
+        timers.marteau = 0;
+      } else timers.marteau = 1;
       if (timers.marteau <= 0) {
         // Deux coups rapprochés, puis une pause : le rythme d'une forge.
-        timers.marteau = Math.random() < 0.6 ? 0.55 : 2.2 + Math.random() * 1.5;
         if (forge > 0.01) clang((ax - x) / PAN_SPREAD, LEVELS.marteau * forge);
       }
     },

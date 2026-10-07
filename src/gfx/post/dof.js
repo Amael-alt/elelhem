@@ -15,7 +15,7 @@
 //    pas sur un pixel plus net : pas de halo flou autour d'un objet net.
 
 import * as THREE from 'three';
-import { FULLSCREEN_VERTEX } from './fullscreen.js';
+import { FULLSCREEN_VERTEX } from './screen-triangle.js';
 
 const SHARP_RANGE = 2.2;
 const NEAR_RAMP = 7;

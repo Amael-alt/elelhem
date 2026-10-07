@@ -1,6 +1,8 @@
 // Le support de toutes les passes de post-traitement : un seul triangle qui
 // déborde de l'écran et le couvre entier (moins de travail qu'un quad, aucune
-// diagonale au milieu de l'image).
+// diagonale au milieu de l'image). Version 2.10.2 : ce fichier s'appelait
+// fullscreen.js, un nom que les bloqueurs de Brave et d'uBlock refusent sur
+// github.io (les pages d'arnaque au faux support technique l'emploient).
 
 import * as THREE from 'three';
 

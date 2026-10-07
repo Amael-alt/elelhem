@@ -15,7 +15,7 @@
 // ?view=raw | coc | bloom montre une étape à la fois.
 
 import * as THREE from 'three';
-import { createFullscreenTriangle } from './fullscreen.js';
+import { createFullscreenTriangle } from './screen-triangle.js';
 import { BAND_HALF_WIDTH, createDofGatherMaterial, createDofPrefilterMaterial, MAX_BLUR } from './dof.js';
 import { createBloomMaterials } from './bloom.js';
 import { createCompositeMaterial, GRADE_GLSL } from './composite.js';

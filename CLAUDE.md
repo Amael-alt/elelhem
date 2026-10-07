@@ -55,6 +55,7 @@ Trois démos publiques servent de référence : `Legerdo/hd2d-diorama` pour le r
 ## Modules
 
 - Modules ES natifs. Un fichier, une responsabilité, rangé selon l'arborescence du README : `core/` (rendu, caméra, entrées), `gfx/` (pixels, textures, matériaux, sprites, post-traitement, effets), `world/` (carte, terrain, bâtiments, collisions), `game/` (joueur, habitants, dialogues, quête, interface, débogage), `data/` (palette, personnages, dialogues).
+- Noms de fichiers : jamais un nom que les bloqueurs de publicités visent sur github.io. La liste « Badware risks » d'uBlock, active par défaut dans Brave, bloque notamment `fullscreen.js`, `before.js`, `esc.js`, `flscn.js` et `media/beep.mp3` (version 2.10.2 : un `fullscreen.js` empêchait le jeu de démarrer). Éviter aussi `ads`, `banner-ad`, `tracking`, `analytics`, `pixel.gif` dans un chemin.
 - Exports nommés uniquement, pas d'`export default`. Imports relatifs avec l'extension `.js`.
 - Aucun effet de bord à l'import : un module exporte des fonctions (`createXxx(...)`) ou des données. Seul `src/main.js` démarre quelque chose.
 - Aucune variable globale, sauf `window.__lia`, créé par `game/debug.js` pour les tests.

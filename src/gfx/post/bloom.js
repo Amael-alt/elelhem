@@ -11,7 +11,7 @@
 //    de halo, du plus serré au plus large.
 
 import * as THREE from 'three';
-import { FULLSCREEN_VERTEX } from './fullscreen.js';
+import { FULLSCREEN_VERTEX } from './screen-triangle.js';
 
 const THRESHOLD = 1.2; // 0,9 dans le plan, relevé avec le soleil (6,5 au lieu de 4,5)
 const KNEE = 0.5; // part du seuil sur laquelle la courbe s'adoucit

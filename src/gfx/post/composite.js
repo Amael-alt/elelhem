@@ -18,7 +18,7 @@
 
 import * as THREE from 'three';
 import { COC_GLSL } from './dof.js';
-import { FULLSCREEN_VERTEX } from './fullscreen.js';
+import { FULLSCREEN_VERTEX } from './screen-triangle.js';
 
 export const EXPOSURE = 1.25;
 const SPLIT_TONE = 0.05;

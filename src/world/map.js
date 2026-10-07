@@ -2,46 +2,62 @@
 // unité. Ligne 0 au nord (z = 0), colonne 0 à l'ouest (x = 0). Le type de
 // cellule donne sa hauteur, sa matière et si on peut y marcher.
 //
-// Carte du village, 40 × 30 cases : une place pavée au centre, des routes de
-// terre vers chaque quartier, la muraille et sa porte à l'ouest, la rivière
-// et son pont à l'est, des falaises au nord et à l'est, des haies autour des
-// jardins. Les maisons, tours et le chantier sont posés par world/village.js
-// sur ces cases (map.build) ; leur emplacement est donc lisible là-bas.
+// Carte du village, 56 × 42 cases depuis la version 2.3 (40 × 30 avant, tout
+// espacé de 40 %) : une place pavée au centre, des rues de terre vers chaque
+// quartier, la muraille et sa porte à l'ouest, la rivière et son pont à l'est,
+// des falaises au nord et à l'est, des haies autour des jardins, le marché
+// pavé au sud de la place, le terrain d'entraînement en terre battue derrière
+// la forge, le bassin du lavoir au bord de la rivière. Les maisons, tours et
+// le chantier sont posés par world/village.js sur ces cases (map.build) ;
+// leur emplacement est donc lisible là-bas.
 //
 //   . herbe   t terre   p pavés   ~ eau   # muret   b pont
 //   c falaise   W muraille   h haie   r rivière haute (avant la cascade)
+//   g corniche derrière la cascade
 
 const ROWS = [
-  'ccccccccccccccccccccccccccccccrrrccccccc',
-  'ccccccccccccccccccccccccccccccrrrccccccc',
-  'ccccccc.......................~~~.cccccc',
-  'cc.................tt.........~~~.....cc',
-  '..W................tt.........~~~.....cc',
-  '..W................tt.....hhhh~~~.....cc',
-  '..W................tt.....htth~~~.....cc',
-  '..W................tt.....htth~~~.....cc',
-  '..W................tt.....htth~~~.....cc',
-  '..W..........tt....tt.....htth~~~.....cc',
-  '..W..tt......tt....tt...tt....~~~.....cc',
-  '..W..tt.......pppppppppppp....~~~.....cc',
-  '..W..tt.......pppppppppppp....~~~.....cc',
-  '.....tt.......pppppppppppp....###.ttt.cc',
-  '...tttttttttttppppppppppppttttbbb.ttttcc',
-  '...tttttttttttppppppppppppttttbbb.ttttcc',
-  '..W...........pppppppppppp....###.ttt.cc',
-  '..W...........pppppppppppp.....~~~....cc',
-  '..W...........pppppppppppp.....~~~....cc',
-  '..W................tttttt......~~~....cc',
-  '..W................ttttt.......~~~....cc',
-  '..W..........hhhhh.ttttt.......~~~....cc',
-  '..W..........httth.ttttt.......~~~....cc',
-  '..W..........hhthh.ttttt.......~~~....cc',
-  '..W......ttttttttttttttt.......~~~....cc',
-  '..W......ttttttttttttttt.......~~~....cc',
-  '...................ttttt.......~~~....cc',
-  '..................htth.........~~~....cc',
-  '..................htth.........~~~....cc',
-  '...................tt..........~~~....cc',
+  'cccccccccccccccccccccccccccccccccccccccccccrrrcccccccccc',
+  'cccccccccccccccccccccccccccccccccccccccccccrrrcccccccccc',
+  'cccccccccc.................................ggg..cccccccc',
+  'ccc........................................~~~........cc',
+  '...W.......................................~~~........cc',
+  '...W......................tt...............~~~........cc',
+  '...W......................tt...............~~~........cc',
+  '...W...tt.................tt........hhhhhh.~~~........cc',
+  '...W...tt.................tt........htttth.~~~........cc',
+  '...W...tt.................tt........htttth.~~~........cc',
+  '...W...tt.................tt........htttth.~~~........cc',
+  '...W...tt........tt.......tt.....tt.htttth.~~~........cc',
+  '...W...ttttttt...tt.......tt.....tt.htttth.~~~........cc',
+  '...W...ttttttt...tt.......tt.....tt.htttth.~~~........cc',
+  '...W...ttttttt...tt.......tt.....tt........~~~........cc',
+  '...W...ttttttt...tt.......tt.....tt........~~~........cc',
+  '...W...ttttttt......ppppppppppppppppp......~~~........cc',
+  '...W...ttttttt......ppppppppppppppppp......~~~........cc',
+  '...W...ttttttt......ppppppppppppppppp......~~~........cc',
+  '.........ttt........ppppppppppppppppp......###.tttt...cc',
+  'ttttttttttttttttttttpppppppppppppppppttttttbbbttttttt.cc',
+  'ttttttttttttttttttttpppppppppppppppppttttttbbbttttttt.cc',
+  '....................ppppppppppppppppp......###.tttt...cc',
+  '...W................ppppppppppppppppp.......~~~.......cc',
+  '...W................ppppppppppppppppp.......~~~.......cc',
+  '...W................ppppppppppppppppp.......~~~.......cc',
+  '...W................ppppppppppppppppp.......~~~.......cc',
+  '...W.......................tt...............~~~.......cc',
+  '...W..............hhhhhh...tt...............~~~.......cc',
+  '...W..............htttthppppppppppp.........~~~.......cc',
+  '...W..............htttthppppppppppp.........~~~.......cc',
+  '...W..............hhtthhpppppppppptttttt....~~~.......cc',
+  '...W........ttttttttttpppppppppppptttttt....~~~.......cc',
+  '...W........ttttttttttppppppppppppp...tt....~~~.......cc',
+  '...W..................ppppppppppppp...tt....~~~.......cc',
+  '...W.......................tt.........tt....~~~.......cc',
+  '...........................tt...............~~~.......cc',
+  '...........................tt............~~.~~~.......cc',
+  '..........................htth...........~~.~~~.......cc',
+  '..........................htth..............~~~.......cc',
+  '...........................tt...............~~~.......cc',
+  '...........................tt...............~~~.......cc',
 ];
 
 // matter : texture du dessus ; side : texture des flancs ; height : hauteur
@@ -57,6 +73,9 @@ export const CELL_TYPES = {
   W: { name: 'muraille', matter: 'cobble', side: 'cobble', height: 3.4, solid: true }, // deux personnages de haut
   h: { name: 'haie', matter: 'leaves', side: 'leaves', height: 0.45, solid: true }, // basse : ses grappes la couvrent
   r: { name: 'rivière haute', matter: 'water', side: 'rock', height: 1.55, solid: true },
+  // La corniche derrière la cascade (version 2.3) : de la pierre au niveau du
+  // village, cachée par le rideau d'eau qui tombe une case devant.
+  g: { name: 'corniche', matter: 'cobble', side: 'rock', height: 0, solid: false },
   // Les intérieurs (world/rooms.js) : plancher de lattes (ou dalles de pierre
   // à la forge), murs au nord et sur les côtés, muret bas au sud (la façade est
   // coupée, comme une maquette ouverte), seuil par où l'on ressort, de bois ou

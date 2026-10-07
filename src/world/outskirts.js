@@ -16,6 +16,7 @@ import { TILE_UNITS } from '../gfx/textures.js';
 import { createRng } from '../gfx/pixels.js';
 import { crownClumps } from '../gfx/foliage.js';
 import { FIRST_FLOWER_VARIANT, FLOWER_VARIANTS } from '../gfx/grass.js';
+import { OUTSKIRTS } from './layout.js';
 
 const REACH = 36; // jusqu'où s'étend le monde autour du village
 const FOREST_DEPTH = 15; // largeur de la lisière boisée, au-delà la brume suffit
@@ -62,12 +63,11 @@ export function createOutskirts(map, materials, { tints, treeKinds = ['vert', 'v
   const R = REACH;
   const b = { grass: createMeshBuilder(), dirt: createMeshBuilder(), water: createMeshBuilder(), rock: createMeshBuilder(), bark: createMeshBuilder() };
 
-  // Rivière : sur le plateau au nord (x 30 à 33), dans la plaine au sud (31 à 34).
-  const north = { x0: 30, x1: 33 };
-  const south = { x0: 31, x1: 34 };
-  // Routes : à l'ouest (z 14 à 16), au sud (x 19 à 21).
-  const westRoad = { z0: 14, z1: 16 };
-  const southRoad = { x0: 19, x1: 21 };
+  // Rivière sur le plateau au nord et dans la plaine au sud, rues de l'ouest
+  // et du sud : là où la carte les laisse sortir (OUTSKIRTS de world/layout.js).
+  const north = OUTSKIRTS.riverNorth;
+  const south = OUTSKIRTS.riverSouth;
+  const { westRoad, southRoad } = OUTSKIRTS;
 
   // Plateau nord, de part et d'autre de la rivière haute.
   top(b.grass, -R, -R, north.x0, 0, PLATEAU);

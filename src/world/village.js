@@ -13,13 +13,14 @@ import { createTerrain } from './terrain.js';
 import { createCollider } from './collision.js';
 import { buildHouse, buildLantern, buildTree, LANTERN_FLAME, LANTERN_POST_RADIUS, TREE_TRUNK_RADIUS } from './props.js';
 import {
-  buildAnvil, buildBarrel, buildBench, buildCampfire, buildCrate, buildFence, buildFlowerPot, buildHaystack, buildHearth,
-  buildRock, buildSign, buildSignpost, buildSite, buildStall, buildTable, buildTower, buildVegetables, buildWell, buildWoodpile,
+  buildAnvil, buildAppleTree, buildBarrel, buildBasket, buildBench, buildCampfire, buildCrate, buildDummy, buildFence,
+  buildFlowerPot, buildHaystack, buildHearth, buildLadder, buildMarketStall, buildRock, buildSign, buildSignpost, buildSite,
+  buildStall, buildTable, buildTarget, buildTower, buildVegetables, buildWashhouse, buildWell, buildWoodpile,
 } from './landmarks.js';
 import {
   ANVIL, BARRELS, BENCHES, BUNTING, BUSHES, BUTTERFLIES, CAMPFIRE, FENCES, FLOWER_POTS, HAYSTACKS, MEADOWS, ROCKS, SIGNPOSTS,
-  STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, SIGN, SITE, SPAWN, SUN_RAYS,
-  PIGEONS, TOWERS, TREES, VEGETABLES, WATERFALL, WELL,
+  STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, MARKET_STALLS, ORCHARD, SIGN, SITE,
+  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createFoliage, crownClumps } from '../gfx/foliage.js';
@@ -31,6 +32,7 @@ import { createBunting } from '../gfx/bunting.js';
 import { createLightPools } from '../gfx/lightpools.js';
 import { createButterflies, createFallingLeaves } from '../gfx/fx/leaves.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
+import { buildChest } from './furniture.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
 import { createFxUniforms } from '../gfx/fx/points.js';
@@ -139,6 +141,15 @@ function createBuildings(materials, posts) {
   const chimneys = houses.map((house) => house.chimney).filter(Boolean);
   const planters = houses.flatMap((house) => house.planters);
   for (const stall of STALLS) addPosts(buildStall(stall, builders));
+  // Version 2.3 : le marché, le lavoir, l'enclos d'entraînement et le verger.
+  for (const stall of MARKET_STALLS) addPosts(buildMarketStall(stall, builders));
+  addPosts(buildWashhouse(WASHHOUSE, builders));
+  const dummies = TRAINING.dummies.map((dummy) => buildDummy(dummy, builders));
+  for (const dummy of dummies) addPosts(dummy.obstacle);
+  for (const target of TRAINING.targets) addPosts(buildTarget(target, builders));
+  addPosts(buildLadder(ORCHARD.ladder, builders));
+  for (const chest of CHESTS) addPosts(buildChest(chest, builders).posts);
+  for (const basket of ORCHARD.baskets) addPosts(buildBasket(basket, builders));
   for (const fence of FENCES) addPosts(buildFence(fence, builders));
   for (const stack of HAYSTACKS) addPosts(buildHaystack(stack, builders));
   for (const rock of ROCKS) addPosts(buildRock(rock, builders));
@@ -173,6 +184,14 @@ function createBuildings(materials, posts) {
     clumps.push(...crownClumps(crown.center, crown.radius, tint, i));
     if (kind === 'automne') autumnCrowns.push({ ...crown.center, radius: crown.radius, tint });
   });
+  // Les pommiers du verger : couronnes plus rondes et plus basses, chargées
+  // de pommes (buildAppleTree pose les fruits dans la géométrie).
+  ORCHARD.trees.forEach(([x, z, size], i) => {
+    posts.push({ x, z, radius: TREE_TRUNK_RADIUS * size });
+    const crown = buildAppleTree(x, z, { size }, builders);
+    const tints = foliageTints.verger ?? foliageTints.vert;
+    clumps.push(...crownClumps(crown.center, crown.radius, tints[i % tints.length], 100 + i));
+  });
   const lanternFlame = ([x, z]) => {
     posts.push({ x, z, radius: LANTERN_POST_RADIUS });
     return buildLantern(x, z, builders);
@@ -195,7 +214,7 @@ function createBuildings(materials, posts) {
     mesh.matrixAutoUpdate = false;
     group.add(mesh);
   }
-  return { group, flames, chimneys, clumps, planters, autumnCrowns };
+  return { group, flames, chimneys, clumps, planters, autumnCrowns, dummies: dummies.map((dummy) => dummy.hit) };
 }
 
 export function createVillage(scene, { narrowScreen = false } = {}) {
@@ -208,6 +227,7 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
   scene.add(createTerrain(map, materials));
   const posts = [];
   const buildings = createBuildings(materials, posts);
+  const dummies = buildings.dummies;
   scene.add(buildings.group);
 
   const { lit, decor, hearth } = buildings.flames;
@@ -344,6 +364,10 @@ export function createVillage(scene, { narrowScreen = false } = {}) {
     },
     sunDirection,
     spawn: SPAWN,
+    // Les mannequins de l'enclos d'entraînement : où l'épée les touche.
+    dummies,
+    // Les coffres du dehors (main.js les ouvre comme ceux des pièces).
+    chests: CHESTS,
     groundHeight(x, z) {
       return map.cellAt(Math.floor(x), Math.floor(z))?.height ?? 0;
     },

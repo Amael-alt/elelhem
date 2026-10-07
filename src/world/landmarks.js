@@ -375,3 +375,452 @@ export function buildWoodpile({ x, z }, builders) {
   pushBox(wood, [-0.9, 1.05, -0.5], [0.75, 1.1, 0.42]);
   return { x, z, radius: 0.75 };
 }
+
+// ---------------------------------------------------------------------------
+// Le verger, le terrain d'entraînement, le lavoir et le marché. Même méthode,
+// avec deux outils de plus : une boîte inclinée (pushBar), pour les échelles,
+// les pieds de chevalet, les flèches et les branches, et un octogone épais
+// (pushOctagon) pour les cibles. Les positions « au hasard » (les pommes)
+// sortent d'un hachage de x et z : le même verger à chaque chargement.
+// ---------------------------------------------------------------------------
+
+// Nombre pseudo-aléatoire dans [0, 1[, déterminé par (a, b) et un indice i.
+function hash01(a, b, i) {
+  const v = Math.sin(a * 12.9898 + b * 78.233 + i * 37.719) * 43758.5453;
+  return v - Math.floor(v);
+}
+
+// Boîte dont les arêtes suivent trois vecteurs quelconques (ex, ey, ez) depuis
+// un coin origin : le parallélépipède d'un bois incliné. Six faces, dessous
+// compris. Le trièdre (ex, ey, ez) doit être direct pour garder les faces
+// tournées vers l'extérieur.
+function pushSkewBox(frame, origin, [ex, ey, ez], { groundAo = 0.75 } = {}) {
+  const at = (i, j, k) => [
+    origin[0] + i * ex[0] + j * ey[0] + k * ez[0],
+    origin[1] + i * ex[1] + j * ey[1] + k * ez[1],
+    origin[2] + i * ex[2] + j * ey[2] + k * ez[2],
+  ];
+  const length = (v) => tile(Math.hypot(v[0], v[1], v[2]));
+  const [lx, ly, lz] = [length(ex), length(ey), length(ez)];
+  const uv = (a, b) => [[0, 0], [a, 0], [a, b], [0, b]];
+  const foot = origin[1] < 0.05 ? groundAo : 1;
+  const sideAo = [foot, foot, 1, 1];
+  frame.polygon([at(0, 1, 1), at(1, 1, 1), at(1, 1, 0), at(0, 1, 0)], uv(lx, lz));
+  frame.polygon([at(0, 0, 1), at(1, 0, 1), at(1, 1, 1), at(0, 1, 1)], uv(lx, ly), sideAo);
+  frame.polygon([at(1, 0, 0), at(0, 0, 0), at(0, 1, 0), at(1, 1, 0)], uv(lx, ly), sideAo);
+  frame.polygon([at(1, 0, 1), at(1, 0, 0), at(1, 1, 0), at(1, 1, 1)], uv(lz, ly), sideAo);
+  frame.polygon([at(0, 0, 0), at(0, 0, 1), at(0, 1, 1), at(0, 1, 0)], uv(lz, ly), sideAo);
+  frame.polygon([at(0, 0, 0), at(1, 0, 0), at(1, 0, 1), at(0, 0, 1)], uv(lx, lz));
+}
+
+// Barre de section carrée entre deux points [x, y, z], quelle que soit son
+// inclinaison : la section reste droite selon les deux autres axes du monde.
+function pushBar(frame, from, to, section, options) {
+  let d = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
+  let start = from;
+  const sizes = d.map(Math.abs);
+  const axis = sizes.indexOf(Math.max(...sizes));
+  if (d[axis] < 0) {
+    start = to;
+    d = d.map((v) => -v);
+  }
+  const h = section / 2;
+  const across = [[h, 0, 0], [0, h, 0], [0, 0, h]].filter((_, i) => i !== axis);
+  const origin = [
+    start[0] - across[0][0] - across[1][0],
+    start[1] - across[0][1] - across[1][1],
+    start[2] - across[0][2] - across[1][2],
+  ];
+  const edges = [[section, 0, 0], [0, section, 0], [0, 0, section]];
+  edges[axis] = d;
+  pushSkewBox(frame, origin, edges, options);
+}
+
+// Octogone plein dans un plan vertical, face au sud : face avant en z1, face
+// arrière en z0, flancs entre les deux. Avec z0 égal à z1, seule la face avant
+// (un disque plat à plaquer). Le rayon est pris aux sommets.
+function pushOctagon(frame, [cx, cy], radius, [z0, z1]) {
+  const ring = (zz) => Array.from({ length: 8 }, (_, k) => {
+    const a = (k / 8) * Math.PI * 2 + Math.PI / 8;
+    return [cx + Math.cos(a) * radius, cy + Math.sin(a) * radius, zz];
+  });
+  const uvs = (points) => points.map(([px, py]) => [tile(px), tile(py)]);
+  const front = ring(z1);
+  frame.polygon(front, uvs(front));
+  if (z0 === z1) return;
+  const back = ring(z0).reverse();
+  frame.polygon(back, uvs(back));
+  const depth = tile(z1 - z0);
+  for (let k = 0; k < 8; k += 1) {
+    const n = (k + 1) % 8;
+    const edge = tile(Math.hypot(front[n][0] - front[k][0], front[n][1] - front[k][1]));
+    frame.polygon(
+      [front[k], [front[k][0], front[k][1], z0], [front[n][0], front[n][1], z0], front[n]],
+      [[0, 0], [depth, 0], [depth, edge], [0, edge]],
+    );
+  }
+}
+
+// Toit à deux pans dont le faîtage suit l'axe x, de x0 à x1, les égouts en z0
+// (nord) et z1 (sud) : pans couverts de la matière roofKey, sous-face et chants
+// en planches, poutre de faîtage. Fermé, il porte ombre comme un volume.
+function gableRoofX(frames, roofKey, [x0, z0, x1, z1], eaveY, ridgeY, T) {
+  const mid = (z0 + z1) / 2;
+  const slopeLength = tile(Math.hypot(mid - z0, ridgeY - eaveY));
+  const roof = frames[roofKey];
+  const wood = frames.wood;
+  roof.polygon([[x0, eaveY, z1], [x1, eaveY, z1], [x1, ridgeY, mid], [x0, ridgeY, mid]],
+    [[tile(x0), 0], [tile(x1), 0], [tile(x1), slopeLength], [tile(x0), slopeLength]]);
+  roof.polygon([[x1, eaveY, z0], [x0, eaveY, z0], [x0, ridgeY, mid], [x1, ridgeY, mid]],
+    [[tile(x1), 0], [tile(x0), 0], [tile(x0), slopeLength], [tile(x1), slopeLength]]);
+  wood.polygon([[x0, ridgeY - T, mid], [x1, ridgeY - T, mid], [x1, eaveY - T, z1], [x0, eaveY - T, z1]], FULL_UV);
+  wood.polygon([[x1, ridgeY - T, mid], [x0, ridgeY - T, mid], [x0, eaveY - T, z0], [x1, eaveY - T, z0]], FULL_UV);
+  wood.polygon([[x0, eaveY - T, z1], [x1, eaveY - T, z1], [x1, eaveY, z1], [x0, eaveY, z1]], FULL_UV);
+  wood.polygon([[x1, eaveY - T, z0], [x0, eaveY - T, z0], [x0, eaveY, z0], [x1, eaveY, z0]], FULL_UV);
+  wood.polygon([[x1, eaveY - T, z1], [x1, ridgeY - T, mid], [x1, ridgeY, mid], [x1, eaveY, z1]], FULL_UV);
+  wood.polygon([[x1, ridgeY - T, mid], [x1, eaveY - T, z0], [x1, eaveY, z0], [x1, ridgeY, mid]], FULL_UV);
+  wood.polygon([[x0, eaveY - T, z0], [x0, ridgeY - T, mid], [x0, ridgeY, mid], [x0, eaveY, z0]], FULL_UV);
+  wood.polygon([[x0, ridgeY - T, mid], [x0, eaveY - T, z1], [x0, eaveY, z1], [x0, ridgeY, mid]], FULL_UV);
+  pushBox(wood, [x0, ridgeY - 0.04, mid - 0.09], [x1, ridgeY + 0.08, mid + 0.09]);
+}
+
+// Lavoir : margelle de pierre autour d'un bassin de deux cases sur deux (l'eau
+// est peinte par la carte, le rectangle intérieur reste vide), planche à laver,
+// baquet et panier de linge, sous un toit d'ardoise à deux pans porté par
+// quatre poteaux à charpente apparente. (x, z) : coin nord-ouest de l'emprise
+// de 4 × 4 cases. Renvoie les obstacles ronds des poteaux et de la margelle.
+const WASHHOUSE = { size: 4, rim: 0.3, rimHeight: 0.45, postHeight: 2.4, ridgeY: 3.3, roofSize: 4.4, postInset: 0.35 };
+export function buildWashhouse({ x, z }, builders) {
+  const frames = Object.fromEntries(Object.keys(builders).map((key) => [key, createFrame(builders[key], [x, 0, z])]));
+  const { stone, wood, post, iron, plaster, awning } = frames;
+  const S = WASHHOUSE.size;
+  const [in0, in1] = [1, 3]; // le bassin
+  const [out0, out1] = [in0 - WASHHOUSE.rim, in1 + WASHHOUSE.rim];
+  const H = WASHHOUSE.rimHeight;
+  // Margelle en quatre côtés, coiffée d'un chaperon qui déborde un peu.
+  const rimStrips = (a0, a1, y0, y1) => {
+    pushBox(stone, [a0, y0, a0], [a1, y1, in0]);
+    pushBox(stone, [a0, y0, in1], [a1, y1, a1]);
+    pushBox(stone, [a0, y0, in0], [in0, y1, in1]);
+    pushBox(stone, [in1, y0, in0], [a1, y1, in1]);
+  };
+  rimStrips(out0, out1, 0, H - 0.06);
+  rimStrips(out0 - 0.04, out1 + 0.04, H - 0.06, H);
+  // Poteaux sur dés de pierre, sablières (axe x) et entraits (axe z) posés
+  // dessus, jambes de force, puis aux pignons un poinçon et deux arbalétriers
+  // qui suivent les pans.
+  const [p0, p1] = [WASHHOUSE.postInset, S - WASHHOUSE.postInset];
+  const PH = WASHHOUSE.postHeight;
+  const ridgeY = WASHHOUSE.ridgeY;
+  const mid = S / 2;
+  const corners = [[p0, p0], [p1, p0], [p0, p1], [p1, p1]];
+  for (const [px, pz] of corners) {
+    pushBox(stone, [px - 0.12, 0, pz - 0.12], [px + 0.12, 0.12, pz + 0.12], { groundAo: 0.6 });
+    pushBox(post, [px - 0.07, 0, pz - 0.07], [px + 0.07, PH, pz + 0.07], { groundAo: 0.6 });
+    const sx = px === p0 ? 1 : -1;
+    const sz = pz === p0 ? 1 : -1;
+    pushBar(wood, [px, PH - 0.55, pz], [px + sx * 0.5, PH + 0.02, pz], 0.06);
+    pushBar(wood, [px, PH - 0.55, pz], [px, PH + 0.02, pz + sz * 0.5], 0.06);
+  }
+  for (const pz of [p0, p1]) pushBox(wood, [p0 - 0.15, PH, pz - 0.07], [p1 + 0.15, PH + 0.12, pz + 0.07]);
+  for (const px of [p0, p1]) {
+    pushBox(wood, [px - 0.07, PH, p0 - 0.15], [px + 0.07, PH + 0.12, p1 + 0.15]);
+    pushBox(wood, [px - 0.05, PH + 0.12, mid - 0.05], [px + 0.05, ridgeY - 0.04, mid + 0.05]);
+    pushBar(wood, [px, PH + 0.06, p0], [px, ridgeY - 0.2, mid - 0.08], 0.08);
+    pushBar(wood, [px, PH + 0.06, p1], [px, ridgeY - 0.2, mid + 0.08], 0.08);
+  }
+  const overhang = (WASHHOUSE.roofSize - S) / 2;
+  gableRoofX(frames, 'slate', [-overhang, -overhang, S + overhang, S + overhang], PH, ridgeY, 0.1);
+  // Planche à laver appuyée sur la margelle sud et plongeant dans le bassin,
+  // le savon à côté.
+  const boardLow = [1.63, 0.12, 2.35];
+  const boardRun = [0, H - 0.12, 0.85];
+  const boardLength = Math.hypot(boardRun[1], boardRun[2]);
+  const boardUp = [0, (boardRun[2] / boardLength) * 0.04, (-boardRun[1] / boardLength) * 0.04];
+  pushSkewBox(wood, boardLow, [[0.45, 0, 0], boardUp, boardRun]);
+  pushBox(plaster, [2.25, H, 3.05], [2.37, H + 0.05, 3.14]);
+  // Baquet cerclé de fer au coin nord-ouest, plein d'eau savonneuse.
+  pushBox(wood, [0.68, H, 0.68], [1.04, H + 0.26, 1.04]);
+  for (const y of [H + 0.05, H + 0.19]) pushBox(iron, [0.665, y, 0.665], [1.045, y + 0.03, 1.045]);
+  pushBox(plaster, [0.72, H + 0.26, 0.72], [1.0, H + 0.3, 1.0]);
+  // Panier de linge sur la margelle est, le linge qui dépasse.
+  pushBox(wood, [out1 - 0.33, H, 1.95], [out1 + 0.02, H + 0.22, 2.4]);
+  pushBox(iron, [out1 - 0.345, H + 0.1, 1.935], [out1 + 0.035, H + 0.13, 2.415]);
+  pushBox(plaster, [out1 - 0.3, H + 0.22, 1.98], [out1 - 0.01, H + 0.3, 2.37]);
+  pushBox(awning, [out1 - 0.26, H + 0.3, 2.05], [out1 - 0.05, H + 0.35, 2.3]);
+  // Un drap étendu sur la margelle sud, qui pend devant.
+  pushBox(awning, [2.5, H, 3.0], [2.85, H + 0.02, out1 + 0.04]);
+  awning.polygon(
+    [[2.5, 0.15, out1 + 0.045], [2.85, 0.15, out1 + 0.045], [2.85, H + 0.02, out1 + 0.045], [2.5, H + 0.02, out1 + 0.045]],
+    [[0, 0], [tile(0.35), 0], [tile(0.35), tile(H)], [0, tile(H)]],
+  );
+  // Obstacles : les poteaux, et des cercles serrés le long de la margelle.
+  const obstacles = corners.map(([px, pz]) => ({ x: x + px, z: z + pz, radius: 0.1 }));
+  const [c0, c1] = [out0 + WASHHOUSE.rim / 2, out1 - WASHHOUSE.rim / 2];
+  const steps = Math.ceil((c1 - c0) / 0.4);
+  for (let s = 0; s <= steps; s += 1) {
+    const t = c0 + ((c1 - c0) * s) / steps;
+    obstacles.push({ x: x + t, z: z + c0, radius: 0.2 }, { x: x + t, z: z + c1, radius: 0.2 });
+    if (s > 0 && s < steps) obstacles.push({ x: x + c0, z: z + t, radius: 0.2 }, { x: x + c1, z: z + t, radius: 0.2 });
+  }
+  return obstacles;
+}
+
+// Mannequin d'entraînement : un pieu calé au sol, un corps de paille serré par
+// des cordes, une traverse pour les bras, un tablier de toile. facing : le
+// côté vers lequel il regarde (south, north, east, west). Renvoie l'obstacle
+// rond et le point où une épée le touche.
+const DUMMY = { postHeight: 1.9, torso: [0.5, 0.7, 0.3], torsoBottom: 0.75, armsY: 1.35, armsLength: 1.1, hitY: 1.1 };
+export function buildDummy({ x, z, facing = 'south' }, builders) {
+  const swap = facing === 'east' || facing === 'west';
+  const front = facing === 'south' || facing === 'east' ? 1 : -1;
+  const frame = (key) => createFrame(builders[key], [x, 0, z], swap);
+  const [post, thatch, wood, iron, awning] = ['post', 'thatch', 'wood', 'iron', 'awning'].map(frame);
+  const [hw, th, hd] = [DUMMY.torso[0] / 2, DUMMY.torso[1], DUMMY.torso[2] / 2];
+  const y0 = DUMMY.torsoBottom;
+  pushBox(post, [-0.05, 0, -0.05], [0.05, DUMMY.postHeight, 0.05], { groundAo: 0.6 });
+  for (const [u, w] of [[0.08, 0], [-0.08, 0.02], [0.01, -0.09]]) {
+    pushBox(wood, [u - 0.07, 0, w - 0.05], [u + 0.07, 0.08, w + 0.05], { groundAo: 0.6 });
+  }
+  // Paille : torse, hanches plus étroites, tête en deux boîtes croisées.
+  pushBox(thatch, [-hw, y0, -hd], [hw, y0 + th, hd]);
+  pushBox(thatch, [-hw + 0.08, y0 - 0.2, -hd + 0.05], [hw - 0.08, y0, hd - 0.05]);
+  pushBox(thatch, [-0.14, y0 + th + 0.03, -0.14], [0.14, y0 + th + 0.31, 0.14]);
+  pushBox(thatch, [-0.1, y0 + th - 0.01, -0.1], [0.1, y0 + th + 0.35, 0.1]);
+  // Traverse des bras, une poignée de paille à chaque bout.
+  const half = DUMMY.armsLength / 2;
+  pushBox(wood, [-half, DUMMY.armsY - 0.04, -0.04], [half, DUMMY.armsY + 0.04, 0.04]);
+  for (const su of [-1, 1]) {
+    pushBox(thatch, [su * half - 0.1, DUMMY.armsY - 0.09, -0.07], [su * half + 0.1, DUMMY.armsY + 0.09, 0.07]);
+  }
+  // Tablier sur le devant, cordes autour du torse et du cou.
+  const apron = front > 0 ? [hd, hd + 0.02] : [-hd - 0.02, -hd];
+  pushBox(awning, [-0.19, y0 + 0.05, apron[0]], [0.19, y0 + 0.5, apron[1]]);
+  for (const y of [y0 + 0.1, y0 + 0.3, y0 + 0.5]) pushBox(iron, [-hw - 0.03, y, -hd - 0.03], [hw + 0.03, y + 0.03, hd + 0.03]);
+  pushBox(iron, [-0.115, y0 + th - 0.03, -0.115], [0.115, y0 + th, 0.115]);
+  return { obstacle: { x, z, radius: 0.35 }, hit: { x, y: DUMMY.hitY, z } };
+}
+
+// Cible d'archer : un disque de paille (octogone épais) ceinturé de corde,
+// posé sur un chevalet à trois pieds croisés, deux anneaux peints sur la face
+// sud, deux flèches fichées. Renvoie l'obstacle rond.
+const TARGET = { radius: 0.45, thickness: 0.12, centerY: 0.9, legHeight: 1.1 };
+export function buildTarget({ x, z }, builders) {
+  const frame = (key) => createFrame(builders[key], [x, 0, z]);
+  const [thatch, wood, iron, brick, plaster, awning] = ['thatch', 'wood', 'iron', 'brick', 'plaster', 'awning'].map(frame);
+  const t = TARGET.thickness / 2;
+  const cy = TARGET.centerY;
+  const top = TARGET.legHeight;
+  const legZ = -t - 0.05;
+  // Chevalet : deux pieds avant écartés, un pied arrière, réunis sous un
+  // chapeau, une traverse, et la tablette où repose la cible.
+  for (const sx of [-1, 1]) pushBar(wood, [sx * 0.5, 0, legZ], [sx * 0.1, top, legZ], 0.06, { groundAo: 0.6 });
+  pushBar(wood, [0, 0, -0.8], [0, top, legZ - 0.08], 0.06, { groundAo: 0.6 });
+  pushBox(wood, [-0.16, top - 0.02, legZ - 0.12], [0.16, top + 0.05, legZ + 0.04]);
+  pushBox(wood, [-0.36, 0.38, legZ - 0.03], [0.36, 0.45, legZ + 0.03]);
+  pushBox(wood, [-0.3, cy - TARGET.radius - 0.06, legZ], [0.3, cy - TARGET.radius, t + 0.04]);
+  // Le disque de paille, deux liens de corde, et les anneaux peints.
+  pushOctagon(thatch, [0, cy], TARGET.radius, [-t, t]);
+  for (const sy of [-0.18, 0.18]) pushBox(iron, [-0.4, cy + sy - 0.015, -t - 0.005], [0.4, cy + sy + 0.015, t + 0.005]);
+  pushOctagon(plaster, [0, cy], 0.33, [t + 0.01, t + 0.01]);
+  pushOctagon(brick, [0, cy], 0.2, [t + 0.02, t + 0.02]);
+  pushOctagon(plaster, [0, cy], 0.08, [t + 0.03, t + 0.03]);
+  // Deux flèches un peu obliques : fût de fer, empenne de toile.
+  for (const [ax, ay, dx, dy] of [[0.1, cy + 0.06, 0.12, 0.1], [-0.15, cy - 0.12, -0.08, 0.14]]) {
+    const tail = [ax + dx, ay + dy, t + 0.5];
+    pushBar(iron, [ax, ay, t - 0.04], tail, 0.025);
+    pushBar(awning, [ax + dx * 0.82, ay + dy * 0.82, t + 0.41], tail, 0.05);
+  }
+  return { x, z, radius: 0.5 };
+}
+
+// Pommier de verger : tronc court et trapu, trois branches qui montent, des
+// pommes semées dans la coquille de la couronne (positions tirées de x et z,
+// identiques à chaque chargement) et deux tombées au pied. La couronne est
+// posée par le village en grappes de feuillage. Renvoie { center, radius }.
+const APPLE = 0.09;
+export function buildAppleTree(x, z, { size = 1 }, builders) {
+  const bark = createFrame(builders.bark, [x, 0, z]);
+  const brick = createFrame(builders.brick, [x, 0, z]);
+  const trunk = 0.19 * size;
+  const crownBase = 1.0 * size;
+  pushBox(bark, [-trunk, 0, -trunk], [trunk, crownBase + 0.7 * size, trunk], { groundAo: 0.6 });
+  pushBox(bark, [-trunk - 0.05, 0, -trunk - 0.05], [trunk + 0.05, 0.22 * size, trunk + 0.05], { groundAo: 0.6 });
+  const b = 0.07 * size;
+  pushBar(bark, [trunk - 0.05, crownBase - 0.15 * size, 0], [trunk + 0.55 * size, crownBase + 0.35 * size, 0.1 * size], b);
+  pushBar(bark, [-trunk + 0.05, crownBase + 0.05 * size, 0.05 * size], [-trunk - 0.5 * size, crownBase + 0.5 * size, -0.15 * size], b);
+  pushBar(bark, [0, crownBase + 0.2 * size, -trunk + 0.05], [0.1 * size, crownBase + 0.6 * size, -trunk - 0.5 * size], b);
+  const center = { x, y: crownBase + 0.95 * size, z };
+  const radius = 1.05 * size;
+  const count = 12 + Math.floor(hash01(x, z, 0) * 5);
+  for (let i = 0; i < count; i += 1) {
+    const angle = hash01(x, z, i * 3 + 1) * Math.PI * 2;
+    const v = hash01(x, z, i * 3 + 2);
+    const lift = -0.75 + 1.1 * v * v; // plutôt dans la moitié basse
+    const rho = radius * (0.6 + 0.4 * hash01(x, z, i * 3 + 3));
+    const flat = rho * Math.sqrt(1 - lift * lift);
+    const [ax, ay, az] = [Math.cos(angle) * flat, center.y + rho * lift, Math.sin(angle) * flat];
+    pushBox(brick, [ax - APPLE / 2, ay - APPLE / 2, az - APPLE / 2], [ax + APPLE / 2, ay + APPLE / 2, az + APPLE / 2]);
+  }
+  for (const i of [0, 1]) {
+    const angle = hash01(x, z, 60 + i) * Math.PI * 2;
+    const d = trunk + 0.25 + hash01(x, z, 70 + i) * 0.4;
+    const [ax, az] = [Math.cos(angle) * d, Math.sin(angle) * d];
+    pushBox(brick, [ax - APPLE / 2, 0, az - APPLE / 2], [ax + APPLE / 2, APPLE, az + APPLE / 2], { groundAo: 0.6 });
+  }
+  return { center, radius };
+}
+
+// Échelle de bois appuyée contre un arbre : deux montants inclinés de 0,07
+// vers lean (north, south, east, west) par 0,3 de hauteur, barreaux tous les
+// 0,3. (x, z) : le pied de l'échelle. Renvoie l'obstacle rond.
+const LADDER = { width: 0.4, rail: 0.05, rung: 0.04, step: 0.3, lean: 0.07 };
+export function buildLadder({ x, z, length = 2.6, lean = 'north' }, builders) {
+  const swap = lean === 'east' || lean === 'west';
+  const sign = lean === 'south' || lean === 'east' ? 1 : -1;
+  const wood = createFrame(builders.wood, [x, 0, z], swap);
+  const slope = Math.hypot(LADDER.step, LADDER.lean);
+  const rise = (LADDER.step / slope) * length;
+  const run = ((sign * LADDER.lean) / slope) * length;
+  const half = LADDER.width / 2;
+  for (const u of [-half, half]) pushBar(wood, [u, 0, 0], [u, rise, run], LADDER.rail, { groundAo: 0.6 });
+  for (let s = 0.25; s < length - 0.12; s += LADDER.step) {
+    const y = (s / length) * rise;
+    const w = (s / length) * run;
+    pushBox(wood, [-half, y - LADDER.rung / 2, w - LADDER.rung / 2], [half, y + LADDER.rung / 2, w + LADDER.rung / 2]);
+  }
+  return { x, z, radius: 0.25 };
+}
+
+// Panier d'osier : une caisse de bois cerclée de deux liserés de fer (le
+// tressage) au bord roulé, une anse en trois morceaux, et des pommes dedans
+// si full. Renvoie l'obstacle rond.
+export function buildBasket({ x, z, full = true }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const iron = createFrame(builders.iron, [x, 0, z]);
+  const brick = createFrame(builders.brick, [x, 0, z]);
+  const h = 0.25;
+  pushBox(wood, [-h, 0, -h], [h, 0.32, h], { groundAo: 0.6 });
+  for (const y of [0.08, 0.26]) pushBox(iron, [-h - 0.012, y, -h - 0.012], [h + 0.012, y + 0.025, h + 0.012]);
+  pushBox(wood, [-h - 0.02, 0.3, -h - 0.02], [h + 0.02, 0.34, h + 0.02]);
+  for (const sx of [-0.2, 0.2]) pushBox(wood, [sx - 0.02, 0.34, -0.02], [sx + 0.02, 0.58, 0.02]);
+  pushBox(wood, [-0.22, 0.58, -0.02], [0.22, 0.62, 0.02]);
+  if (!full) return { x, z, radius: 0.3 };
+  // Cinq pommes posées dans le panier, trois par-dessus, à peine décalées.
+  const spots = [
+    [-0.13, 0.34, -0.12], [0.12, 0.34, -0.13], [-0.12, 0.34, 0.12], [0.13, 0.34, 0.1], [0, 0.34, 0],
+    [-0.03, 0.42, -0.1], [0.08, 0.42, 0.05], [-0.1, 0.42, 0.06],
+  ];
+  spots.forEach(([ax, ay, az], i) => {
+    const jx = (hash01(x, z, i) - 0.5) * 0.03;
+    const jz = (hash01(x, z, i + 9) - 0.5) * 0.03;
+    pushBox(brick, [ax + jx - APPLE / 2, ay, az + jz - APPLE / 2], [ax + jx + APPLE / 2, ay + APPLE, az + jz + APPLE / 2]);
+  });
+  return { x, z, radius: 0.3 };
+}
+
+// Structure commune des étals garnis : comptoir à lisses, quatre poteaux,
+// auvent de toile rayée en pente vers le sud, lambrequin à festons. Renvoie
+// le bas du lambrequin et l'avancée du front, pour y suspendre une pancarte.
+const STALL = { halfWidth: 1.1, counterTop: 0.92, back: [-0.75, 2.2], front: [0.95, 1.78], valance: 0.25, scallops: 6 };
+function pushStallStructure(wood, awning) {
+  const w = STALL.halfWidth;
+  for (const [px, pz, h] of [[-w, -0.55, 2.15], [w, -0.55, 2.15], [-w, 0.65, 1.8], [w, 0.65, 1.8]]) {
+    pushBox(wood, [px - 0.05, 0, pz - 0.05], [px + 0.05, h, pz + 0.05]);
+  }
+  pushBox(wood, [-w + 0.05, 0, 0.1], [w - 0.05, 0.85, 0.6]);
+  pushBox(wood, [-w, 0.85, 0.05], [w, STALL.counterTop, 0.7]);
+  for (const y of [0.25, 0.55]) pushBox(wood, [-w + 0.03, y, 0.6], [w - 0.03, y + 0.06, 0.63]);
+  const { back, front } = STALL;
+  const span = tile(2 * w + 0.2);
+  const uv = [[0, 0], [span, 0], [span, tile(1.8)], [0, tile(1.8)]];
+  awning.polygon([[-w - 0.1, front[1], front[0]], [w + 0.1, front[1], front[0]], [w + 0.1, back[1], back[0]], [-w - 0.1, back[1], back[0]]], uv);
+  awning.polygon([[w + 0.1, front[1], front[0]], [-w - 0.1, front[1], front[0]], [-w - 0.1, back[1], back[0]], [w + 0.1, back[1], back[0]]], uv);
+  const valanceY = front[1] - STALL.valance;
+  awning.polygon([[-w - 0.1, valanceY, front[0]], [w + 0.1, valanceY, front[0]], [w + 0.1, front[1], front[0]], [-w - 0.1, front[1], front[0]]],
+    [[0, 0], [span, 0], [span, tile(STALL.valance)], [0, tile(STALL.valance)]]);
+  const width = (2 * w + 0.2) / STALL.scallops;
+  for (let i = 0; i < STALL.scallops; i += 1) {
+    const a = -w - 0.1 + i * width;
+    awning.polygon([[a, valanceY, front[0]], [a + width / 2, valanceY - 0.1, front[0]], [a + width, valanceY, front[0]]],
+      [[tile(a), 0], [tile(a + width / 2), -tile(0.1)], [tile(a + width), 0]]);
+  }
+  return { valanceY, frontZ: front[0] };
+}
+
+// Étal de marché garni selon goods : 'legumes' (cageots et citrouilles),
+// 'tissus' (rouleaux de toile, coupons pliés, un pan qui pend), 'poteries'
+// (pots et cruches à anse) ou 'fioles' (étagère de fioles bouchées, mortier,
+// pancarte). Même emprise que buildStall. Renvoie l'obstacle rond.
+export function buildMarketStall({ x, z, goods = 'legumes' }, builders) {
+  const frame = (key) => createFrame(builders[key], [x, 0, z]);
+  const wood = frame('wood');
+  const awning = frame('awning');
+  const { valanceY, frontZ } = pushStallStructure(wood, awning);
+  const top = STALL.counterTop;
+  if (goods === 'legumes') {
+    const leaves = frame('leaves');
+    const brick = frame('brick');
+    for (const cx of [-0.72, -0.2, 0.32]) {
+      pushBox(wood, [cx - 0.22, top, 0.15], [cx + 0.22, top + 0.14, 0.6]);
+      pushBox(leaves, [cx - 0.18, top + 0.14, 0.2], [cx + 0.18, top + 0.28, 0.55]);
+    }
+    for (const [px, pz] of [[0.72, 0.25], [0.93, 0.5]]) {
+      pushBox(brick, [px - 0.11, top, pz - 0.11], [px + 0.11, top + 0.22, pz + 0.11]);
+      pushBox(brick, [px - 0.08, top + 0.22, pz - 0.08], [px + 0.08, top + 0.25, pz + 0.08]);
+      pushBox(wood, [px - 0.02, top + 0.25, pz - 0.02], [px + 0.02, top + 0.31, pz + 0.02]);
+    }
+  } else if (goods === 'tissus') {
+    const roll = (cx, cy, cz) => pushBox(awning, [cx - 0.275, cy, cz - 0.09], [cx + 0.275, cy + 0.18, cz + 0.09]);
+    roll(-0.55, top, 0.22);
+    roll(-0.55, top, 0.44);
+    roll(-0.55, top + 0.18, 0.33);
+    for (let i = 0; i < 3; i += 1) {
+      pushBox(awning, [0.2 + i * 0.02, top + i * 0.06, 0.15 + i * 0.01], [0.6 - i * 0.02, top + (i + 1) * 0.06, 0.55 - i * 0.01]);
+    }
+    pushBox(awning, [0.76, top, 0.26], [0.94, top + 0.6, 0.44]);
+    pushBox(awning, [-0.3, top, 0.4], [0.3, top + 0.02, 0.72]);
+    awning.polygon(
+      [[-0.3, 0.15, 0.725], [0.3, 0.15, 0.725], [0.3, top + 0.02, 0.725], [-0.3, top + 0.02, 0.725]],
+      [[0, 0], [tile(0.6), 0], [tile(0.6), tile(top)], [0, tile(top)]],
+    );
+  } else if (goods === 'poteries') {
+    const brick = frame('brick');
+    const pot = (cx, cz, s) => {
+      pushBox(brick, [cx - s / 2, top, cz - s / 2], [cx + s / 2, top + s * 1.1, cz + s / 2]);
+      pushBox(brick, [cx - s * 0.36, top + s * 1.1, cz - s * 0.36], [cx + s * 0.36, top + s * 1.3, cz + s * 0.36]);
+      pushBox(brick, [cx - s * 0.42, top + s * 1.3, cz - s * 0.42], [cx + s * 0.42, top + s * 1.38, cz + s * 0.42]);
+    };
+    for (const [cx, cz, s] of [[-0.85, 0.28, 0.22], [-0.52, 0.5, 0.16], [-0.3, 0.22, 0.18], [0, 0.45, 0.14], [0.25, 0.2, 0.2]]) pot(cx, cz, s);
+    for (const [cx, cz] of [[0.6, 0.3], [0.92, 0.5]]) {
+      pushBox(brick, [cx - 0.1, top, cz - 0.1], [cx + 0.1, top + 0.3, cz + 0.1]);
+      pushBox(brick, [cx - 0.06, top + 0.3, cz - 0.06], [cx + 0.06, top + 0.42, cz + 0.06]);
+      pushBox(brick, [cx - 0.08, top + 0.42, cz - 0.08], [cx + 0.08, top + 0.45, cz + 0.08]);
+      pushBox(brick, [cx + 0.1, top + 0.14, cz - 0.015], [cx + 0.17, top + 0.17, cz + 0.015]);
+      pushBox(brick, [cx + 0.14, top + 0.14, cz - 0.015], [cx + 0.17, top + 0.36, cz + 0.015]);
+      pushBox(brick, [cx + 0.06, top + 0.33, cz - 0.015], [cx + 0.17, top + 0.36, cz + 0.015]);
+    }
+  } else {
+    const iron = frame('iron');
+    const brick = frame('brick');
+    const vial = (cx, cy, cz) => {
+      pushBox(iron, [cx - 0.04, cy, cz - 0.04], [cx + 0.04, cy + 0.16, cz + 0.04]);
+      pushBox(wood, [cx - 0.03, cy + 0.16, cz - 0.03], [cx + 0.03, cy + 0.22, cz + 0.03]);
+    };
+    // Étagère à deux niveaux, fond compris, quatre fioles en bas et trois en haut.
+    for (const sx of [-0.55, 0.55]) pushBox(wood, [sx - 0.025, top, 0.3], [sx + 0.025, top + 0.58, 0.5]);
+    for (const y of [top + 0.27, top + 0.55]) pushBox(wood, [-0.58, y, 0.29], [0.58, y + 0.03, 0.51]);
+    pushBox(wood, [-0.55, top, 0.29], [0.55, top + 0.58, 0.3]);
+    for (const cx of [-0.38, -0.13, 0.13, 0.38]) vial(cx, top, 0.4);
+    for (const cx of [-0.25, 0, 0.25]) vial(cx, top + 0.3, 0.4);
+    // Mortier et pilon au bout du comptoir.
+    pushBox(brick, [0.78, top, 0.3], [0.98, top + 0.14, 0.5]);
+    pushBar(wood, [0.84, top + 0.1, 0.42], [0.96, top + 0.3, 0.34], 0.04);
+    // Pancarte suspendue au lambrequin, une fiole peinte dessus.
+    for (const sx of [-0.22, 0.22]) pushBox(iron, [sx - 0.01, valanceY - 0.2, frontZ - 0.01], [sx + 0.01, valanceY, frontZ + 0.01]);
+    pushBox(wood, [-0.3, valanceY - 0.42, frontZ - 0.02], [0.3, valanceY - 0.2, frontZ + 0.02]);
+    pushBox(iron, [-0.035, valanceY - 0.38, frontZ + 0.02], [0.035, valanceY - 0.27, frontZ + 0.035]);
+    pushBox(wood, [-0.025, valanceY - 0.27, frontZ + 0.02], [0.025, valanceY - 0.23, frontZ + 0.035]);
+  }
+  return [{ x, z: z + 0.2, radius: 1.15 }];
+}

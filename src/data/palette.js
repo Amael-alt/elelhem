@@ -45,6 +45,8 @@ export const foliageTints = {
   automne: ['#f2a553', '#e3803f', '#f4c75e', '#d9693a'],
   buisson: ['#7fb251', '#8bbd58', '#74a64b'],
   haie: ['#6e9c45', '#77a64b', '#67933f'],
+  // Les pommiers du verger (version 2.3) : un vert plus profond, un peu bleuté, qui fait ressortir les pommes.
+  verger: ['#7fb859', '#6fa84f', '#8cc264', '#639b48'],
 };
 
 // Fleurs des prés : pétales blancs, jaunes, roses, bleus.
@@ -182,6 +184,8 @@ export const swordColors = {
 export const lootColors = {
   piece: ['#8a6414', '#d9a935', '#ffe08a', '#fff6dc'],
   fiole: { verre: '#c9dff0', liquide: ['#a1262a', '#ef6a58'], bouchon: '#6e4a2a' },
+  // L'étincelle cachée (version 2.3) : du bleu clair au blanc, elle brille même à l'ombre.
+  etincelle: ['#4fa8d8', '#9fe0ff', '#e8fbff'],
 };
 
 // Les barres de vie (gfx/healthbar.js) : celle des Hallucinations, rouge, et

@@ -130,13 +130,13 @@ export const ORCHARD = {
 // Petits objets : tonneaux, caisses, bancs, enseigne, potagers.
 export const BARRELS = [
   { x: 12.4, z: 5.6 }, { x: 12.3, z: 6.6, height: 0.6 },
-  { x: 15.4, z: 32.5 }, { x: 16.1, z: 33.0, height: 0.6 },
+  { x: 14.85, z: 32.42 }, { x: 15.5, z: 32.42 }, { x: 16.15, z: 32.42 }, { x: 15.2, z: 33.05, height: 0.6 },
   { x: 36.2, z: 30.4 }, { x: 44.0, z: 39.8, height: 0.6 },
 ];
 export const CRATES = [
   { x: 22.0, z: 13.3 }, { x: 31.5, z: 13.4 }, { x: 30.6, z: 36.0, size: 0.5 }, { x: 22.8, z: 35.6 },
 ];
-export const BENCHES = [{ x: 23.7, z: 16.7 }, { x: 31.2, z: 24.8 }, { x: 11.4, z: 32.6 }, { x: 41.6, z: 27.2 }, { x: 49.4, z: 39.3 }];
+export const BENCHES = [{ x: 23.7, z: 16.7 }, { x: 31.2, z: 24.8 }, { x: 11.0, z: 32.55 }, { x: 41.6, z: 27.2 }, { x: 49.4, z: 39.3 }];
 export const VEGETABLES = [
   { x0: 37.6, z0: 8.6, x1: 39.4, z1: 12.2 }, // jardin de simples de l'apothicaire
   { x0: 19.5, z0: 29.4, x1: 22.0, z1: 30.3 }, // potager de l'auberge
@@ -149,7 +149,7 @@ export const FENCES = [
   // La pâture aux meules, dans la prairie de l'est.
   [[47.6, 23.6], [52.6, 23.6]], [[47.6, 23.6], [47.6, 28.6]], [[47.6, 28.6], [52.6, 28.6]],
   // Devant l'auberge, et le coin nord-ouest du verger.
-  [[4.5, 34.4], [9.2, 34.4]], [[46.8, 30.0], [51.0, 30.0]], [[46.8, 30.0], [46.8, 34.0]],
+  [[4.5, 34.4], [8.6, 34.4]], [[46.8, 30.0], [51.0, 30.0]], [[46.8, 30.0], [46.8, 34.0]],
   ...TRAINING.fences,
 ];
 export const HAYSTACKS = [{ x: 49.4, z: 25.2 }, { x: 51.4, z: 27.4 }, { x: 52.6, z: 18.4 }];
@@ -161,9 +161,30 @@ export const CAMPFIRE = { x: 50.4, z: 16.2 };
 
 // Terrasse de l'auberge, pots de fleurs aux portes, poteaux indicateurs aux
 // carrefours, tas de bois de la forge.
-export const TABLES = [{ x: 12.9, z: 35.7 }, { x: 19.6, z: 36.4 }];
+// Le parvis de l'auberge (version 2.5) : un muret de pierre à chaperon le
+// ferme à l'ouest et au sud (une ouverture face à la porte), des jardinières
+// sur le muret et contre lui, un chevalet d'ardoise à la porte, des tabourets
+// autour des tables de la terrasse. Le sol est en pavés en éventail (case e de
+// world/map.js).
+export const INN_COURT = {
+  walls: [
+    [[8.75, 32.25], [8.75, 36.75], [12.6, 36.75]],
+    [[14.4, 36.75], [18.9, 36.75]],
+  ],
+  planters: [
+    { x: 10.7, z: 36.75, length: 1.8, axis: 'x', y: 0.66, stone: true },
+    { x: 16.7, z: 36.75, length: 2.0, axis: 'x', y: 0.66, stone: true },
+    { x: 8.75, z: 34.5, length: 2.0, axis: 'z', y: 0.66, stone: true },
+    { x: 19.3, z: 34.6, length: 1.4, axis: 'z' },
+  ],
+  chalkboard: { x: 12.3, z: 33.0 },
+  // Les tables ont leurs bancs (landmarks.js) : un tabouret à chaque bout.
+  stools: [{ x: 10.25, z: 34.7 }, { x: 12.15, z: 34.7 }, { x: 15.65, z: 34.7 }, { x: 17.55, z: 34.7 }],
+};
+
+export const TABLES = [{ x: 11.2, z: 34.7 }, { x: 16.6, z: 34.7 }];
 export const FLOWER_POTS = [
-  { x: 16.4, z: 11.4 }, { x: 18.6, z: 11.4 }, { x: 12.6, z: 32.4 }, { x: 14.4, z: 32.4 },
+  { x: 16.4, z: 11.4 }, { x: 18.6, z: 11.4 }, { x: 12.75, z: 32.5 }, { x: 14.25, z: 32.5 },
   { x: 32.6, z: 11.4 }, { x: 34.4, z: 11.4 }, { x: 25.5, z: 6.4 }, { x: 27.5, z: 6.4 },
 ];
 export const SIGNPOSTS = [{ x: 19.4, z: 18.8 }, { x: 29.6, z: 27.4 }, { x: 40.6, z: 18.3 }, { x: 46.6, z: 18.6 }, { x: 35.2, z: 33.6 }];
@@ -190,7 +211,7 @@ export const BUTTERFLIES = [
 // téléphones.
 export const LANTERNS = [[20.7, 16.7], [35.3, 16.7], [20.7, 25.3], [35.3, 25.3]];
 export const DECOR_LANTERNS = [
-  [19.6, 12.6], [35.6, 12.6], [24.6, 8.0], [5.6, 12.8], [16.8, 34.0], [41.2, 18.6], [47.2, 23.0],
+  [19.6, 12.6], [35.6, 12.6], [24.6, 8.0], [5.6, 12.8], [18.4, 32.6], [41.2, 18.6], [47.2, 23.0],
   [26.2, 28.2], [29.4, 28.2], [39.4, 35.4], [13.6, 9.6], [46.6, 31.0],
 ];
 
@@ -201,14 +222,14 @@ export const TREES = [
   [14.0, 4.6, 1.6], [14.4, 9.0, 1.31], [24.2, 10.6, 1.38], [30.8, 5.6, 1.6],
   [35.7, 4.9, 1.45], [46.8, 12.3, 1.6, 'automne'], [49.7, 14.0, 1.45, 'automne'], [53.0, 29.2, 1.74, 'automne'],
   [47.3, 29.3, 1.52, 'automne'], [6.3, 24.5, 1.6], [7.0, 30.8, 1.45, 'automne'], [23.1, 37.8, 1.45],
-  [36.2, 40.6, 1.67, 'automne'], [12.6, 38.5, 1.31], [39.9, 16.8, 1.31], [16.8, 19.6, 1.16], [5.3, 37.8, 1.52],
+  [36.2, 40.6, 1.67, 'automne'], [6.2, 39.6, 1.31], [39.9, 16.8, 1.31], [16.8, 19.6, 1.16], [5.3, 37.8, 1.52],
   [4.6, 7.6, 1.3], [40.6, 8.6, 1.4], [47.6, 40.4, 1.2, 'automne'], [8.4, 22.4, 1.2],
 ];
 
 // Buissons : position, taille (1 : à hauteur de genou).
 export const BUSHES = [
   [15.6, 12.8, 1], [5.2, 13.2, 0.9], [23.0, 12.0, 1], [14.2, 11.2, 0.8], [31.6, 12.3, 0.9], [36.4, 6.2, 1],
-  [9.2, 26.0, 1.1], [19.0, 27.4, 0.9], [9.0, 32.5, 1], [35.6, 30.2, 0.9], [37.4, 22.6, 0.8], [42.0, 29.4, 1],
+  [9.2, 26.0, 1.1], [19.0, 27.4, 0.9], [7.6, 33.0, 1], [35.6, 30.2, 0.9], [37.4, 22.6, 0.8], [42.0, 29.4, 1],
   [46.2, 15.4, 1.1], [51.1, 17.5, 0.9], [46.4, 25.4, 1], [38.6, 40.6, 1.1], [24.6, 36.4, 0.9], [15.4, 38.6, 1],
   [3.6, 39.2, 1], [13.6, 3.4, 0.9], [19.6, 4.8, 1], [38.6, 4.5, 1], [22.4, 7.8, 0.9], [41.8, 24.0, 0.9],
 ];

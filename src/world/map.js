@@ -13,7 +13,7 @@
 //
 //   . herbe   t terre   p pavés   ~ eau   # muret   b pont
 //   c falaise   W muraille   h haie   r rivière haute (avant la cascade)
-//   g corniche derrière la cascade
+//   g corniche derrière la cascade   e parvis en éventail (devant l'auberge)
 
 const ROWS = [
   'cccccccccccccccccccccccccccccccccccccccccccrrrcccccccccc',
@@ -48,11 +48,11 @@ const ROWS = [
   '...W..............htttthppppppppppp.........~~~.......cc',
   '...W..............htttthppppppppppp.........~~~.......cc',
   '...W..............hhtthhpppppppppptttttt....~~~.......cc',
-  '...W........ttttttttttpppppppppppptttttt....~~~.......cc',
-  '...W........ttttttttttppppppppppppp...tt....~~~.......cc',
-  '...W..................ppppppppppppp...tt....~~~.......cc',
-  '...W.......................tt.........tt....~~~.......cc',
-  '...........................tt...............~~~.......cc',
+  '...W.....eeeeeeeeeeeeepppppppppppptttttt....~~~.......cc',
+  '...W.....eeeeeeeeeeeeeppppppppppppp...tt....~~~.......cc',
+  '...W.....eeeeeeeeee...ppppppppppppp...tt....~~~.......cc',
+  '...W.....eeeeeeeeee........tt.........tt....~~~.......cc',
+  '.........eeeeeeeeee........tt...............~~~.......cc',
   '...........................tt............~~.~~~.......cc',
   '..........................htth...........~~.~~~.......cc',
   '..........................htth..............~~~.......cc',
@@ -76,6 +76,8 @@ export const CELL_TYPES = {
   // La corniche derrière la cascade (version 2.3) : de la pierre au niveau du
   // village, cachée par le rideau d'eau qui tombe une case devant.
   g: { name: 'corniche', matter: 'cobble', side: 'rock', height: 0, solid: false },
+  // Le parvis de l'auberge (version 2.5) : des pavés en éventail.
+  e: { name: 'parvis', matter: 'fan', side: 'dirt', height: 0, solid: false },
   // Les intérieurs (world/rooms.js) : plancher de lattes (ou dalles de pierre
   // à la forge), murs au nord et sur les côtés, muret bas au sud (la façade est
   // coupée, comme une maquette ouverte), seuil par où l'on ressort, de bois ou

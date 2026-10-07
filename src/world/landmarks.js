@@ -8,7 +8,7 @@
 // ronds { x, z, radius } à poser dans les collisions, et au besoin la
 // position d'une flamme ou d'une cheminée.
 
-import { createFrame, pushBar, pushBox, pushSkewBox } from './builder.js';
+import { createFrame, pushBar, pushBox, pushDisc, pushRevolution, pushSkewBox } from './builder.js';
 import { TILE_UNITS } from '../gfx/textures.js';
 
 const tile = (value) => value / TILE_UNITS;
@@ -118,13 +118,104 @@ export function buildWell({ x, z }, builders) {
   return [{ x, z, radius: WELL_RADIUS }];
 }
 
-// Tonneau : fût de bois et deux cercles de fer.
+// Tonneau (version 2.5 : rond et ventru, il était un cube) : un fût à dix
+// douelles qui s'évase au milieu, trois cercles de fer, un couvercle.
 export function buildBarrel({ x, z, height = 0.75 }, builders) {
   const wood = createFrame(builders.wood, [x, 0, z]);
   const iron = createFrame(builders.iron, [x, 0, z]);
-  pushBox(wood, [-0.27, 0, -0.27], [0.27, height, 0.27]);
-  for (const y of [0.15, height - 0.2]) pushBox(iron, [-0.285, y, -0.285], [0.285, y + 0.05, 0.285]);
-  return { x, z, radius: 0.3 };
+  const h = height;
+  pushRevolution(wood, [[0, 0.24], [h * 0.25, 0.285], [h * 0.5, 0.3], [h * 0.75, 0.285], [h, 0.24]]);
+  pushDisc(wood, h - 0.02, 0.235);
+  for (const [y, r] of [[0.08, 0.255], [h * 0.5 - 0.03, 0.305], [h - 0.12, 0.255]]) {
+    pushRevolution(iron, [[y, r], [y + 0.05, r]], { groundAo: 1 });
+  }
+  return { x, z, radius: 0.31 };
+}
+
+// Muret de pierre à chaperon (version 2.5, le parvis de l'auberge) : un mur
+// bas d'une trentaine de centimètres d'épaisseur le long d'une suite de
+// points, une dalle de couronnement qui déborde, et un pilier coiffé à chaque
+// point. On ne le traverse pas.
+const WALL = { thick: 0.3, height: 0.58, coping: 0.42, copingHeight: 0.08, pier: 0.46, pierHeight: 0.78 };
+export function buildLowWall(points, builders) {
+  const stone = createFrame(builders.stonewall, [0, 0, 0]);
+  const cap = createFrame(builders.stone, [0, 0, 0]);
+  const obstacles = [];
+  const t = WALL.thick / 2;
+  const c = WALL.coping / 2;
+  for (let i = 0; i + 1 < points.length; i += 1) {
+    const [ax, az] = points[i];
+    const [bx, bz] = points[i + 1];
+    const alongX = Math.abs(bx - ax) >= Math.abs(bz - az);
+    const [x0, x1] = [Math.min(ax, bx), Math.max(ax, bx)];
+    const [z0, z1] = [Math.min(az, bz), Math.max(az, bz)];
+    if (alongX) {
+      pushBox(stone, [x0, 0, az - t], [x1, WALL.height, az + t], { groundAo: 0.6 });
+      pushBox(cap, [x0, WALL.height, az - c], [x1, WALL.height + WALL.copingHeight, az + c]);
+    } else {
+      pushBox(stone, [ax - t, 0, z0], [ax + t, WALL.height, z1], { groundAo: 0.6 });
+      pushBox(cap, [ax - c, WALL.height, z0], [ax + c, WALL.height + WALL.copingHeight, z1]);
+    }
+    const length = Math.hypot(bx - ax, bz - az);
+    const steps = Math.max(1, Math.ceil(length / 0.35));
+    for (let s = 0; s <= steps; s += 1) obstacles.push({ x: ax + ((bx - ax) * s) / steps, z: az + ((bz - az) * s) / steps, radius: 0.2 });
+  }
+  // Les piliers, à chaque point : plus larges et plus hauts, avec leur chapeau.
+  const p = WALL.pier / 2;
+  for (const [px, pz] of points) {
+    pushBox(stone, [px - p, 0, pz - p], [px + p, WALL.pierHeight, pz + p], { groundAo: 0.6 });
+    pushBox(cap, [px - p - 0.04, WALL.pierHeight, pz - p - 0.04], [px + p + 0.04, WALL.pierHeight + 0.07, pz + p + 0.04]);
+    pushBox(cap, [px - p * 0.55, WALL.pierHeight + 0.07, pz - p * 0.55], [px + p * 0.55, WALL.pierHeight + 0.17, pz + p * 0.55]);
+    obstacles.push({ x: px, z: pz, radius: 0.3 });
+  }
+  return obstacles;
+}
+
+// Jardinière (version 2.5) : une caisse de bois ou une auge de pierre, longue sur quatre pieds
+// courts, pleine de terre ; les fleurs y poussent (points renvoyés, plantés
+// par le village comme ceux des rebords de fenêtre). axis : 'x' ou 'z', le
+// sens de la longueur.
+export function buildPlanterBox({ x, z, length = 1.3, axis = 'x', y = 0, stone = false }, builders) {
+  // stone : une auge de pierre (posée sur un muret), sinon une caisse de bois.
+  const wood = createFrame(stone ? builders.stone : builders.wood, [x, 0, z]);
+  const soil = createFrame(builders.bark, [x, 0, z]);
+  const half = length / 2;
+  const [hx, hz] = axis === 'x' ? [half, 0.2] : [0.2, half];
+  pushBox(wood, [-hx, y + 0.08, -hz], [hx, y + 0.38, hz], { groundAo: 0.7 });
+  pushBox(wood, [-hx - 0.03, y + 0.36, -hz - 0.03], [hx + 0.03, y + 0.41, hz + 0.03]);
+  pushBox(soil, [-hx + 0.04, y + 0.38, -hz + 0.04], [hx - 0.04, y + 0.4, hz - 0.04]);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) pushBox(wood, [sx * hx - 0.04 - (sx > 0 ? 0.04 : -0.04) * 0, y, sz * hz - 0.04], [sx * hx + 0.04, y + 0.08, sz * hz + 0.04]);
+  const count = Math.max(2, Math.round(length / 0.32));
+  const flowers = [];
+  for (let k = 0; k < count; k += 1) {
+    const t = (k + 0.5) / count - 0.5;
+    flowers.push(axis === 'x' ? { x: x + t * length, y: y + 0.4, z } : { x, y: y + 0.4, z: z + t * length });
+  }
+  const obstacle = y > 0.05 ? [] : axis === 'x'
+    ? [{ x: x - half / 2, z, radius: 0.24 }, { x: x + half / 2, z, radius: 0.24 }]
+    : [{ x, z: z - half / 2, radius: 0.24 }, { x, z: z + half / 2, radius: 0.24 }];
+  return { obstacle, flowers };
+}
+
+// Chevalet d'ardoise à la porte d'une auberge (version 2.5) : deux panneaux
+// penchés l'un contre l'autre, cadre de bois, ardoise sombre, une ligne
+// claire de craie.
+export function buildChalkboard({ x, z }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const slate = createFrame(builders.iron, [x, 0, z]);
+  const chalk = createFrame(builders.stone, [x, 0, z]);
+  const lean = 0.2; // les pieds s'écartent de 2 × 0,2 au sol
+  const top = 0.86;
+  // Face sud (vers la caméra) : cadre, ardoise, deux lignes de craie.
+  pushSkewBox(wood, [-0.28, 0, lean], [[0.56, 0, 0], [0, top, -lean], [0, 0, 0.035]], { groundAo: 0.7 });
+  pushSkewBox(slate, [-0.23, 0.12, lean - 0.028 + 0.04], [[0.46, 0, 0], [0, top - 0.2, -(lean * (top - 0.2)) / top], [0, 0, 0.012]]);
+  for (const [y0, w] of [[0.5, 0.32], [0.38, 0.24], [0.26, 0.28]]) {
+    const back = (lean * y0) / top;
+    pushBox(chalk, [-w / 2, y0, lean - back + 0.062], [w / 2, y0 + 0.025, lean - back + 0.07]);
+  }
+  // Face nord, penchée en miroir.
+  pushSkewBox(wood, [-0.28, 0, -lean - 0.035], [[0.56, 0, 0], [0, top, lean], [0, 0, 0.035]], { groundAo: 0.7 });
+  return { x, z, radius: 0.32 };
 }
 
 // Caisse de bois.

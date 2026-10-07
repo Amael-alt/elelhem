@@ -12,7 +12,7 @@ import { createMap } from './map.js';
 import { createTerrain } from './terrain.js';
 import { createCollider } from './collision.js';
 import { buildHouse, buildLantern, buildTree, LANTERN_FLAME, LANTERN_POST_RADIUS, TREE_TRUNK_RADIUS } from './props.js';
-import {
+import { buildChalkboard, buildLowWall, buildPlanterBox,
   buildAnvil, buildAppleTree, buildBarrel, buildBasket, buildBench, buildCampfire, buildCrate, buildDummy, buildFence,
   buildFlowerPot, buildHaystack, buildHearth, buildLadder, buildMarketStall, buildRock, buildShopSign, buildSignpost, buildSite,
   buildStall, buildTable, buildTarget, buildTower, buildVegetables, buildWashhouse, buildWell, buildWoodpile,
@@ -20,7 +20,7 @@ import {
 import {
   ANVIL, BARRELS, BENCHES, BUNTING, BUSHES, BUTTERFLIES, CAMPFIRE, FENCES, FLOWER_POTS, HAYSTACKS, MEADOWS, ROCKS, SIGNPOSTS,
   STALLS, TABLES, WOODPILE, CRATES, DECOR_LANTERNS, FIREFLY_ANCHORS, HEARTH, HOUSES, LANTERNS, MARKET_STALLS, ORCHARD, SITE,
-  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS,
+  SPAWN, SUN_RAYS, PIGEONS, TOWERS, TRAINING, TREES, VEGETABLES, WASHHOUSE, WATERFALL, WELL, CHESTS, INN_COURT,
 } from './layout.js';
 import { createPigeons } from '../gfx/fx/pigeons.js';
 import { createFoliage, crownClumps } from '../gfx/foliage.js';
@@ -32,7 +32,7 @@ import { createBunting } from '../gfx/bunting.js';
 import { createLightPools } from '../gfx/lightpools.js';
 import { createButterflies, createFallingLeaves } from '../gfx/fx/leaves.js';
 import { createMeshBuilder, toGeometry } from './builder.js';
-import { buildChest } from './furniture.js';
+import { buildStool, buildChest } from './furniture.js';
 import { createNoPointShadowMaterial, createPixelMaterial } from '../gfx/materials.js';
 import { createFlames } from '../gfx/fx/flame.js';
 import { createFxUniforms } from '../gfx/fx/points.js';
@@ -42,7 +42,7 @@ import { createDust } from '../gfx/fx/dust.js';
 import { createSmoke } from '../gfx/fx/smoke.js';
 import { createSunRays } from '../gfx/fx/sunrays.js';
 import {
-  createBrickTextures, createCobbleTextures, createDirtTextures, createDoorTexture, createGrassTextures,
+  createBrickTextures, createCobbleTextures, createFanCobbleTextures, createDirtTextures, createDoorTexture, createGrassTextures,
   createLeafTextures, createPlasterTextures, createRockTextures, createRoofTextures, createWaterTextures,
   createWindowTextures, createWoodTextures, createAwningTexture, createSlateTextures, createStoneWallTextures, createThatchTextures,
   createFlagstoneTextures, createPaintingTexture, createPanelTextures, createPlankTextures, createRugTexture, RUG_PIXELS_PER_UNIT,
@@ -96,6 +96,8 @@ function createMaterials() {
     grass: tile(createGrassTextures(11), { normalStrength: 0.35, roughness: 0.95 }),
     dirt: tile(createDirtTextures(23), { normalStrength: 0.8, roughness: 0.95 }),
     cobble: tile(createCobbleTextures(37), { normalStrength: 0.7, roughness: 0.85 }),
+    // Le parvis de l'auberge (version 2.5) : des pavés en éventail.
+    fan: tile(createFanCobbleTextures(43), { normalStrength: 0.75, roughness: 0.85 }),
     water: tile(createWaterTextures(41), { roughness: 0.35 }),
     plaster: tile(createPlasterTextures(53), { normalStrength: 0.4, roughness: 0.95 }),
     wood: tile(createWoodTextures(61), { normalStrength: 0.5, roughness: 0.8 }),
@@ -121,6 +123,8 @@ function createMaterials() {
     flagstone: tile(createFlagstoneTextures(127), { normalStrength: 0.9, roughness: 0.95 }),
     paneling: tile(createPanelTextures(131), { normalStrength: 0.6, roughness: 0.8 }),
     plasterIn: tile(createPlasterTextures(137, interiorRamps.enduit), { normalStrength: 0.4, roughness: 0.95 }),
+    // Le velours des fauteuils (version 2.5).
+    velvet: tile(createPlasterTextures(149, interiorRamps.velours), { normalStrength: 0.5, roughness: 0.9 }),
     // La toile d'un tableau s'éclaire un peu d'elle-même : le mur nord ne reçoit
     // pas le jour (il entre par ses fenêtres), un tableau y resterait terne.
     painting: (() => {
@@ -182,6 +186,16 @@ function createBuildings(materials, posts) {
   for (const barrel of BARRELS) addPosts(buildBarrel(barrel, builders));
   for (const crate of CRATES) addPosts(buildCrate(crate, builders));
   for (const bench of BENCHES) addPosts(buildBench(bench, builders));
+  // Le parvis de l'auberge (version 2.5) : muret à chaperon, jardinières
+  // fleuries, chevalet d'ardoise, tabourets autour des tables de la terrasse.
+  for (const wall of INN_COURT.walls) addPosts(buildLowWall(wall, builders));
+  for (const box of INN_COURT.planters) {
+    const planter = buildPlanterBox(box, builders);
+    addPosts(planter.obstacle);
+    planters.push(...planter.flowers);
+  }
+  addPosts(buildChalkboard(INN_COURT.chalkboard, builders));
+  for (const stool of INN_COURT.stools) addPosts(buildStool(stool, builders).posts);
   for (const garden of VEGETABLES) buildVegetables(garden, builders);
   // Couronnes : les grappes de tous les arbres, dessinées ensemble (voir createVillage).
   const clumps = [];

@@ -133,3 +133,56 @@ export function pushBar(frame, from, to, section, options) {
   edges[axis] = d;
   pushSkewBox(frame, origin, edges, options);
 }
+
+// Une surface de révolution à n pans : rings est une liste [y, rayon] du bas
+// vers le haut ; chaque pan est un quad entre deux anneaux. Les faces sont
+// tournées vers l'extérieur (vérifié sur la normale), l'ombre au pied si le
+// bas touche le sol. Pour un tonneau, un pot, un pilier rond.
+export function pushRevolution(frame, rings, { sides = 10, groundAo = 0.75, phase = 0 } = {}) {
+  for (let r = 0; r + 1 < rings.length; r += 1) {
+    const [y0, r0] = rings[r];
+    const [y1, r1] = rings[r + 1];
+    for (let k = 0; k < sides; k += 1) {
+      const a0 = phase + (k / sides) * Math.PI * 2;
+      const a1 = phase + ((k + 1) / sides) * Math.PI * 2;
+      const quad = [
+        [Math.cos(a0) * r0, y0, Math.sin(a0) * r0], [Math.cos(a1) * r0, y0, Math.sin(a1) * r0],
+        [Math.cos(a1) * r1, y1, Math.sin(a1) * r1], [Math.cos(a0) * r1, y1, Math.sin(a0) * r1],
+      ];
+      const u0 = (k / sides) * 0.5;
+      const u1 = ((k + 1) / sides) * 0.5;
+      let uvs = [[u0, y0 / TILE_UNITS], [u1, y0 / TILE_UNITS], [u1, y1 / TILE_UNITS], [u0, y1 / TILE_UNITS]];
+      const foot = y0 < 0.05 ? groundAo : 1;
+      let ao = [foot, foot, 1, 1];
+      // La normale du quad doit regarder vers l'extérieur (vers son milieu radial).
+      const [p0, p1, p2] = quad;
+      const ux = p1[0] - p0[0]; const uy = p1[1] - p0[1]; const uz = p1[2] - p0[2];
+      const vx = p2[0] - p0[0]; const vy = p2[1] - p0[1]; const vz = p2[2] - p0[2];
+      const nx = uy * vz - uz * vy;
+      const nz = ux * vy - uy * vx;
+      const mid = (a0 + a1) / 2;
+      let points = quad;
+      if (nx * Math.cos(mid) + nz * Math.sin(mid) < 0) {
+        points = [...quad].reverse();
+        uvs = [...uvs].reverse();
+        ao = [...ao].reverse();
+      }
+      // À la pointe (rayon nul), deux sommets se confondent : un triangle, pas
+      // un quad dégénéré, dont la normale serait invalide.
+      const keep = points.map((pt, i) => i === 0 || Math.hypot(pt[0] - points[i - 1][0], pt[1] - points[i - 1][1], pt[2] - points[i - 1][2]) > 1e-6);
+      if (Math.hypot(points[0][0] - points[3][0], points[0][1] - points[3][1], points[0][2] - points[3][2]) <= 1e-6) keep[3] = false;
+      frame.polygon(points.filter((_, i) => keep[i]), uvs.filter((_, i) => keep[i]), ao.filter((_, i) => keep[i]));
+    }
+  }
+}
+
+// Un disque horizontal à n pans (le couvercle d'un tonneau), tourné vers le haut.
+export function pushDisc(frame, y, radius, { sides = 10, phase = 0 } = {}) {
+  for (let k = 0; k < sides; k += 1) {
+    const a0 = phase + (k / sides) * Math.PI * 2;
+    const a1 = phase + ((k + 1) / sides) * Math.PI * 2;
+    const tri = [[0, y, 0], [Math.cos(a1) * radius, y, Math.sin(a1) * radius], [Math.cos(a0) * radius, y, Math.sin(a0) * radius]];
+    const uvs = tri.map(([px, , pz]) => [px / TILE_UNITS, -pz / TILE_UNITS]);
+    frame.polygon(tri, uvs);
+  }
+}

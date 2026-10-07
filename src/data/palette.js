@@ -7,6 +7,8 @@ export const terrainRamps = {
   herbe: ['#1f321e', '#2b4425', '#38572b', '#4a6b31', '#5f8039', '#799745', '#97ae55'],
   terre: ['#2e2119', '#3f2f20', '#533d29', '#685033', '#7f633f', '#97784e'],
   paves: ['#2b2526', '#3c3433', '#4f4541', '#645850', '#7b6d60', '#948472', '#ad9c86'],
+  // Le parvis de l'auberge (version 2.5) : des pavés plus clairs et plus chauds.
+  parvis: ['#4b4139', '#61544a', '#77695c', '#8e7f6e', '#a69582', '#bfad96', '#d6c5aa'],
   eau: ['#13273d', '#1a3551', '#234665', '#2e597a', '#3e7090', '#5a8ba7', '#84aec2'],
 };
 
@@ -119,7 +121,7 @@ export const mapColors = {
   // Une couleur par lettre de la grille (voir world/map.js).
   cases: {
     '.': '#4f6e34', t: '#8a6c47', p: '#a39581', '~': '#3e7090', '#': '#7b6d60',
-    b: '#b3a28a', c: '#3a4a2a', W: '#6a5f55', h: '#2f4a26', r: '#3e7090',
+    b: '#b3a28a', c: '#3a4a2a', W: '#6a5f55', h: '#2f4a26', r: '#3e7090', e: '#a89a86',
   },
   toit: '#7a3a28',
   toitBord: '#4a2018',
@@ -152,6 +154,9 @@ export const interiorRamps = {
   dalles: ['#242120', '#322e2d', '#413b38', '#4f4844', '#5f5650', '#6f655d'],
   lambris: ['#22140e', '#33201a', '#452d21', '#583b2b', '#6c4a36'],
   enduit: ['#6d5945', '#836e56', '#9a8567', '#b09b7b', '#c4b08f', '#d4c3a3'],
+  // Version 2.5 : le velours vert bouteille des fauteuils et du canapé de
+  // l'auberge (rouge, il se perdait sur le tapis).
+  velours: ['#0c1f17', '#12301f', '#1a4229', '#235434', '#2e6841', '#3c7c50'],
 };
 
 // Le tapis : laine rouge chinée, bordure crème entre deux filets sombres,

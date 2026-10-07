@@ -109,6 +109,64 @@ export function createCobbleTextures(seed) {
   return finish(terrainRamps.paves, tones, heights, 1.2);
 }
 
+// Pavés en éventail (version 2.5, le parvis de l'auberge) : des arcs de petits
+// pavés posés en écailles, comme sur les places des villes anciennes. Chaque
+// éventail est un demi-disque d'une unité de rayon (16 pixels), ouvert vers
+// le nord ; ils se chevauchent en rangées décalées, le plus au sud par-dessus.
+// Dans un éventail, quatre anneaux de pavés, chacun découpé en pierres de
+// longueur égale. Période de 32 pixels : la tuile de 64 se raccorde.
+export function createFanCobbleTextures(seed) {
+  const grain = fbm(seed + 17, SIZE, 16, 2);
+  const tones = new Float32Array(SIZE * SIZE);
+  const heights = new Float32Array(SIZE * SIZE);
+  const R = 16;
+  const RING = 4;
+  const JOINT = 0.9;
+  for (let y = 0; y < SIZE; y += 1) {
+    for (let x = 0; x < SIZE; x += 1) {
+      const i = y * SIZE + x;
+      const px = x + 0.5;
+      const py = y + 0.5;
+      // L'éventail qui couvre le pixel : celui dont le centre est le plus au sud.
+      let best = null;
+      const row0 = Math.floor(py / R);
+      for (let row = row0; row <= row0 + 2; row += 1) {
+        const cy = row * R;
+        const offset = ((row % 2) + 2) % 2 ? R : 0;
+        for (let k = -1; k <= SIZE / (2 * R) + 1; k += 1) {
+          const cx = k * 2 * R + offset;
+          const d = Math.hypot(px - cx, py - cy);
+          if (d > R * 1.06 || py > cy + 0.01) continue;
+          if (!best || cy > best.cy) best = { cx, cy, d, row, k };
+        }
+      }
+      if (!best) {
+        tones[i] = 0.1;
+        continue;
+      }
+      const ring = Math.min(3, Math.floor(best.d / RING));
+      const inRing = best.d - ring * RING;
+      const angle = Math.atan2(best.cy - py, px - best.cx); // 0 à droite, π à gauche
+      const count = Math.max(2, Math.round((Math.PI * (ring + 0.5) * RING) / 4.6));
+      const along = (angle / Math.PI) * count;
+      const stone = Math.floor(along);
+      const arc = (along - stone) * ((Math.PI * (ring + 0.5) * RING) / count);
+      const arcLength = (Math.PI * (ring + 0.5) * RING) / count;
+      const edge = Math.min(inRing, RING - inRing, arc, arcLength - arc, R * 1.06 - best.d + 0.4);
+      if (edge < JOINT) {
+        tones[i] = 0.08 + grain(x, y) * 0.08;
+        heights[i] = 0;
+        continue;
+      }
+      const id = hash2(((best.k % 2) + 2) % 2 * 97 + ((best.row % 2) + 2) % 2 * 31 + ring * 7, stone, seed);
+      const dome = Math.min(1, (edge - JOINT) / 1.4);
+      tones[i] = 0.4 + id * 0.3 + dome * 0.16 + (grain(x, y) - 0.5) * 0.1;
+      heights[i] = Math.sqrt(dome) * 0.9 + grain(x, y) * 0.1;
+    }
+  }
+  return finish(terrainRamps.parvis, tones, heights, 1.2);
+}
+
 // Eau : bandes de vaguelettes étirées à l'horizontale, quelques reflets clairs.
 export function createWaterTextures(seed) {
   const waves = fbm(seed, SIZE, 4, 3, 0.6);

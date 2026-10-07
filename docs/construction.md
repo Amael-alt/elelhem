@@ -1031,3 +1031,25 @@ La suite des retours de Jordan, après la 2.8 : une correction, les tics d'IA qu
 | Console | aucune erreur |
 | Écran titre | bureau 1686 × 1199, mobile 375 × 812, paysage 812 × 375 et vignette 1200 × 630 vérifiés |
 | Console | aucune erreur |
+
+## Version 2.10 : la revue d'architecture appliquée, les intérieurs au pixel (7 octobre 2026)
+
+Jordan a demandé « les améliorations nécessaires » après la revue d'architecture (`/anthropic-skills:improve-codebase-architecture`, huit candidats, voir `suite.md`), puis des intérieurs plus fins, puis la publication : le but est une version jouable et partageable.
+
+- **Trois approfondissements sur huit**, les trois forts et sans risque pour une sortie :
+  - **Les lieux** (`world/places.js`, pur, sans three.js) : les quartiers, les pièces et la lande, leurs clés de découverte (gelées parce qu'elles vivent dans les sauvegardes : identifiant nu pour un quartier, `piece:` pour une pièce, `lieu:lande`), le total des lieux et le point-dans-rectangle. Avant : trois façons d'écrire une clé dans `main.js`, le total calculé deux fois à la main, le rectangle réécrit dans le bandeau et les portes.
+  - **La partie** (`game/state.js`) : la forme des vingt champs n'est écrite qu'une fois (`FIELDS`), l'état vide, l'écriture, la relecture et l'instantané de débogage en découlent (l'instantané de `__lia.gameState()` n'en connaissait que dix). Règle : qui change l'état sauvegarde ; plus de rappel `save()` passé aux points d'action et aux exploits, et les deux champs (`dissipees`, `etincelles`) qui n'étaient sauvés que par effet de bord de la bourse le sont pour de bon. `questStatus` et `hasAllScrolls` remplacent les trois copies de `main.js` (la minimap et le point d'exclamation lisent la même réponse), `discover` note un lieu une seule fois.
+  - **L'hôte des panneaux** (`game/overlays.js`) : Échap referme le dernier panneau ouvert, un clic sur le fond referme, « le jeu est-il occupé » se demande à un seul endroit. Sept panneaux recopiaient ces gestes et onze écouteurs clavier se disputaient Échap ; la liste `quest.overlays` disparaît.
+  - Non faits, notés dans `suite.md` : les bâtisseurs de décor (gros, risqué avant une sortie), les mondes qui portent leur comportement, la couture d'animation du sprite, la table des touches, la façade pour `__lia`.
+  - `CONTEXT.md`, à la racine : le vocabulaire du jeu, un mot, une définition, le module qui en a la charge. La skill de revue s'en servira la prochaine fois.
+- **Les intérieurs au pixel** : les tuiles faisaient 128 pixels depuis la 2.7, mais le plancher, le lambris, le tapis et le tableau se dessinaient encore en blocs de deux pixels, à l'ancienne finesse de 16 texels par unité. Ils passent à 32 pour de bon (Jordan a dit « 36 » : les tuiles vont par puissances de deux, 32 est la valeur de tout le décor extérieur) : joints et chanfreins d'un pixel, clous de deux pixels, nœuds ovales, fibres qui ondulent le long de la latte et dans la hauteur du lambris ; le tapis gagne un médaillon à double contour avec sa croix, une bordure à dents de loup, des rosaces aux coins et des franges fines ; le tableau passe de 20 × 14 à 40 × 28 pixels, avec trois rangs de collines, une maisonnette, des nuages et des herbes.
+
+### Mesures
+
+| Critère | Résultat |
+|---|---|
+| Panneaux | fiche ouverte par F, fermée par Échap ; grimoire fermé par un clic sur le fond ; les deux par l'hôte |
+| Instantané | `__lia.gameState()` rend 20 champs (10 avant) |
+| Lande | `__lia.lande(true)` : arrivée en (25,2 ; 10,5), `decouvertes` = `piece:maison`, `lieu:lande` |
+| Modules purs | `places.js` et `state.js` s'exécutent dans Node sans navigateur |
+| Intérieurs | maison, bibliothèque, auberge revues : lattes, lambris et tapis lisibles au pixel, zéro erreur console |

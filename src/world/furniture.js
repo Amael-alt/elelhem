@@ -14,7 +14,7 @@
 // vers le sud (z croissant) ; une applique ou un tableau prend le mur (side)
 // qui le porte.
 
-import { createFrame, pushBox } from './builder.js';
+import { createFrame, pushBar, pushBox, pushDisc, pushRevolution } from './builder.js';
 
 const FULL_UV = [[0, 0], [1, 0], [1, 1], [0, 1]];
 const WALL_DEPTH = 0.02; // fenêtres et râteliers, juste devant le mur
@@ -525,5 +525,176 @@ export function buildTableware({ x, z, y = 0.78 }, builders) {
   const bread = createFrame(builders.thatch, [x, y, z]);
   pushBox(linen, [-0.2, 0, 0.12], [0.08, 0.025, 0.34]);
   pushBox(bread, [-0.14, 0.025, 0.16], [0.02, 0.1, 0.3]);
+  return { posts: [] };
+}
+
+// --- Version 2.5 : le salon et la salle de l'auberge ------------------------
+
+// Un meuble tourné : ses boîtes sont données dans un repère local où +w est
+// l'avant (le côté où l'on s'assoit, où l'on regarde) et +u la droite ; facing
+// ('south', 'north', 'east', 'west') oriente cet avant dans la pièce. Les
+// rotations sont d'un quart de tour : une boîte reste une boîte.
+const FRONT = { south: [0, 1], north: [0, -1], east: [1, 0], west: [-1, 0] };
+function orientedBox(builder, x, z, facing) {
+  const [fx, fz] = FRONT[facing] ?? FRONT.south;
+  const [rx, rz] = [fz, -fx]; // la droite de l'avant (vue de derrière le meuble)
+  const frame = createFrame(builder, [x, 0, z]);
+  const toWorld = (u, w) => [u * rx + w * fx, u * rz + w * fz];
+  return ([u0, y0, w0], [u1, y1, w1], options) => {
+    const [ax, az] = toWorld(u0, w0);
+    const [bx, bz] = toWorld(u1, w1);
+    pushBox(frame, [Math.min(ax, bx), y0, Math.min(az, bz)], [Math.max(ax, bx), y1, Math.max(az, bz)], options);
+  };
+}
+
+// Chaise à dossier : assise, quatre pieds, deux montants et trois barreaux au
+// dos (du côté opposé à facing, le côté où l'on regarde assis).
+export function buildChair({ x, z, facing = 'south' }, builders) {
+  const box = orientedBox(builders.wood, x, z, facing);
+  box([-0.21, 0.42, -0.2], [0.21, 0.48, 0.2]);
+  for (const [u, w] of [[-0.17, -0.16], [0.17, -0.16], [-0.17, 0.16], [0.17, 0.16]]) box([u - 0.03, 0, w - 0.03], [u + 0.03, 0.42, w + 0.03]);
+  for (const u of [-0.18, 0.18]) box([u - 0.03, 0.48, -0.2], [u + 0.03, 1.0, -0.15]);
+  box([-0.2, 0.92, -0.2], [0.2, 1.0, -0.15]);
+  for (const u of [-0.07, 0.07]) box([u - 0.02, 0.5, -0.19], [u + 0.02, 0.92, -0.16]);
+  return { posts: [{ x, z, radius: 0.24 }] };
+}
+
+// Fauteuil de velours vert : socle et pieds de bois, assise rembourrée, dossier
+// haut et deux accoudoirs arrondis d'un bourrelet.
+export function buildArmchair({ x, z, facing = 'south' }, builders) {
+  const velvet = orientedBox(builders.velvet, x, z, facing);
+  const wood = orientedBox(builders.wood, x, z, facing);
+  for (const [u, w] of [[-0.3, -0.26], [0.3, -0.26], [-0.3, 0.26], [0.3, 0.26]]) wood([u - 0.04, 0, w - 0.04], [u + 0.04, 0.1, w + 0.04]);
+  velvet([-0.38, 0.1, -0.33], [0.38, 0.36, 0.33]);
+  velvet([-0.26, 0.36, -0.2], [0.26, 0.47, 0.32]); // le coussin
+  velvet([-0.38, 0.36, -0.36], [0.38, 1.02, -0.18]); // le dossier
+  velvet([-0.3, 1.02, -0.34], [0.3, 1.08, -0.2]);
+  for (const s of [-1, 1]) {
+    velvet([s * 0.26, 0.36, -0.2], [s * 0.39, 0.62, 0.33]);
+    velvet([s * 0.25, 0.62, -0.2], [s * 0.4, 0.68, 0.35]);
+  }
+  return { posts: [{ x, z, radius: 0.42 }] };
+}
+
+// Canapé de velours, long de length : comme le fauteuil, avec deux coussins.
+export function buildSofa({ x, z, facing = 'south', length = 1.8 }, builders) {
+  const velvet = orientedBox(builders.velvet, x, z, facing);
+  const wood = orientedBox(builders.wood, x, z, facing);
+  const h = length / 2;
+  for (const [u, w] of [[-h + 0.08, -0.26], [h - 0.08, -0.26], [-h + 0.08, 0.26], [h - 0.08, 0.26]]) wood([u - 0.04, 0, w - 0.04], [u + 0.04, 0.1, w + 0.04]);
+  velvet([-h, 0.1, -0.33], [h, 0.36, 0.33]);
+  for (const s of [-1, 1]) velvet([s < 0 ? -h + 0.14 : 0.02, 0.36, -0.2], [s < 0 ? -0.02 : h - 0.14, 0.47, 0.32]);
+  velvet([-h, 0.36, -0.36], [h, 0.98, -0.18]);
+  velvet([-h + 0.06, 0.98, -0.34], [h - 0.06, 1.04, -0.2]);
+  for (const s of [-1, 1]) {
+    const [a, b] = s < 0 ? [-h, -h + 0.14] : [h - 0.14, h];
+    velvet([a, 0.36, -0.2], [b, 0.62, 0.33]);
+    velvet([a - (s < 0 ? 0.01 : 0), 0.62, -0.2], [b + (s > 0 ? 0.01 : 0), 0.68, 0.35]);
+  }
+  const posts = [];
+  for (let u = -h + 0.35; u <= h - 0.35 + 1e-6; u += 0.5) {
+    const [fx, fz] = FRONT[facing] ?? FRONT.south;
+    posts.push({ x: x + u * fz, z: z - u * fx, radius: 0.4 });
+  }
+  return { posts };
+}
+
+// Table ronde sur pied : un plateau octogonal, une colonne tournée, un pied
+// en croix.
+export function buildRoundTable({ x, z, radius = 0.52 }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  pushRevolution(wood, [[0.7, radius], [0.78, radius]], { sides: 12, groundAo: 1 });
+  pushDisc(wood, 0.78, radius, { sides: 12 });
+  pushRevolution(wood, [[0, 0.09], [0.12, 0.07], [0.35, 0.05], [0.55, 0.07], [0.7, 0.06]], { sides: 8 });
+  pushBox(wood, [-0.32, 0, -0.05], [0.32, 0.06, 0.05]);
+  pushBox(wood, [-0.05, 0, -0.32], [0.05, 0.06, 0.32]);
+  return { posts: [{ x, z, radius: radius + 0.05 }] };
+}
+
+// Table basse du salon : plateau sur quatre pieds courts, un livre et une tasse.
+export function buildLowTable({ x, z, width = 0.9, depth = 0.55 }, builders) {
+  const wood = createFrame(builders.wood, [x, 0, z]);
+  const book = createFrame(builders.awning, [x, 0, z]);
+  const cup = createFrame(builders.plaster, [x, 0, z]);
+  const hw = width / 2;
+  const hd = depth / 2;
+  pushBox(wood, [-hw, 0.36, -hd], [hw, 0.42, hd]);
+  for (const [u, w] of [[-hw + 0.06, -hd + 0.06], [hw - 0.06, -hd + 0.06], [-hw + 0.06, hd - 0.06], [hw - 0.06, hd - 0.06]]) pushBox(wood, [u - 0.03, 0, w - 0.03], [u + 0.03, 0.36, w + 0.03]);
+  pushBox(book, [-0.3, 0.42, -0.12], [-0.05, 0.47, 0.08]);
+  pushRevolution(cup, [[0.42, 0.04], [0.5, 0.05]], { sides: 8, groundAo: 1 });
+  return { posts: [{ x, z, radius: Math.max(hw, hd) }] };
+}
+
+// Horloge comtoise contre un mur : une haute caisse de bois, le cadran clair
+// et ses aiguilles, la lentille du balancier derrière une fente, un fronton.
+// facing : le côté du cadran (east : contre le mur ouest).
+export function buildClock({ x, z, facing = 'south' }, builders) {
+  const wood = orientedBox(builders.wood, x, z, facing);
+  const face = orientedBox(builders.plaster, x, z, facing);
+  const iron = orientedBox(builders.iron, x, z, facing);
+  wood([-0.26, 0, -0.18], [0.26, 0.16, 0.18]);
+  wood([-0.2, 0.16, -0.15], [0.2, 1.45, 0.15]);
+  wood([-0.26, 1.45, -0.18], [0.26, 2.05, 0.18]);
+  wood([-0.29, 2.05, -0.2], [0.29, 2.12, 0.2]);
+  wood([-0.12, 2.12, -0.15], [0.12, 2.24, 0.15]);
+  face([-0.18, 1.55, 0.18], [0.18, 1.91, 0.2]);
+  iron([-0.012, 1.72, 0.2], [0.012, 1.86, 0.215]);
+  iron([-0.012, 1.72, 0.2], [0.1, 1.745, 0.215]);
+  iron([-0.07, 0.4, 0.15], [0.07, 1.3, 0.16]);
+  iron([-0.012, 0.75, 0.16], [0.012, 1.3, 0.17]);
+  face([-0.06, 0.6, 0.16], [0.06, 0.72, 0.175]);
+  return { posts: [{ x, z, radius: 0.3 }] };
+}
+
+// Plante en pot : un pot de terre cuite évasé et un buisson de feuilles en
+// deux étages.
+export function buildPlant({ x, z, size = 1 }, builders) {
+  const pot = createFrame(builders.brick, [x, 0, z]);
+  const leaves = createFrame(builders.leaves, [x, 0, z]);
+  const s = size;
+  pushRevolution(pot, [[0, 0.13 * s], [0.32 * s, 0.18 * s], [0.36 * s, 0.2 * s]], { sides: 8 });
+  pushRevolution(leaves, [[0.34 * s, 0.12 * s], [0.5 * s, 0.32 * s], [0.75 * s, 0.34 * s], [0.95 * s, 0.22 * s], [1.08 * s, 0]], { sides: 9, groundAo: 1 });
+  pushRevolution(leaves, [[0.7 * s, 0.1 * s], [0.85 * s, 0.26 * s], [1.1 * s, 0.22 * s], [1.26 * s, 0]], { sides: 7, groundAo: 1, phase: 0.4 });
+  return { posts: [{ x, z, radius: 0.24 * s }] };
+}
+
+// Escalier vers l'étage, de z1 (en bas, au sud) à z0 (en haut, au nord),
+// entre x0 et x1, jusqu'à la hauteur top ; un palier au nord, une rampe à
+// balustres du côté ouest (x0). Les cases dessous sont réservées (world/rooms.js) :
+// on ne passe pas sous les marches.
+export function buildStairs({ x0, x1, z0, z1, top = 2.3, landing = 0.6 }, builders) {
+  const wood = createFrame(builders.wood, [0, 0, 0]);
+  const tread = createFrame(builders.bark, [0, 0, 0]);
+  const run = z1 - z0;
+  const count = Math.max(4, Math.round(run / 0.3));
+  const depth = run / count;
+  const rise = top / (count + 1);
+  for (let i = 0; i < count; i += 1) {
+    const zb = z1 - i * depth;
+    const y = (i + 1) * rise;
+    pushBox(wood, [x0, 0, zb - depth], [x1, y - 0.05, zb], { groundAo: 0.6 });
+    pushBox(tread, [x0 - 0.03, y - 0.05, zb - depth - 0.02], [x1, y, zb]);
+  }
+  // Le palier, à hauteur de la dernière marche, porté par une poutre.
+  pushBox(wood, [x0, top - 0.12, z0 - landing], [x1, top - 0.05, z0]);
+  pushBox(tread, [x0 - 0.03, top - 0.05, z0 - landing], [x1, top, z0]);
+  pushBox(wood, [x0, 0, z0 - landing], [x0 + 0.1, top - 0.12, z0 - landing + 0.1], { groundAo: 0.6 });
+  // La rampe : un poteau en bas, un en haut, une main courante entre eux, des balustres.
+  const rail = 0.82;
+  const xr = x0 + 0.06;
+  pushBox(wood, [xr - 0.06, 0, z1 - 0.12], [xr + 0.06, rise + rail + 0.1, z1], { groundAo: 0.6 });
+  pushBox(wood, [xr - 0.08, rise + rail + 0.1, z1 - 0.14], [xr + 0.08, rise + rail + 0.17, z1 + 0.02]);
+  pushBar(wood, [xr, rise + rail, z1 - 0.06], [xr, top + rail - rise * 0.5, z0], 0.07);
+  pushBar(wood, [xr, top + rail - rise * 0.5, z0], [xr, top + rail - rise * 0.5, z0 - landing], 0.07);
+  for (let i = 0; i < count; i += 1) {
+    const zc = z1 - (i + 0.5) * depth;
+    const y = (i + 1) * rise;
+    const yTop = rise + rail + ((z1 - zc) / run) * (top - rise * 1.5 - rise);
+    pushBox(wood, [xr - 0.02, y, zc - 0.02], [xr + 0.02, yTop, zc + 0.02]);
+  }
+  for (let k = 1; k <= 2; k += 1) {
+    const zc = z0 - (landing * k) / 3;
+    pushBox(wood, [xr - 0.02, top, zc - 0.02], [xr + 0.02, top + rail - rise * 0.5, zc + 0.02]);
+  }
   return { posts: [] };
 }
